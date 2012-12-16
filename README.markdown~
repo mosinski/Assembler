@@ -1,10 +1,14 @@
-# Witam oto repozytorium do heroku dla aplikacji <font color="blue">Napster</font>#
+# Assembler#
+<hr>
+## Instalacja##
+> sudo apt-get install nasm
 
-Program będzie polegał na bazie danych z listą piosenek. 
-Użytkownik będzie mogł dodać piosenkę oraz zobaczyć jej Wykonawce Album itd.
-Narazie wersja wtępna.
-Pobierać i przerabiać informować o postępach.
-Pozdro
+## Compilacja##
+> nasm -f elf hello.asm
 
-# Aplikacja na Heroku#
-> http://napsterug.herokuapp.com/
+> ld -o hello hello.o
+
+> ./hello
+
+i tyle
+
