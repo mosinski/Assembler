@@ -1,0 +1,725 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 1 - Podstawy </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="bsd.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux02.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, rejestry, program, kompilatory,
+	system dwójkowy, system szesnastkowy, bit, bajt, binarny, hex, org, nasm, fasm, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="Kwrite">
+<meta http-equiv="Last-Modified" content="Mon, Oct 29 2012 17:22:19 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 1 - Podstawy, czyli czym to się je</h1></div>
+
+<P>
+Wyobraźcie sobie, jakby to było móc programować maszynę bezpośrednio - <q>rozmawiać</q> z
+procesorem bez pośrednictwa struktur wysokiego poziomu, na przykład takich jak spotykamy w języku C.
+Bezpośrednie operowanie na procesorze umożliwia przecież pełną kontrolę jego działań! Bez
+zbędnych instrukcji i innych <q>śmieci</q> spowalniających nasze programy.</P>
+<P>
+Czy już czujecie chęć pisania najkrótszych i najszybszych programów na świecie?<BR>
+Programów, których czasem w ogóle NIE MOŻNA napisać w innych językach? Brzmi wspaniale, prawda?</P>
+<P>
+Tylko pomyślcie o tym, co powiedzieliby znajomi, gdybyście się im pochwalili. Widzicie już te
+ich zdumione miny?</P>
+<P>
+Miła perspektywa, prawda? No, ale dość już gadania. Zabierajmy się do rzeczy!</P>
+
+<P>Zacznijmy od krótkiego wprowadzenia:
+</P>
+<HR>
+ <h2 class="nag">Niedziesiętne systemy liczenia.</h2>
+ <BR>
+  <OL>
+   <LI>Dwójkowy (binarny)<BR>
+    <P>Najprostszy dla komputera, gdzie coś jest albo włączone, albo wyłączone. System ten operuje na
+    liczbach zwanych <span class="b">bitami</span> (bit = <span lang="en">binary digit</span>
+    = cyfra dwójkowa). Bit przyjmuje jedną z dwóch wartości: 0 lub 1.<BR>
+    Na <span class="b">bajt</span> składa się 8 bitów.
+    	 Jednym bajtem można przedstawić więc 2^8=256 możliwości.</P>
+    <P>Przeliczenie liczby zapisanej w systemie dwójkowym na dziesiętny jest proste. Podobnie
+	jak w systemie dziesiętnym, każdą cyfrę mnożymy przez odpowiednią potęgę podstawy
+	(podstawa wynosi 2 w systemie dwójkowym, 10 w systemie dziesiętnym).</P>
+    <P>Oto przykład (daszek ^ oznacza potęgowanie):<BR>
+	 1010 1001 dwójkowo =<BR>
+	 1*(2^7) + 0*(2^6) + 1*(2^5) + 0*(2^4) + 1*(2^3) + 0*(2^2) + 0*(2^1) + 1*(2^0) = <BR>
+	 128 + 32 + 8 + 1 =<BR>
+	 169 dziesiętnie (lub <q>dec</q>, od <q lang="en">decimal</q>).</P>
+
+    <P>Działanie odwrotne też nie jest trudne: naszą liczbę dzielimy ciągle (do chwili
+	uzyskania ilorazu równego 0) przez 2, po czym zapisujemy reszty z dzielenia wspak:</P>
+	<BR><a href="#linux0101" tabindex="1" class="bezdruk">(przeskocz konwersję liczby dziesiętnej na dwójkową)</a>
+	<PRE title="dziesiętny na binarny" class="asciiart">
+	169	|
+	 84	| 1
+	 42	| 0
+	 21	| 0
+	 10	| 1
+	  5	| 0
+	  2	| 1
+	  1	| 0
+	  0	| 1</PRE>
+	<P><a name="linux0101" id="linux0101">Wspak dostajemy</a>: 1010 1001, czyli wyjściową liczbę.
+	</P></LI>
+
+
+
+
+   <LI>Szesnastkowy (heksadecymalny, w skrócie hex)<BR>
+    <P>Jako że system dwójkowy ma mniej cyfr niż dziesiętny, do przedstawienia względnie małych
+    liczb trzeba użyć dużo zer i jedynek. Jako że bajt ma 8 bitów, podzielono go na dwie równe,
+    czterobitowe części. Teraz bajt można już reprezentować dwoma znakami, a nie ośmioma. Na każdy
+    taki znak składa się 2^4=16 możliwości. Stąd wzięła się nazwa <q>szesnastkowy</q>.<BR>
+    Powstał jednak problem: cyfr jest tylko 10, a trzeba mieć 16. Co zrobić?<BR>
+    Postanowiono liczbom 10-15 przyporządkować odpowiednio znaki A-F.<BR>
+    Na przykład<BR>
+    Liczba 255 dziesiętnie = 1111 1111 binarnie = FF szesnastkowo (1111 bin = 15 dec = F hex)<BR>
+    Liczba 150 dziesiętnie = 1001 0110 binarnie = 96 szesnastkowo.</P>
+
+    <P>Należy zauważyć ścisły związek między systemem dwójkowym i szesnastkowym:
+	1 cyfra szesnastkowa to 4 bity, co umożliwia błyskawiczne przeliczanie między obydwoma
+	systemami: wystarczy <q>tłumaczyć</q> po 4 bity (1 cyfrę hex) na raz i zrobione.
+	</P>
+    <P>Przeliczenie liczby zapisanej w systemie szesnastkowym na dziesiętny jest równie proste,
+	jak tłumaczenie z dwójkowego na dziesiętny. Każdą cyfrę mnożymy przez odpowiednią
+	 potęgę podstawy (podstawa wynosi 16 w systemie szesnastkowym).</P>
+    <P>Oto przykład:<BR>
+	 10A szesnastkowo =<BR>
+	 1*16^2 + 0*16^1 + A*16^0 =<BR>
+	 256 + 0 + 10 =<BR>
+	 266 dziesiętnie.</P>
+
+    <P>Działanie odwrotne też nie jest trudne: naszą liczbę dzielimy ciągle (do chwili
+	uzyskania ilorazu równego 0) przez 16, po czym zapisujemy reszty z dzielenia wspak:</P>
+	<BR><a href="#linux0102" class="bezdruk">(przeskocz konwersję liczby dziesiętnej na szesnastkową)</a>
+	<PRE title="dziesiętny na szesnastkowy" class="asciiart">
+	 266	|
+	 16	| 10
+	  1	| 0
+	  0	| 1</PRE>
+	<a name="linux0102" id="linux0102">Wspak dostajemy kolejno</a>: 1, 0, 10, czyli 10A, czyli wyjściową liczbę.
+	<P>
+
+	Podczas pisania programów, liczby w systemie szesnastkowym oznacza się przez dodanie
+	na końcu litery <span class="b">h</span> (lub z przodu <span class="b">0x</span>),
+	a liczby w systemie dwójkowym - przez dodanie litery <span class="b">b</span> na końcu.<BR>
+	 Tak więc, 101 oznacza dziesiętną liczbę o wartości 101, 101b oznacza liczbę 101 w
+	systemie dwójkowym (czyli 5 w systemie dziesiętnym), a 101h lub 0x101 oznacza liczbę
+	101 w systemie szesnastkowym (czyli 257 dziesiętnie).</P>
+
+
+	</LI></OL><BR>
+
+<HR>
+<h2 class="nag">Język asembler i rejestry procesora</h2>
+
+
+ <P>Co to jest asembler?<BR>
+
+   Asembler jest to język programowania, należący do języków niskiego poziomu.
+   Znaczy to tyle, że jednej komendzie asemblera odpowiada dokładnie jeden rozkaz procesora.
+   Asembler operuje na rejestrach procesora.</P>
+
+   <P>A co to jest rejestr procesora?<BR>
+
+   Rejestr procesora to zespół układów elektronicznych, mogący przechowywać informacje (taka
+   własna pamięć wewnętrzna procesora).<BR>
+
+   Zaraz podam Wam podstawowe rejestry, na których
+   będziemy operować. Wiem, że ich liczba może przerazić, ale od razu mówię, abyście
+    <em class="wazne">NIE uczyli
+   się tego wszystkiego na pamięć</em>! Najlepiej zrobicie, czytając poniższą listę tylko 2 razy, a
+   potem wracali do niej, gdy jakikolwiek rejestr pojawi się w programach, które
+   będę później prezentował w ramach tego kursu.<BR>
+
+   Oto lista interesujących nas rejestrów:</P>
+ <OL>
+   <LI> ogólnego użytku:<BR><BR>
+    <UL>
+     <LI>akumulator:<BR>
+     			 RAX (64 bity) = EAX (młodsze 32 bity) + starsze 32 bity,<BR>
+     			 EAX (32 bity) = AX (młodsze 16 bitów) + starsze 16 bitów,<BR>
+                     AX = AH (starsze 8 bitów) + AL (młodsze 8 bitów)<BR>
+	Rejestr ten służy do wykonywania działań matematycznych, ale często w tym
+	rejestrze będziemy mówić systemowi operacyjnemu,
+	co od niego chcemy.
+	<BR><BR></LI>
+     <LI>bazowy:<BR>
+     			 RBX (64 bity) = EBX (młodsze 32 bity) + starsze 32 bity,<BR>
+     			 EBX (32 bity) = BX (młodsze 16 bitów) + starsze 16 bitów,<BR>
+                 BX = BH (starsze 8 bitów) + BL (młodsze 8 bitów)<BR>
+	Ten rejestr jest używany na przykład przy dostępie do tablic.
+	<BR><BR></LI>
+     <LI>licznik:<BR>
+     			 RCX (64 bity) = ECX (młodsze 32 bity) + starsze 32 bity,<BR>
+     			 ECX (32 bity) = CX (młodsze 16 bitów) + starsze 16 bitów,<BR>
+                  CX = CH (starsze 8 bitów) + CL (młodsze 8 bitów)<BR>
+	Tego rejestru używamy na przykład do określania ilości powtórzeń pętli.
+	<BR><BR></LI>
+     <LI>rejestr danych:<BR>
+     			 RDX (64 bity) = EDX (młodsze 32 bity) + starsze 32 bity,<BR>
+     			 EDX (32 bity) = DX (młodsze 16 bitów) + starsze 16 bitów,<BR>
+                         DX = DH (starsze 8 bitów) + DL (młodsze 8 bitów)<BR>
+	W tym rejestrze na przykład przechowujemy adresy różnych zmiennych.
+	<BR><BR></LI>
+
+
+     <LI>rejestry dostępne <span class="b">tylko w trybie 64-bitowym</span>:<BR>
+     	<UL>
+	 <LI>8 rejestrów 8-bitowych: R8B, R9B, ..., R15B (lub R8L, R9L, ..., R15L)</LI>
+	 <LI>8 rejestrów 16-bitowych: R8W, R9W, ..., R15W</LI>
+	 <LI>8 rejestrów 32-bitowych: R8D, R9D, ..., R15D</LI>
+	 <LI>8 rejestrów 64-bitowych: R8, R9, ..., R15</LI>
+	</UL><BR><BR></LI>
+
+
+     <LI>rejestry indeksowe:
+      <UL>
+       <LI>indeks źródłowy:<BR>
+       			 RSI (64 bity) = ESI (młodsze 32 bity) + starsze 32 bity,<BR>
+     			 ESI (32 bity) = SI (młodsze 16 bitów) + starsze 16 bitów,<BR>
+			 SI (16 bitów) = SIL (młodsze 8 bitów) + starsze 8 bitów
+			  <span class="b">(tylko tryb 64-bit)</span>
+			 <BR><BR></LI>
+       <LI>indeks docelowy:<BR>
+       			 RDI (64 bity) = EDI (młodsze 32 bity) + starsze 32 bity,<BR>
+     			 EDI (32 bity) = DI (młodsze 16 bitów) + starsze 16 bitów,<BR>
+			 DI (16 bitów) = DIL (młodsze 8 bitów) + starsze 8 bitów
+			  <span class="b">(tylko tryb 64-bit)</span>
+			 </LI>
+      </UL>
+	Rejestry indeksowe najczęściej służą do operacji na długich łańcuchach danych, w tym
+	napisach i tablicach.
+	<BR><BR></LI>
+     <LI>rejestry wskaźnikowe:
+      <UL>
+       <LI>wskaźnik bazowy:<BR>
+       			 RBP (64 bity) = EBP (młodsze 32 bity) + starsze 32 bity,<BR>
+     			 EBP (32 bity) = BP (młodsze 16 bitów) + starsze 16 bitów.<BR>
+			 BP (16 bitów) = BPL (młodsze 8 bitów) + starsze 8 bitów
+			  <span class="b">(tylko tryb 64-bit)</span> <BR>
+	Najczęściej służy do dostępu do zmiennych lokalnych danej funkcji.
+	<BR><BR></LI>
+       <LI>wskaźnik stosu:<BR>
+       			 RSP (64 bity) = ESP (młodsze 32 bity) + starsze 32 bity,<BR>
+     			 ESP (32 bity) = SP (młodsze 16 bitów) + starsze 16 bitów.<BR>
+			 SP (16 bitów) = SPL (młodsze 8 bitów) + starsze 8 bitów
+			  <span class="b">(tylko tryb 64-bit)</span> <BR>
+	Służy do dostępu do stosu (o tym nieco później).
+	<BR><BR></LI>
+       <LI>wskaźnik instrukcji:<BR>
+       			 RIP (64 bity) = EIP (młodsze 32 bity) + starsze 32 bity,<BR>
+     			 EIP (32 bity) = IP (młodsze 16 bitów) + starsze 16 bitów.<BR>
+	Mówi procesorowi, skąd ma pobierać instrukcje do wykonywania.
+	</LI>
+      </UL></LI>
+    </UL><BR>
+      <LI>rejestry segmentowe (wszystkie 16-bitowe) - tych najlepiej
+       <span class="b">nie dotykać</span> w Linuksie:
+	<BR><BR>
+   <UL>
+    <LI>segment kodu CS - mówi procesorowi, gdzie znajdują się dla niego instrukcje.</LI>
+    <LI>segment danych DS - ten najczęściej pokazuje na miejsce, gdzie trzymamy nasze
+	zmienne.</LI>
+    <LI>segment stosu SS - dzięki niemu wiemy, w którym segmencie jest nasz stos. O tym,
+	czym w ogóle jest stos, powiem w następnej części.</LI>
+    <LI>segment dodatkowy ES - zazwyczaj pokazuje na to samo, co DS - na nasze zmienne. </LI>
+    <LI>FS i GS - nie mają specjalnego przeznaczenia. Są tu
+	na wypadek, gdyby zabrakło nam innych rejestrów segmentowych.</LI>
+   </UL><BR>
+  <LI>rejestr stanu procesora: FLAGI (16-bitowe), E-FLAGI (32-bitowe) lub R-FLAGI (64-bitowe).<BR>
+  	Służą one przede wszystkim do badania
+	wyniku ostatniego przekształcenia (na przykład czy nie wystąpiło przepełnienie, czy wynik jest
+	zerem, itp.). Najważniejsze flagi to
+	 CF (<span lang="en">carry flag</span> - flaga przeniesienia),
+	 OF (<span lang="en">overflow flag</span> - flaga przepełnienia),
+	 SF (<span lang="en">sign flag</span> - flaga znaku),
+	 ZF (<span lang="en">zero flag</span> - flaga zera),
+	 IF (<span lang="en">interrupt flag</span> - flaga przerwań),
+	 PF (<span lang="en">parity flag</span> - flaga parzystości),
+	 DF (<span lang="en">direction flag</span> - flaga kierunku).<BR><BR></LI>
+ </OL>
+
+   <P>Użycie litery R przed symbolem rejestru, na przykład RCX, oznacza rejestr 64-bitowy,
+    <span class="b">dostępny tylko
+   na procesorach 64-bitowych</span>.</P>
+<P>
+   Użycie litery E przed symbolem rejestru, na przykład EAX, oznacza rejestr 32-bitowy,
+    <span class="b">dostępny tylko
+   na procesorach rodziny 80386 lub lepszych</span>. Nie dotyczy to rejestru ES.</P>
+
+   <P>Napisy</P> <blockquote>RAX = EAX+starsze 32 bity;  EAX=AX+ starsze 16 bitów;  AX=AH+AL</blockquote>
+    <P>oznaczają:</P>
+    <BR><a href="#linux0103" class="bezdruk">(przeskocz rozwinięcie rejestru RAX)</a>
+<PRE title="RAX, EAX, AX oraz AH i AL" class="asciiart">
+				RAX (64 bity)
+				     |                 EAX (32b)
+    00000000000000000000000000000000 | 0000000000000000 | 00000000 | 00000000
+       		   32b	     	     |	      16b       |        AX(16b)
+                       		     | 		        |  AH(8b)  |   AL(8b)</PRE>
+   <P><a name="linux0103" id="linux0103">Napisy</a></P>
+    <blockquote>RSI = ESI+starsze 32 bity;  ESI = SI + starsze 16 bitów; SI = SIL+starsze 8 bitów
+   	</blockquote> <P>oznaczają:</P>
+    <BR><a href="#linux0104" class="bezdruk">(przeskocz rozwinięcie rejestru RSI)</a>
+<PRE title="RSI, ESI, SI oraz SIL" class="asciiart">
+				RSI (64 bity)
+				     |               ESI (32b)
+    00000000000000000000000000000000 | 0000000000000000 | 00000000 | 00000000
+       		   32b		     |	     16b        |        SI(16b)
+                       		     |		        |   8b     |  SIL(8b)</PRE>
+	<P>
+
+	<a name="linux0104" id="linux0104">Jedna ważna uwaga</a>
+	 - między nazwami rejestrów może pojawić się dwukropek w dwóch różnych znaczeniach:</P>
+	<UL>
+	<LI>zapis <q>DX : AX</q> (lub 2 dowolne zwykłe rejestry) będzie oznaczać liczbę,
+	której starsza część znajduje się w rejestrze po lewej stronie (DX), a młodsza - w
+	tym z prawej (AX). Wartość liczby wynosi DX*65536 + AX.<BR></LI>
+	<LI>zapis <q>CS : SI</q> (rejestr segmentowy + dowolny zwykły) będzie najczęściej oznaczać wskaźnik
+	do jakiegoś obiektu w pamięci (o pamięci opowiem następnym razem). Rejestr segmentowy
+	zawiera oczywiście segment, w którym znajduje się ów obiekt, a rejestr zwykły -
+	offset (przesunięcie, adres w tym segmencie) tegoż obiektu.<BR></LI>
+	</UL>
+	<P>Na razie nie musicie się przejmować tymi dwukropkami. Mówię to tylko dlatego, żebyście
+	nie byli zaskoczeni, gdyż w przyszłości się pojawią.</P>
+
+   <P>Programista może odnosić się bezpośrednio do wszystkich wymienionych rejestrów, z wyjątkiem
+   *IP oraz flag procesora (z wyjątkami).</P>
+
+	<P>Jak widać po ich rozmiarach, do rejestrów 8-bitowych można wpisać liczbę z przedziału
+	0-255 (lub od -128 do 127, gdy najwyższy, siódmy bit służy nam jako bit oznaczający
+	znak liczby), w 16-bitowych zmieszczą się liczby 0-65535 (od -32768 do 32767), a w
+	32-bitowych - liczby od 0 do 4.294.967.295 (od -2.147.483.648 do 2.147.483.647).</P>
+   <P>
+   Dobrym, choć trudnym w odbiorze źródłem informacji są:
+   <cite lang="en">Intel Architecture Software Developer's Manual</cite> (IASDM)
+    dostępny <em class="wazne">ZA DARMO</em> ze
+   	<A class="intel_link" href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html" hreflang="en">stron Intela</A>
+
+   oraz <em class="wazne">DARMOWE</em> podręczniki <cite lang="en">AMD64 Architecture
+   	Programmer's Manual</cite>
+ <A class="amd_link" href="http://developer.amd.com/Resources/documentation/guides/Pages/default.aspx" hreflang="en">firmy
+	<acronym title="Advanced Micro Devices" lang="en">AMD</acronym></A></P>
+
+<BR>
+
+<!-- ###################################################################### -->
+<HR>
+<h2 class="nag">Pisanie i kompilowanie (asemblowanie) swoich programów</h2>
+
+ <P>Jak pisać programy w asemblerze?<BR>
+   Należy zaopatrzyć się w:</P>
+<UL>
+
+   <LI> Edytor tekstu, mogący zapisywać pliki tekstowe (bez formatowania), na przykład VIM, LPE,
+	Emacs/XEmacs, <span lang="en">Joe</span>, <span lang="en">Pico</span>, Jed,
+	<span lang="en">Kate</span>, KWrite.</LI>
+   <LI> Kompilator języka asembler (patrz dalej)</LI>
+   <LI> Odpowiedni program łączący (<q>konsolidator</q>, ang. <span class="b">linker</span>),
+   	 chyba że kompilator ma już taki wbudowany, jak na przykład FASM</LI>
+</UL>
+ <P>  Wtedy wystarczy napisać w edytorze tekstu plik zawierający komendy procesora (o tym
+   później), zapisać go z rozszerzeniem .asm lub .s (GNU as), po czym użyć kompilatora,
+   aby przetworzyć program na kod rozumiany przez procesor. </P>
+
+
+
+ <P>Jakiego kompilatora użyć?<BR>
+   Istnieje wiele kompilatorów języka asembler pod Linuksa. Do najpopularniejszych należą
+   <span lang="en">Netwide Asembler Project</span> (NASM),
+   <span lang="en">Flat Asembler</span> (FASM),
+   <span lang="en">High-Level Asembler</span> (HLA) i Gnu As.</P>
+
+   <P>Można je ściągnąć z internetu:</P>
+	<BR><a href="#linux0104_1" class="bezdruk">(przeskocz adresy stron kompilatorów)</a>
+<UL>
+    <LI>NASM: <A HREF="http://sourceforge.net/projects/nasm" hreflang="en" lang="en">sf.net/projects/nasm</A></LI>
+    <LI>FASM: <A HREF="http://www.flatasembler.net" hreflang="en">flatasembler.net</A></LI>
+    <LI>HLA:  <A HREF="http://webster.cs.ucr.edu" hreflang="en">webster.cs.ucr.edu</A></LI>
+    <LI>Gnu Asembler znajduje się w pakiecie <span lang="en">binutils</span>
+    	 (powinien być w każdej dystrybucji).
+</UL>
+   <P><a name="linux0104_1" id="linux0104_1">Po skompilowaniu pliku</a>
+    z kodem źródłowym należy użyć programu łączącego - będziemy używać
+   standardowego LD (tego, którego używają inne kompilatory), gdyż również powinien się
+   znajdować w każdej dystrybucji Linuksa.</P>
+
+<!-- ###################################################################### -->
+
+<P>Mamy więc już wszystko, co potrzeba. Zaczynamy pisać. Będę tutaj używał składni NASMa i FASMa
+(gdyż kompilują one programy w składni Intela, która jest bardziej przejrzysta, mimo iż może
+się wydawać <q>odwrotna</q>).<br>
+Najpierw programy na systemy 32-bitowe:</P>
+	<BR><a href="#linux0105" class="bezdruk">(przeskocz pierwszy 32-bitowy program w składni NASM)</a>
+<PRE title="pierwszy program, składnia NASM">
+	; wersja NASM na system 32-bitowy
+
+	section	.text			; początek sekcji kodu.
+	global _start		; linker ld chce mieć ten symbol globalny
+
+	_start:				; punkt startu programu
+
+		mov	eax, 4		; numer funkcji systemowej:
+					; sys_write - zapisz do pliku
+		mov	ebx, 1		; numer pliku, do którego piszemy.
+					; 1 = standardowe wyjście = ekran
+		mov	ecx, tekst	; ECX = adres (offset) tekstu
+		mov	edx, dlugosc	; EDX = długość tekstu
+		int	80h		; wywołujemy funkcję systemową
+		mov	eax, 1		; numer funkcji systemowej
+					; (sys_exit - wyjdź z programu)
+		int	80h		; wywołujemy funkcję systemową
+
+	section .data			; początek sekcji danych.
+
+	tekst	db	&quot;Czesc&quot;, 0ah	; nasz napis, który wyświetlimy
+	dlugosc	equ	$ - tekst	; długość napisu</PRE>
+
+<hr>
+<P><a name="linux0105" id="linux0105">Teraz wersja dla FASMa</a>:</P>
+	<BR><a href="#linux0106" class="bezdruk">(przeskocz pierwszy 32-bitowy program w składni FASM)</a>
+<PRE title="pierwszy program, składnia FASM">
+	; wersja FASM na system 32-bitowy
+
+	format ELF executable		; typ pliku
+	entry _start			; punkt startu programu
+
+	segment	readable executable	; początek sekcji kodu
+
+	_start:				; punkt startu programu
+
+		mov	eax, 4		; numer funkcji systemowej:
+					; sys_write - zapisz do pliku
+		mov	ebx, 1		; numer pliku, do którego piszemy.
+					; 1 = standardowe wyjście = ekran
+		mov	ecx, tekst	; ECX = adres (offset) tekstu
+		mov	edx, [dlugosc]	; EDX = długość tekstu
+		int	80h		; wywołujemy funkcję systemową
+		mov	eax, 1		; numer funkcji systemowej
+					; (sys_exit - wyjdź z programu)
+		int	80h		; wywołujemy funkcję systemową
+
+	segment readable writeable	; początek sekcji danych.
+	tekst	db	&quot;Czesc&quot;, 0ah	; nasz napis, który wyświetlimy
+	dlugosc	dd	$ - tekst	; długość napisu</PRE>
+
+<hr>
+<P><a name="linux0106" id="linux0106">Teraz program 64-bitowy (x86-64) dla NASMa</a>:</P>
+	<BR><a href="#linux0107" class="bezdruk">(przeskocz pierwszy 64-bitowy program w składni NASM)</a>
+<PRE title="pierwszy program, składnia NASM">
+	; wersja NASM na system 64-bitowy (x86-64)
+
+	section	.text			; początek sekcji kodu.
+	global _start		; linker ld chce mieć ten symbol globalny
+
+	_start:				; punkt startu programu
+
+		mov	rax, 1		; numer funkcji systemowej:
+					; sys_write - zapisz do pliku
+		mov	rdi, 1		; numer pliku, do którego piszemy.
+					; 1 = standardowe wyjście = ekran
+		mov	rsi, tekst	; RSI = adres (offset) tekstu
+		mov	rdx, dlugosc	; RDX = długość tekstu
+		syscall			; wywołujemy funkcję systemową
+		mov	rax, 60		; numer funkcji systemowej
+					; (sys_exit - wyjdź z programu)
+		syscall			; wywołujemy funkcję systemową
+
+	section .data			; początek sekcji danych.
+
+	tekst	db	&quot;Czesc&quot;, 0ah	; nasz napis, który wyświetlimy
+	dlugosc	equ	$ - tekst	; długość napisu</PRE>
+
+<hr>
+<P><a name="linux0107" id="linux0107">I w końcu program 64-bitowy dla FASMa</a>:</P>
+	<BR><a href="#linux0108" class="bezdruk">(przeskocz pierwszy 64-bitowy program w składni FASM)</a>
+<PRE title="pierwszy program, składnia FASM">
+	; wersja FASM na system 64-bitowy  (x86-64)
+
+	format ELF64 executable		; typ pliku
+	entry _start			; punkt startu programu
+
+	segment	readable executable	; początek sekcji kodu
+
+	_start:				; punkt startu programu
+		mov	rax, 1		; numer funkcji systemowej:
+					; sys_write - zapisz do pliku
+		mov	rdi, 1		; numer pliku, do którego piszemy.
+					; 1 = standardowe wyjście = ekran
+		mov	rsi, tekst	; RSI = adres (offset) tekstu
+		mov	rdx, [dlugosc]	; RDX = długość tekstu
+		syscall			; wywołujemy funkcję systemową
+		mov	rax, 60		; numer funkcji systemowej
+					; (sys_exit - wyjdź z programu)
+		syscall			; wywołujemy funkcję systemową
+
+	segment readable writeable	; początek sekcji danych.
+	tekst	db	&quot;Czesc&quot;, 0ah	; nasz napis, który wyświetlimy
+	dlugosc	dq	$ - tekst	; długość napisu w trybie 64-bitowym</pre>
+
+<P><a name="linux0108" id="linux0108">Bez paniki!</a> Teraz omówimy dokładnie, co każda linia robi.</P>
+<UL>
+
+ <LI>linie lub napisy zaczynające się średnikiem.
+	<P>Traktowane są jako komentarze i są
+	całkowicie ignorowane przy kompilacji. Rozmiar skompilowanego programu wynikowego
+	 nie zależy od ilości
+	komentarzy. Dlatego najlepiej wstawiać tyle komentarzy, aby
+	inni (również my) mogli później zrozumieć nasz kod.</P></LI>
+
+ <LI>(FASM) <CODE lang="en">format ELF executable</CODE> /
+ 	<CODE lang="en">format ELF64 executable</CODE>
+	<P>Określa format (typ) pliku wyjściowego: wykonywalny plik ELF (format używany w Linuksie).
+ 	FASM nie potrzebuje programów łączących, aby utworzyć program.
+ 	Format ELF64 jest używany oczywiście pod systemem 64-bitowym.
+	</P></LI>
+
+ <LI>(FASM) <CODE lang="en">entry _start</CODE>
+	<P>Określa, gdzie program się zaczyna. Po uruchomieniu programu procesor zaczyna wykonywać
+	komendy zaczynające się pod podaną tutaj etykietą (_start) znajdującą się w sekcji
+	kodu.
+	</P></LI>
+
+ <LI>(FASM) <CODE lang="en">segment readable executable</CODE>
+	<P>Określa nowy segment programu - segment kodu, któremu ustawiamy odpowiednie atrybuty:
+	do odczytu i do wykonywania. Innym atrybutem jest <CODE lang="en">writeable</CODE> (do zapisu), który
+	powinien być używany tylko do sekcji danych.
+	Mimo, iż FASM zaakceptuje atrybut <CODE lang="en">writeable</CODE> dla sekcji kodu, nie
+	powinniśmy go tam umieszczać. Zapisanie czegokolwiek do sekcji kodu może skończyć
+	się błędem naruszenia ochrony pamięci (<span lang="en">segmentation fault</span>).
+	 Można jednak w tym segmencie
+     umieszczać dane. Ale należy to robić tak, aby nie stały się one częścią programu, zwykle
+     wpisuje się je za ostatnią komendą kończącą program. Procesor przecież nie wie, co jest pod
+     danym adresem i z miłą chęcią potraktuje to coś jako instrukcję, co może prowadzić do
+     przykrych konsekwencji. Swoje dane umieszczajcie tak, aby w żaden sposób strumień
+     wykonywanych instrukcji nie wszedł na nie. <BR>
+	Dane będziemy więc zazwyczaj umieszczać w oddzielnej sekcji.
+	</P></LI>
+
+ <LI>(NASM) <CODE lang="en">section .text</CODE>
+     <P>Wskazuje początek segmentu, gdzie znajduje się kod programu. Można jednak w tym segmencie
+     umieszczać dane. Ale należy to robić tak, aby nie stały się one częścią programu, zwykle
+     wpisuje się je za ostatnią komendą kończącą program. Procesor przecież nie wie, co jest pod
+     danym adresem i z miłą chęcią potraktuje to coś jako instrukcję, co może prowadzić do
+     przykrych konsekwencji. Swoje dane umieszczajcie tak, aby w żaden sposób strumień
+     wykonywanych instrukcji nie wszedł na nie. Zapisanie czegokolwiek do sekcji kodu
+     może skończyć się błędem naruszenia ochrony pamięci (<span lang="en">segmentation fault</span>),
+     dlatego dane będziemy zazwyczaj umieszczać w oddzielnej sekcji.
+	</P></LI>
+
+ <LI>(NASM) <CODE lang="en">global _start</CODE>
+	<P>Sprawiamy, że nazwa <q>_start</q> będzie widziana poza tym programem (konkretnie to przez
+	linker ld, który skompilowaną wersję programu przerobi na wersję wykonywalną).
+	</P></LI>
+
+ <LI><CODE>_start:</CODE> (z dwukropkiem)
+	<P>Etykieta określająca początek programu.
+	</P></LI>
+
+
+ <LI><CODE>mov	eax, 4</CODE> / <code>mov rax, 1</code>
+	<P>Do rejestru EAX (32-bitowy) lub RAX (64-bitowy) wstaw
+	(<code>MOV</code> = <span lang="en">move</span>, przesuń) wartość 4
+	(1 na systemach x86-64).
+	 Jest to numer funkcji systemu Linux, którą
+	chcemy uruchomić. Jeśli chcemy skorzystać z funkcji systemowych, to zawsze EAX zawiera
+	numer takiej funkcji.
+	<br>
+	Numery funkcji różnią się na różnych architekturach procesorów. Poczytajcie mój
+	<a href="przer80h_1.html" hreflang="pl">spis funkcji systemowych</a>.
+	</P>
+
+     <P>Komenda <code>MOV</code> ma 3 ważne ograniczenia:</P>
+  <OL>
+   <LI>nie można skopiować jedną komendą <code>MOV</code> komórki pamięci do innej komórki pamięci,
+      takie coś:
+    <PRE>		mov	[a], [b]    </PRE>
+      (gdzie a i b - dwie zmienne w pamięci) jest zabronione.<BR>
+      O tym, co oznaczają nawiasy kwadratowe, czyli o adresowaniu zmiennych w pamięci - następnym razem.
+	<br><br></LI>
+
+   <LI>nie można skopiować jedną komendą <code>MOV</code> jednego rejestru segmentowego (cs,ds,es,ss,fs,gs)
+       do innego rejestru segmentowego, czyli taka operacja
+    <PRE>		mov	es, ds    </PRE>
+      jest zabroniona. W ogóle najlepiej <em class="wazne">unikać jakichkolwiek operacji na rejestrach
+	segmentowych</em>.<br><br></LI>
+
+   <LI>Nie można do rejestru segmentowego bezpośrednio wpisać jakieś wartości. Czyli nie można
+	<PRE>		mov	ds, 0	</PRE>
+	Ale można:
+	<PRE>		mov	bx, 0
+		mov	ds, bx	</PRE>
+   </OL>
+
+	<BR><BR></LI>
+
+ <LI><CODE>mov	ebx, 1</CODE> / <code>mov rdi, 1</code>
+	<P>Do rejestru EBX (32-bitowy) lub RDI (64-bitowy) wstaw 1. Dlaczego akurat 1? Zaraz się przekonamy.
+	</P></LI>
+
+ <LI><CODE>mov ecx,tekst</CODE> / <code>mov rsi, tekst</code>
+	<P>Do rejestru ECX (32-bitowy) lub RSI (64-bitowy) wstaw offset (adres)
+	etykiety <q>tekst</q>. Można obliczać
+	adresy nie tylko danych, ale etykiet znajdujących się w kodzie programu.
+	</P></LI>
+
+ <LI><CODE>mov edx, dlugosc / mov edx, [dlugosc]</CODE>
+ 	/ <code>mov rdx, dlugosc / mov rdx, [dlugosc]</code>
+	<P>Do rejestru EDX (32-bitowy) lub RDX (64-bitowy) wstaw długość naszego tekstu.
+	 W pierwszym przypadku
+	jest to stała, w drugim wartość pobieramy ze zmiennej.
+	</P></LI>
+
+ <LI><CODE>int	80h</CODE> / <code>syscall</code>
+	<P><q>Int</q> = <span lang="en">interrupt</span> = przerwanie.
+	 Nie jest to jednak znane na przykład z kart dźwiękowych
+	przerwanie typu <acronym lang="en" title="Interrupt Request">IRQ</acronym>.
+	 Wywołując przerwanie 80h (128 dziesiętnie) lub instrukcję <code>syscall</code>
+	 (w trybie 64-bitowym) uruchamiamy jedną
+	z funkcji Linuksa. Którą? O tym zazwyczaj mówi rejestr akumulatora.</P>
+	<P>W tym przypadku EAX = 4 (lub RAX = 1 w trybie 64-bitowym) i jest to funkcja
+	zapisu do pliku - <span lang="en">sys_write</span>.
+	Funkcja ta przyjmuje 3 argumenty:</P>
+	<UL>
+	 <LI>W rejestrze EBX (lub RDI, w trybie 64-bitowym) podajemy numer (deskryptor)
+	 	pliku, do którego chcemy pisać.
+		U nas EBX (lub RDI) = 1 i jest to standardowe wyjście (zazwyczaj ekran).</LI>
+	 <LI>W rejestrze ECX (lub RSI, w trybie 64-bitowym) podajemy adres danych,
+	 	które chcemy zapisać do pliku.</LI>
+	 <LI>W rejestrze EDX (lub RDX, w trybie 64-bitowym) podajemy, ile bajtów chcemy zapisać.</LI>
+	</UL>
+	<P>Funkcje systemowe 32-bitowego Linuksa przyjmują co najwyżej 6 argumentów,
+	<em class="wazne">kolejno w rejestrach:
+	 EBX, ECX, EDX, ESI, EDI, EBP</em>. W EAX oczywiście jest numer funkcji, tak jak tutaj 4.
+	 <br><br>
+	Funkcje systemowe 64-bitowego Linuksa przyjmują także co najwyżej 6 argumentów,
+	<em class="wazne">kolejno w rejestrach:
+	 RDI, RSI, RDX, R10, R8, R9</em>. W RAX oczywiście jest numer funkcji, tak jak tutaj 1.
+	 Rejestry RCX i R11 są zamazywane.
+	</P></LI>
+
+ <LI><CODE>mov	eax, 1</CODE> / <code>mov rax, 60</code>
+	<P>Do EAX lub RAX wpisujemy numer kolejnej funkcji systemowej - <span lang="en">sys_exit</span>,
+	która spowoduje zamknięcie naszego programu.
+	</P></LI>
+
+ <LI><CODE>int	80h</CODE> / <code>syscall</code>
+	<P>Przerwanie systemowe - uruchomienie funkcji wyjścia z programu. Numer błędu (taki
+	<acronym lang="en" title="Disk Operating System">DOS</acronym>-owski
+	<span lang="en">errorlevel</span>) zwykle umieszczamy w EBX/RDI, czego tutaj
+	jednak nie zrobiliśmy.
+	</P></LI>
+
+ <LI><CODE lang="en"> (NASM) section .data / (FASM) segment readable writeable</CODE>
+ 	<P>Określa początek sekcji danych. Dane muszą być w osobnej części programu, bo inaczej
+ 	nie można do nich zapisywać (a na jądrze 2.6 nawet odczytać).
+ 	</P></LI>
+
+ <LI><CODE>tekst	db	&quot;Czesc&quot;,0ah</CODE>
+	<P>Definicja napisu i znaku przejścia do nowej linii. O tym, jak deklarować
+	 zmienne powiem następnym razem.
+	</P></LI>
+
+ <LI><CODE>dlugosc	equ	$ - tekst </CODE>
+ 	/ <CODE> dlugosc	dd	$ - tekst</CODE>
+ 	/ <CODE> dlugosc	dq	$ - tekst</CODE>
+ 	<P>
+	Definiujemy stałą, która przyjmuje wartość: <q>adres bieżący</q> - <q>adres początku napisu</q>,
+	czyli długość napisu. W pierwszym przypadku jest to stała kompilacji,
+	w drugim i trzecim - zmienna, która będzie umieszczona w programie.
+	</P></LI>
+
+
+</UL>
+<P>
+Programik nazywamy <q>hello.asm</q> i kompilujemy poleceniem (FASM):</P>
+<PRE title="kompilacja FASM">	fasm hello.asm hello</PRE>
+<P>lub, dla NASMa:</P>
+<PRE title="kompilacja NASM">
+	nasm -f elf hello.asm
+	ld -o hello hello.o</PRE>
+<P>lub, dla NASMa na systemie 64-bitowym:</P>
+<PRE title="kompilacja NASM">
+	nasm -f elf64 hello.asm
+	ld -o hello hello.o</PRE>
+<P>Wyjaśnienie opcji:</P>
+<UL>
+ <LI><code>-f elf</code> powoduje, że plik będzie skompilowany na 32-bitowy plik obiektowy typu ELF
+     (<span lang="en">Executable-Linkable Format</span>, typowy dla większości Linuksów).
+     Aby kompilować programy pod systemem 64-bitowym, należy użyć formatu <code>elf64</code></LI>
+ <LI><code>-f elf64</code> powoduje, że plik będzie skompilowany na 64-bitowy plik obiektowy typu ELF</LI>
+ <LI><code>-o nazwa</code> spowoduje nazwanie programu wynikowego.</LI>
+</UL>
+
+
+<P>Kompilacja, nawet programu w asemblerze (zwana czasem asemblacją), ma kilka etapów:</P>
+<ul>
+ <li><span lang="en">pre-processing</span> - w tej fazie preprocesor przetwarza dyrektywy takie
+	jak definicje stałych, dołączanie innych plików do kodu, rozwinięcia makr i inne, zanim
+	poda program kompilatorowi do kompilacji<br><br></li>
+ <li>kompilacja - na tym etapie tworzony jest binarny kod programu wynikowego. Podprogram kompilatora
+	sprawdza składnię instrukcji, zmienia je na ich binarne odpowiedniki, przetwarza zmienne na
+	ich binarne odpowiedniki, sprawdza, czy wszystkie wykorzystane symbole (na przykład u nas zmienna
+	<CODE>tekst</CODE>) są zadeklarowane, sprawdza, czy skoki mieszczą się w granicach i wykonuje
+	inne niezbędne czynności, w tym optymalizację. Pozostawia jednak adresy symboli
+	nieuzupełnione.<br><br></li>
+ <li>linkowanie (konsolidowanie) - na tym etapie następuje sprawdzenie, czy wszystkie
+	symbole pozostawione przez kompilator do uzupełnienia są dostępne w samym programie
+	lub innych plikach podanych linkerowi do połączenia.
+	Jeśli wszystkie symbole są obecne, następuje wstawianie ich adresów do programu wynikowego
+	i wygenerowanie samego programu.
+	</li>
+</ul>
+<p>Jeśli do programu nie dołączamy innych już skompilowanych plików ani bibliotek, to
+niektóre kompilatory nie wymagają osobnego linkera i mogą same sobie poradzić z wygenerowaniem
+programu wyjściowego. Widać to na przykład w wywołaniach FASMa powyżej.</p>
+
+<P>
+Teraz uruchamiamy <q>./hello</q> i cieszymy się swoim dziełem.<BR>
+W dalszej części kursu będę przedstawiał programy <em class="wazne">tylko 32-bitowe</em>
+i często tylko dla <em class="wazne">jednego kompilatora</em>.
+Ta część będzie służyć Wam pomocą, jeśli chcielibyście pisać
+programy pod systemy 64-bitowe lub pod inny kompilator.
+</P>
+
+<P>Miłego eksperymentowania.</P>
+
+<blockquote>Na świecie jest 10 rodzajów ludzi:<BR>
+ci, którzy rozumieją liczby binarne i ci, którzy nie.</blockquote>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="bsd.html">Informacja</a> dla użytkowników *BSD (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux02.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<BR>
+<OL>
+<LI>Poeksperymentujcie sobie, wstawiając różne znaki do napisu. Na przykład, znaki o kodach
+  ASCII 10 (<span lang="en">Line Feed</span>), 13 (<span lang="en">Carriage Return</span>),
+   7 (<span lang="en">Bell</span>). Na przykład:
+	<PRE>	info	db	&quot;Czesc.&quot;, 00, 01, 02, 07, 10, 13, 10, 13</PRE>
+ </LI>
+</OL>
+
+</BODY></HTML>

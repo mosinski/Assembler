@@ -1,0 +1,613 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 6 - MMX i SIMD </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux05.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux07.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, MMX, SSE, SSE2, SSE3, 3DNow!, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Mon, Oct 29 2012 17:22:20 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 6 - SIMD, czyli jak działa MMX</h1></div>
+
+
+<P>
+- A cóż to takiego to SIMD ?! - zapytacie.<BR>
+Już odpowiadam.<BR>
+SIMD = <span lang="en">Single Instruction, Multiple Data</span> = jedna instrukcja, wiele danych.<BR>
+Jest to technologia
+umożliwiająca jednoczesne wykonywanie tej samej instrukcji na kilku wartościach. Na pewno znany
+jest wam co najmniej jeden przykład zastosowania technologii SIMD. Jest to
+ <span lang="en">MultiMedia Extensions</span>,
+w skrócie MMX u Intela, a 3DNow! u <acronym title="Advanced Micro Devices" lang="en">AMD</acronym>.
+Innym mniej znanym zastosowaniem jest SSE, które omówię później.<BR>
+Zaczniemy od omówienia, jak właściwie działa to całe MMX.
+</P>
+
+
+
+
+
+
+<BR><HR>
+<h2 class="nag">MMX / 3DNow!</h2>
+<P>
+Technologia MMX operuje na 8 rejestrach danych, po 64 bity każdy, nazwanych mm0 ... mm7.
+Niestety, rejestry te nie są <q>prawdziwymi</q> (oddzielnymi) rejestrami - są częściami rejestrów koprocesora
+ (które, jak pamiętamy, mają po 80 bitów każdy).
+ Pamiętajcie więc, że <em class="wazne">nie można naraz wykonywać operacji na FPU i MMX/3DNow!</em>.
+</P>
+<P>
+Rejestry 64-bitowe służą do umieszczania w nich danych spakowanych. Na czym to polega?
+Zamiast mieć na przykład 32 bity w jednym rejestrze, można mieć dwa razy po 32. Tak więc rejestry mieszczą
+2 podwójne słowa (dword, 32 bity) lub 4 słowa (word, 16 bitów) lub aż 8 spakowanych bajtów.
+</P>
+<P>
+Zajmijmy się omówieniem instrukcji operujących na tych rejestrach.<BR>
+Instrukcje MMX można podzielić na kilka grup (nie wszystkie instrukcje będą tu wymienione):</P>
+<UL>
+  <LI>instrukcje transferu danych:<BR>
+   <UL>
+    <LI><code>MOVD mmi, rej32/mem32</code> (i=0,...,7) </LI>
+    <LI><code>MOVQ mmi, mmj/mem64</code> (i,j=0,...,7)</LI>
+   </UL>
+  <BR></LI>
+  <LI>instrukcje arytmetyczne:<BR>
+   <UL>
+    <LI>dodawanie normalne: <code>PADDB</code> (bajty) / <code>PADDW</code> (słowa) /
+	<code>PADDD</code> (dwordy)<BR><BR></LI>
+    <LI>dodawanie z nasyceniem ze znakiem: <code>PADDSB</code> (bajty) / <code>PADDSW</code> (słowa).<BR>
+	Jeżeli wynik przekracza 127 lub 32767 (bajty/słowa), to jest do tej wartości
+	zaokrąglany, a NIE jest tak, że nagle zmienia się na ujemny. Daje to lepszy efekt, na przykład
+	w czasie słuchania muzyki czy oglądania filmu. Hipotetyczny przykład: 2 kolory <q>szare</q> z
+	dadzą w sumie <q>czarny</q> a nie coś pośrodku skali kolorów.
+	<BR><BR></LI>
+    <LI>dodawanie z nasyceniem bez znaku: <code>PADDUSB</code> / <code>PADDUSW</code>.<BR>
+	Jeżeli wynik przekracza 255 lub 65535, to jest do tej wartości zaokrąglany.<BR><BR></LI>
+    <LI>odejmowanie normalne: <code>PSUBB</code> (bajty) / <code>PSUBW</code> (słowa) /
+	<code>PSUBD</code> (dwordy)<BR><BR></LI>
+    <LI>odejmowanie z nasyceniem ze znakiem: <code>PSUBSB</code> (bajty) / <code>PSUBSW</code> (słowa).<BR>
+	Jeśli wynik jest mniejszy niż -128 lub -32768 to jest do tej wartości zaokrąglany.
+	<BR><BR></LI>
+    <LI>odejmowanie z nasyceniem bez znaku: <code>PSUBUSB</code> (bajty) / <code>PSUBUSW</code> (słowa)<BR>
+	Jeśli wynik jest mniejszy niż 0, to staje się równy 0.<BR><BR></LI>
+    <LI>mnożenie:
+      <UL>
+       <LI><code>PMULHRWC</code>, <code>PMULHRIW</code>, <code>PMULHRWA</code> - mnożenie
+	spakowanych słów, zaokrąglanie, zapisanie tylko starszych 16 bitów wyniku (z 32).</LI>
+       <LI><code>PMULHUW</code> - mnożenie spakowanych słów bez znaku, zachowanie starszych 16 bitów</LI>
+       <LI><code>PMULHW</code>, <code>PMULLW</code> - mnożenie spakowanych słów bez znaku,
+	zapisanie starszych/młodszych 16 bitów (odpowiednio).</LI>
+       <LI><code>PMULUDQ</code> - mnożenie spakowanych dwordów bez znaku</LI>
+     </UL><BR></LI>
+    <LI>mnożenie i dodawanie: <code>PMADDWD</code> - do młodszego dworda rejestru docelowego idzie suma
+	iloczynów 2 najmłodszych słów ze sobą i 2 starszych (bity 16-31) słów ze sobą.
+	Do starszego dworda - suma iloczynów 2 słów 32-47 i 2 słów 48-63.<BR><BR></LI>
+   </UL>
+  </LI>
+  <LI>instrukcje porównawcze:<BR>
+	Zostawiają w odpowiednim bajcie/słowie/dwordzie same jedynki (FFh/FFFFh/FFFFFFFFh) gdy
+	wynik porównania był prawdziwy, same zera - gdy fałszywy.
+   <UL>
+    <LI>na równość <code>PCMPEQB</code> / <code>PCMPEQW</code> / <code>PCMPEQD</code> (EQ oznacza równość)</LI>
+    <LI>na <q>większe niż</q>: <code>PCMPGTPB</code> / <code>PCMPGTPW</code> / <code>PCMPGTPD</code>
+	(GT oznacza <span lang="en">greater than</span>, czyli większy)</LI>
+   </UL>
+  <BR></LI>
+  <LI>instrukcje konwersji:<BR>
+   <UL>
+    <LI>pakowanie: <code>PACKSSWB</code> / <code>PACKSSDW</code>, <code>PACKUSWB</code> -
+	<q>upychają</q> słowa/dwordy do bajtów/słów i pozostawiają w rejestrze docelowym.</LI>
+    <LI>rozpakowania starszych części (<span lang="en">unpack high</span>): <code>PUNPCKHBW</code>,
+	<code>PUNPCKHWD</code>, <code>PUNPCKHDQ</code> -
+	 pobierają starsze części bajtów/słów/dwordów z	jednego i drugiego rejestru, mieszają
+	 je i zostawiają w pierwszym.</LI>
+    <LI>rozpakowania młodszych części (<span lang="en">unpack low</span>): <code>PUNPCKLBW</code>,
+	<code>PUNPCKLWD</code>, <code>PUNPCKLDQ</code> - jak
+	wyżej, tylko pobierane są młodsze części</LI>
+   </UL>
+  <BR></LI>
+  <LI>instrukcje logiczne:<BR>
+   <UL>
+    <LI><code>PAND</code> (bitowe AND)</LI>
+    <LI><code>PANDN</code> (najpierw bitowe NOT pierwszego rejestru, potem jego bitowe AND z drugim rejestrem)</LI>
+    <LI><code>POR</code> (bitowe OR)</LI>
+    <LI><code>PXOR</code> (bitowe XOR)</LI>
+   </UL>
+  <BR></LI>
+  <LI>instrukcje przesunięcia (analogiczne do znanych <code>SHL</code>, <code>SHR</code> i
+	<code>SAR</code>, odpowiednio):<BR>
+   <UL>
+    <LI>w lewo: <code>PSLLW</code> (słowa) / <code>PSLLD</code> (dword-y), <code>PSLLQ</code> (qword)</LI>
+    <LI>w prawo, logiczne: <code>PSRLW</code> (słowa) / <code>PSRLD</code> (dword-y), <code>PSRLQ</code> (qword)</LI>
+    <LI>w prawo, arytmetyczne: <code>PSRAW</code> (słowa)/ <code>PSRAD</code> (dword-y)</LI>
+   </UL>
+  <BR></LI>
+  <LI>instrukcje stanu MMX:<BR>
+   <UL>
+    <LI><code>EMMS</code> - <span lang="en">Empty MMX State</span> - ustawia rejestry FPU
+	jako wolne, umożliwiając ich
+	użycie. Ta instrukcja musi być wykonana za każdym razem, gdy kończymy pracę z
+	MMX i chcemy zacząć pracę z FPU.
+    </LI>
+   </UL>
+  <BR></LI>
+</UL>
+<P>Rzadko która z tych instrukcji traktuje rejestr jako całość, częściej operują one na poszczególnych
+wartościach osobno, równolegle.</P>
+<P>
+Spróbuję teraz podać kilka przykładów zastosowania MMX.
+</P>
+<hr>
+<P>Przykład 1. Dodawanie dwóch tablic bajtów w pamięci. Bez MMX mogłoby to wyglądać mniej więcej tak:</P>
+	<BR><a href="#linux0601" tabindex="1" class="bezdruk">(przeskocz dodawanie tablic)</a>
+
+<PRE title="dodawanie elementów dwóch tablic">
+; EDX - adres pierwszej tablicy bajtów
+; ESI - adres drugiej tablicy bajtów
+; EDI - adres docelowej tablicy bajtów
+; ECX - liczba bajtów w tablicach. Przyjmiemy, że różna od zera...
+
+	petla:
+		mov al, [edx]	; pobierz bajt z pierwszej
+		add al, [esi]	; dodaj bajt z drugiej
+		mov [edi], al	; zapisz bajt w docelowej
+		inc edx		; zwiększ o 1 indeksy tablic
+		inc esi
+		inc edi
+		loop petla	; działaj, dopóki ECX różne od 0.</PRE>
+
+<hr>
+<P><a name="linux0601" id="linux0601">A z MMX</a>:</P>
+	<BR><a href="#linux0602" class="bezdruk">(przeskocz dodawanie tablic z MMX)</a>
+<PRE title="dodawanie elementów dwóch tablic z MMX">
+	mov ebx, ecx	; EBX = liczba bajtów
+	and ebx, 7	; będziemy brać po 8 bajtów - obliczamy
+			; więc resztę z dzielenia przez 8
+
+	shr ecx, 3	; dzielimy ECX przez 8
+petla:
+	movq mm0, [edx]	; pobierz 8 bajtów z pierwszej tablicy
+	paddb mm0, [esi]; dodaj 8 spakowanych bajtów z drugiej
+	movq [edi], mm0	; zapisz 8 bajtów w tablicy docelowej
+	add edx, 8	; zwiększ indeksy do tablic o 8
+	add esi, 8
+	add edi, 8
+	loop petla	; działaj, dopóki ECX różne od 0.
+
+	test ebx, ebx	; czy EBX = 0?
+	jz koniec	; jeśli tak, to już skończyliśmy
+
+	mov ecx, ebx	; ECX = resztka, co najwyżej 7 bajtów.
+			; te kopiujemy tradycyjnie
+petla2:
+	mov al, [edx]	; pobierz bajt z pierwszej
+	add al, [esi]	; dodaj bajt z drugiej
+	mov [edi], al	; zapisz bajt w docelowej
+	inc edx		; zwiększ o 1 indeksy do tablic
+	inc esi
+	inc edi
+	loop petla2	; działaj, dopóki ECX różne od 0
+koniec:
+
+	emms		; wyczyść rejestry MMX, by FPU mogło z nich korzystać</PRE>
+
+<P><a name="linux0602" id="linux0602">Podobnie będą przebiegać operacje</a> <code>PAND</code>,
+<code>POR</code>, <code>PXOR</code>, <code>PANDN</code>.</p>
+
+<P>Przy dużych ilościach danych, sposób drugi będzie wykonywał około 8 razy mniej instrukcji niż
+pierwszych, bo dodaje na raz 8 bajtów. I o to właśnie chodziło.
+</P>
+<hr>
+<P>Przykład 2. Kopiowanie pamięci.<BR>
+Bez MMX:</P>
+	<BR><a href="#linux0603" class="bezdruk">(przeskocz kopiowanie pamięci)</a>
+
+<PRE title="tradycyjne kopiowanie pamięci">
+; DS:ESI - źródło
+; ES:EDI - cel
+; ECX - liczba bajtów
+	mov ebx, ecx	; EBX = liczba bajtów
+	and ebx, 3	; EBX = reszta z dzielenia liczby bajtów przez 4
+	shr ecx, 2	; ECX = liczba bajtów dzielona przez 4
+
+	cld		; kierunek: do przodu
+	rep movsd	; dword z DS:ESI idzie pod ES:EDI, EDI:=EDI+4,
+			; ESI:=ESI+4, dopóki ECX jest różny od 0
+	mov ecx, ebx	; ECX = liczba pozostałych bajtów
+	rep movsb	; resztkę kopiujemy po bajcie</PRE>
+
+<hr>
+<P><a name="linux0603" id="linux0603">Z MMX</a>:</P>
+	<BR><a href="#linux0604" class="bezdruk">(przeskocz kopiowanie pamięci z MMX)</a>
+<PRE title="kopiowanie pamięci z MMX">
+		mov ebx, ecx	; EBX = liczba bajtów
+		and ebx, 7	; EBX = reszta z dzielenia liczby bajtów
+				; przez 8
+
+		shr ecx, 3	; ECX = liczba bajtów dzielona przez 8
+	petla:
+		movq mm0, [esi]	; MM0 = 8 bajtów z tablicy pierwszej
+		movq [edi], mm0	; kopiujemy zawartość MM0 pod [EDI]
+		add esi, 8	; zwiększamy indeksy tablic o 8
+		add edi, 8
+		loop petla	; działaj, dopóki ECX różne od 0
+
+		mov ecx, ebx	; ECX = liczba pozostałych bajtów
+		cld		; kierunek: do przodu
+		rep movsb	; resztkę kopiujemy po bajcie
+
+		emms		; wyczyść rejestry MMX</PRE>
+
+<P><a name="linux0604" id="linux0604">lub, dla solidniejszych porcji danych</a>:</P>
+	<BR><a href="#linux0605" class="bezdruk">(przeskocz kolejne kopiowanie pamięci)</a>
+<PRE title="kopiowanie dużych porcji danych">
+		mov ebx, ecx	; EBX = liczba bajtów
+		and ebx, 63	; EBX = reszta z dzielenia liczby bajtów
+				; przez 64
+		shr ecx, 6 	; ECX = liczba bajtów dzielona przez 64
+	petla:
+		; kopiuj 64 bajty spod [ESI] do rejestrów MM0, ... MM7
+		movq mm0, [esi]
+		movq mm1, [esi+8]
+		movq mm2, [esi+16]
+		movq mm3, [esi+24]
+		movq mm4, [esi+32]
+		movq mm5, [esi+40]
+		movq mm6, [esi+48]
+		movq mm7, [esi+56]
+
+		; kopiuj 64 bajty z rejestrów MM0, ... MM7 do [EDI]
+		movq [edi   ], mm0
+		movq [edi+8 ], mm1
+		movq [edi+16], mm2
+		movq [edi+24], mm3
+		movq [edi+32], mm4
+		movq [edi+40], mm5
+		movq [edi+48], mm6
+		movq [edi+56], mm7
+
+		add esi, 64	; zwiększ indeksy do tablic o 64
+		add edi, 64
+		loop petla	; działaj, dopóki ECX różne od 0
+
+		mov ecx, ebx	; ECX = liczba pozostałych bajtów
+		cld		; kierunek: do przodu
+		rep movsb	; resztkę kopiujemy po bajcie
+
+		emms		; wyczyść rejestry MMX</PRE>
+<BR>
+<hr>
+<P><a name="linux0605" id="linux0605">Przykład 3.</a> <q>Rozmnożenie</q> jednego bajtu na cały rejestr MMX.</P>
+	<BR><a href="#linux0606" class="bezdruk">(przeskocz rozmnażanie bajtu)</a>
+<PRE title="rozmnożenie bajtu na cały rejestr">
+; format ELF executable		; tylko dla FASMa
+; entry _start
+
+; FASM: segment readable executable
+section .text
+
+global _start			; FASM: usunąć tę linijkę
+
+_start:
+
+	movq mm0, [wart1]	; mm0 = 00 00 00 00 00 00 00 33
+				;  (33h = kod ASCII cyfry 3)
+
+	punpcklbw mm0, mm0	; do najmłodszego słowa włóż najmłodszy bajt
+				; mm0 i najmłodszy bajt mm0 (czyli ten sam)
+				; mm0 = 00 00 00 00 00 00 33 33
+
+	punpcklwd mm0, mm0	; do najmłodszego dworda włóż dwa razy
+				; najmłodsze słowo mm0
+				; mm0 = 00 00 00 00 33 33 33 33
+
+	punpckldq mm0, mm0	; do najmłodszego (i jedynego) qworda włóż 2x
+				; najmłodszy dword mm0 obok siebie
+				; mm0 = 33 33 33 33 33 33 33 33
+
+	movq [wart2], mm0
+
+	emms			; wyczyść rejestry MMX
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, wart2
+	mov	edx, 9		; wartość2 + znak nowej linii
+	int	80h		; wyświetl
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h
+
+; FASM: segment readable writeable
+section .data
+
+wart1:	db	&quot;3&quot;
+	times 7 db 0			; trójka i 7 bajtów zerowych
+
+wart2:	times	8	db	2	; 8 bajtów o wartości 2 != 33h
+
+nowa_linia	db	0ah</PRE>
+
+<P>
+<a name="linux0606" id="linux0606">Kompilujemy, uruchamiamy</a>
+ i ... rzeczywiście na ekranie pojawia się upragnione osiem trójek!</P>
+<P>
+Technologia MMX może być używana w wielu celach, ale jej najbardziej korzystną cechą jest właśnie
+równoległość wykonywanych czynności, dzięki czemu można oszczędzić czas procesora.
+</P>
+
+
+
+
+
+
+
+
+<BR><BR>
+<HR>
+<h2 class="nag">Technologia SSE</h2>
+<div class="c">Streaming SIMD Extensions (SSE), Pentium III lub lepszy oraz najnowsze procesory AMD</div>
+<div class="c">Streaming SIMD Extensions 2 (SSE 2), Pentium 4 lub lepszy oraz AMD64</div>
+<div class="c">Streaming SIMD Extensions 3 (SSE 3), Xeon lub lepszy oraz AMD64</div>
+
+<P>
+Krótko mówiąc, SSE jest dla MMX tym, czym FPU jest dla CPU. To znaczy, SSE przeprowadza
+równoległe operacje na liczbach ułamkowych.<BR>
+SSE operuje już na całkowicie osobnych rejestrach nazwanych xmm0, ..., xmm7 po 128 bitów każdy.
+W trybie 64-bitowym dostępne jest dodatkowych 8 rejestrów: xmm8, ..., xmm15.<BR>
+Prawie każda operacja związana z danymi w pamięci musi mieć te dane ustawione na 16-bajtowej
+granicy, czyli jej adres musi się dzielić przez 16. Inaczej generowane jest przerwanie (wyjątek).
+</P>
+<P>
+SSE 2 różni się od SSE kilkoma nowymi instrukcjami konwersji ułamek-liczba całkowita oraz tym,
+że może operować na liczbach ułamkowych rozszerzonej precyzji (64 bity).</P>
+<P>
+U AMD częściowo 3DNow! operuje na ułamkach, ale co najwyżej na dwóch gdyż są to rejestry
+odpowiadające MMX, a więc 64-bitowe. 3DNow! Pro jest odpowiednikiem SSE w procesorach AMD.
+Odpowiedniki SSE2 i SSE3 pojawiły się w AMD64.</P>
+
+<P>
+Instrukcje SSE (nie wszystkie będą wymienione):</P>
+<UL>
+  <LI>Przemieszczanie danych:
+   <UL>
+    <LI><code>MOVAPS</code> - <span lang="en">move aligned packed single precision floating point values</span>
+    	 - przemieść ułożone
+	(na granicy 16 bajtów) spakowane ułamki pojedynczej precyzji (4 sztuki po 32 bity)</LI>
+    <LI><code>MOVUPS</code> - <span lang="en">move unaligned</span> (nieułożone) <span lang="en">packed single
+     precision floating point values</span></LI>
+    <LI><code>MOVSS</code> - <span lang="en">move scalar</span> (1 sztuka, najmłodsze 32 bity rejestru)
+     <span lang="en">single precision floating point value</span></LI>
+   </UL><BR></LI>
+  <LI>Arytmetyczne:
+   <UL>
+    <LI><code>ADDPS</code> - <span lang="en">add packed single precision floating point values</span> =
+     dodawanie czterech ułamków do czterech</LI>
+    <LI><code>ADDSS</code> - <span lang="en">add scalar single precision floating point values</span> =
+     dodawanie jednego ułamka do innego</LI>
+    <LI><code>MULPS</code> - mnożenie spakowanych ułamków, równolegle, 4 pary</LI>
+    <LI><code>MULSS</code> - mnożenie jednego ułamka przez inny</LI>
+    <LI><code>DIVPS</code> - dzielenie spakowanych ułamków, równolegle, 4 pary</LI>
+    <LI><code>DIVSS</code> - dzielenie jednego ułamka przez inny</LI>
+    <LI>obliczanie odwrotności ułamków, ich pierwiastków, odwrotności pierwiastków, znajdowanie
+	wartości największej i najmniejszej</LI>
+   </UL><BR></LI>
+  <LI>Logiczne:
+   <UL>
+    <LI><code>ANDPS</code> - logiczne AND spakowanych wartości (ale oczywiście tym bardziej zadziała
+	dla jednego ułamka w rejestrze)</LI>
+    <LI><code>ANDNPS</code> - AND NOT (najpierw bitowe NOT pierwszego rejestru, potem jego bitowe AND z
+    	 drugim rejestrem) dla spakowanych</LI>
+    <LI><code>ORPS</code> - OR dla spakowanych</LI>
+    <LI><code>XORPS</code> - XOR dla spakowanych</LI>
+   </UL><BR></LI>
+  <LI>Instrukcje porównania: <code>CMPPS</code>, <code>CMPSS</code>, <code>(U)COMISS</code></LI>
+  <LI>Instrukcje tasowania i rozpakowywania. Podobne działanie jak odpowiadające instrukcje MMX.
+   </LI>
+  <LI>Instrukcje konwersji z ułamków na liczby całkowite i na odwrót.</LI>
+  <LI>Instrukcje operujące na liczbach całkowitych 64-bitowych (lub 128-bitowych w SSE 2)</LI>
+</UL>
+<P>W większości przypadków instrukcje dodane w SSE 2 różnią się od powyższych ostatnią literą, którą
+jest D, co oznacza <q lang="en">double precision</q>, na przykład <code>MOVAPD</code>.
+</P>
+<Hr>
+<P>No i krótki przykładzik. Inna wersja procedury do kopiowania pamięci. Tym razem z SSE.</P>
+	<BR><a href="#linux0607" class="bezdruk">(przeskocz kopiowanie pamięci z SSE)</a>
+<PRE title="kopiowanie pamięci z SSE">
+; Tylko jeśli ESI i EDI dzieli się przez 16! Inaczej używać MOVUPS.
+		mov ebx, ecx	; EBX = liczba bajtów
+		and ebx, 127	; EBX = reszta z dzielenia liczby bajtów
+				; przez 128
+		shr ecx, 7	; ECX = liczba bajtów dzielona przez 128
+	petla:
+		; kopiuj 128 bajtów spod [ESI] do rejestrów XMM0, ... XMM7
+		movaps xmm0, [esi]
+		movaps xmm1, [esi+16]
+		movaps xmm2, [esi+32]
+		movaps xmm3, [esi+48]
+		movaps xmm4, [esi+64]
+		movaps xmm5, [esi+80]
+		movaps xmm6, [esi+96]
+		movaps xmm7, [esi+112]
+
+		; kopiuj 128 bajtów z rejestrów XMM0, ... XMM7 do [EDI]
+		movaps [edi    ], xmm0
+		movaps [edi+16 ], xmm1
+		movaps [edi+32 ], xmm2
+		movaps [edi+48 ], xmm3
+		movaps [edi+64 ], xmm4
+		movaps [edi+80 ], xmm5
+		movaps [edi+96 ], xmm6
+		movaps [edi+112], xmm7
+
+		add esi, 128	; zwiększ indeksy do tablic o 128
+		add edi, 128
+		loop petla	; działaj, dopóki ECX różne od 0
+
+		mov ecx, ebx	; ECX = liczba pozostałych bajtów
+		cld		; kierunek: do przodu
+		rep movsb	; resztkę kopiujemy po bajcie</PRE>
+
+<P><a name="linux0607" id="linux0607">Nie jest to ideał, przyznaję</a>. Można było na przykład użyć instrukcji
+ wspierających pobieranie danych z pamięci: <code><span lang="en">PREFETCH</span></code>.
+</P>
+<hr>
+<P>A teraz coś innego: rozdzielanie danych. Przypuśćmy, że z jakiegoś urządzenia (lub pliku)
+czytamy bajty w postaci XYXYXYXYXY..., a my chcemy je rozdzielić na dwie tablice, zawierające tylko
+XXX... i YYY... (oczywiście bajty mogą mieć różne wartości, ale idea jest taka, że co drugi
+chcemy mieć w drugiej tablicy). Oto, jak można tego dokonać z użyciem SSE2.
+ <em class="wazne">To jest tylko fragment programu</em>.</P>
+	<BR><a href="#linux0608" class="bezdruk">(przeskocz rozdzielanie bajtów)</a>
+<PRE>
+	mov	eax, 4			; funkcja zapisu do pliku
+	mov	ebx, 1			; na stdout (ekran)
+	mov	ecx, dane_pocz
+	mov	edx, dane_pocz_dl
+	int	80h
+
+	mov	eax, 4			; funkcja zapisu do pliku
+	mov	ebx, 1			; na stdout (ekran)
+	mov	ecx, dane
+	mov	edx, dane_dl
+	int	80h			; wypisz dane początkowe
+
+
+; FASM: "movaps		xmm0, dqword [dane]"
+	movaps		xmm0, [dane]
+	movaps		xmm1, xmm0
+		; XMM1=XMM0 = X1Y1 X2Y2 X3Y3 X4Y4 X5Y5 X6Y6 X7Y7 X8Y8
+
+		; XXM* muszą zawierać tylko po jednym bajcie w każdym słowie
+	psllw		xmm0, 8
+		; XMM0 = Y1 0 Y2 0 Y3 0 Y4 0 Y5 0 Y6 0 Y7 0 Y8 0
+	psrlw		xmm0, 8
+		; XMM0 = 0 Y1 0 Y2 0 Y3 0 Y4 0 Y5 0 Y6 0 Y7 0 Y8
+	psrlw		xmm1, 8
+		; XMM1 = 0 X1 0 X2 0 X3 0 X4 0 X5 0 X6 0 X7 0 X8
+
+	packuswb	xmm0, xmm0
+		; XMM0 = Y1Y2 Y3Y4 Y5Y6 Y7Y8 Y1Y2 Y3Y4 Y5Y6 Y7Y8
+
+	packuswb	xmm1, xmm1
+		; XMM1 = X1X2 X3X4 X5X6 X7X8 X1X2 X3X4 X5X6 X7X8
+
+
+; FASM: "movq	qword [dane2], xmm0"
+	movq	[dane2], xmm0	; dane2 ani dane1 już nie mają adresu
+				; podzielnego przez 16,
+				; więc nie można użyć MOVAPS
+				; a my i tak chcemy tylko 8 bajtów
+; FASM: "movq	qword [dane1], xmm1"
+	movq	[dane1], xmm1
+
+	mov	eax, 4			; funkcja zapisu do pliku
+	mov	ebx, 1			; na stdout (ekran)
+	mov	ecx, dane_kon
+	mov	edx, dane_kon_dl
+	int	80h
+
+	mov	eax, 4			; funkcja zapisu do pliku
+	mov	ebx, 1			; na stdout (ekran)
+	mov	ecx, dane1
+	mov	edx, dane1_dl
+	int	80h			; wypisz pierwsze dane końcowe
+
+	mov	eax, 4			; funkcja zapisu do pliku
+	mov	ebx, 1			; na stdout (ekran)
+	mov	ecx, dane2
+	mov	edx, dane2_dl
+	int	80h			; wypisz drugie dane końcowe
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h
+
+
+
+section .data
+	; FASM: segment readable writeable
+
+align	16			; dla SSE
+
+dane		db	&quot;ABCDEFGHIJKLMNOP&quot;, 10
+	; FASM: "=" zamiast "equ"
+dane_dl		equ	$ - dane
+
+dane1		db	0, 0, 0, 0, 0, 0, 0, 0, 10, 9
+	; FASM: "=" zamiast "equ"
+dane1_dl	equ	$ - dane1
+
+dane2		db	0, 0, 0, 0, 0, 0, 0, 0, 10
+	; FASM: "=" zamiast "equ"
+dane2_dl	equ	$ - dane2
+
+dane_pocz db &quot;Program demonstrujacy SSE. Dane na poczatku: &quot;, 10, 9
+	; FASM: "=" zamiast "equ"
+dane_pocz_dl	equ	$ - dane_pocz
+
+dane_kon	db	&quot;Dane na koncu: &quot;, 10, 9
+	; FASM: "=" zamiast "equ"
+dane_kon_dl	equ	$ - dane_kon</PRE>
+
+<BR>
+<Hr>
+<P>
+<a name="linux0608" id="linux0608">Po szczegółowy opis</a> wszystkich instrukcji odsyłam, jak zwykle do
+<A class="intel_link" href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html" hreflang="en">Intela</A>
+i <A class="amd_link" href="http://developer.amd.com/Resources/documentation/guides/Pages/default.aspx" hreflang="en">AMD</A>.
+
+</P>
+<P>
+Instrukcje typu SIMD wspomagają szybkie przetwarzanie multimediów: dźwięku, obrazu. Omówienie
+każdej instrukcji w detalu jest niemożliwe i niepotrzebne, gdyż szczegółowe opisy są zamieszczone
+w książkach Intela lub AMD.
+</P>
+Miłej zabawy.
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux05.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux07.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Z dwóch zmiennych typu qword wczytaj do dwóch dowolnych rejestrów MMX (które najlepiej od razu
+	skopiuj do innych), po czym wykonaj wszystkie możliwe dodawania i odejmowania. Wynik
+	każdego zapisz w oddzielnej zmiennej typu qword.<BR><BR></LI>
+ <LI>Wykonaj operacje logiczne OR, AND i XOR na 64 bitach na raz (wczytaj je do rejestru MMX,
+	wynik zapisz do pamięci).<BR><BR></LI>
+ <LI>Wczytajcie do rejestru MMX wartość szesnastkową 30 31 30 31 30 31 30 31, po czym
+	wykonajcie różne operacje rozpakowania i pakowania, zapiszcie i wyświetlcie wynik jak
+	każdy normalny ciąg znaków.<BR><BR></LI>
+ <LI>Wczytajcie do rejestrów XMM po 4 liczby ułamkowe dword, wykonajcie dodawania i odejmowania,
+	po czym sprawdźcie wynik koprocesorem.</LI>
+
+
+</OL>
+
+</BODY></HTML>

@@ -1,0 +1,726 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Rysowanie w trybie graficznym </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Rysowanie w trybie graficznym pod Linuksem">
+<META NAME="Keywords" CONTENT="asm, assembler, asembler, linux, rysowanie, svgalib, drawline, drawpixel, setcolor">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:57 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Rysowanie w trybie graficznym pod Linuksem</h1>
+
+<P>
+W Linuksie oczywiście nie można rysować bezpośrednio, czyli programować kartę graficzną lub zapisywać
+ do pamięci ekranu (dostępnej na przykład w DOSie pod segmentem A000h). Zamiast tego, większość roboty
+wykonają za nas
+biblioteki oraz moduły jądra, odpowiedzialne za urządzenia (jeśli programujemy na przykład
+<span lang="en">framebuffer</span>). W tym
+artykule wykorzystam możliwości biblioteki <span class="b">SVGAlib</span>, ze względu na prostotę
+jej opanowania, oraz z biblioteki Allegro ze względu na jej wieloplatformowość, łatwość
+używania i możliwość zapisania obrazów do pliku.
+</P>
+
+<Hr>
+<h2 class="nag">SVGAlib</h2>
+	<BR><a href="#svgalibmmap" class="bezdruk" tabindex="1">(przeskocz do SVGAlib z
+	mapowaniem pamięci)</a>
+
+<P>
+  Aby móc korzystać z SVGAlib, musicie zainstalować pakiety svgalib oraz svgalib-devel
+  lub po prostu samemu skompilować bibliotekę, jeśli pakiety nie są dostępne.</P>
+<P>
+Będziemy się zajmować dwoma trybami (ale nic nie stoi na przeszkodzie, aby skorzystać z dowolnego innego).
+ Będą to: tryb 320x200 w 256 kolorach i oczywiście tryb tekstowy (ten, do którego wrócimy
+ po zakończeniu programu). Do ustawienia bieżącego trybu służy funkcja
+ <span class="b">vga_<span lang="en">setmode</span></span>.
+ Przyjmuje ona jeden argument - numer trybu
+ (G320x200x256 = 5, TEXT = 0).</P>
+<P>
+Do zmiany bieżącego koloru służy funkcja <span class="b">vga_<span lang="en">setcolor</span></span>.
+ Jedynym jej argumentem jest numer koloru (na przykład
+ 1-niebieski, 2-zielony, 3-jasnoniebieski, 4-czerwony, 5-fioletowy, 6-brązowy, 7-biały).</P>
+<P>
+Do narysowania pojedynczego piksela służy funkcja <span class="b">vga_<span lang="en">drawpixel</span></span>.
+ Przyjmuje ona dwa argumenty. Od lewej
+ (ostatni wkładany na stos) są to: współrzędna X oraz współrzędna Y punktu do zapalenia.
+ Punkt o współrzędnych (0,0)
+ to lewy górny róg ekranu.
+</P>
+<P>Współrzędna X rośnie w prawo, a Y - w dół ekranu.
+</P>
+<P>
+Do narysowania linii służy funkcja <span class="b">vga_<span lang="en">drawline</span></span>.
+ Przyjmuje ona 4 argumenty. Od lewej
+ (ostatni wkładany na stos) są to: współrzędna X początku linii, współrzędna Y początku linii,
+ współrzędna X końca linii, współrzędna Y końca linii.</P>
+<P>
+Aby nasz rysunek był widoczny choć przez chwilę, skorzystamy z funkcji systemowej
+ <span class="b">sys_nano<span lang="en">sleep</span></span>, podając
+ jej adres struktury timespec mówiącej, jak długą przerwę chcemy.
+ Więcej szczegółów w innych artykułach oraz
+ w <A HREF="przer80h_4.html#0162">opisie przerwania int 80h</A>.</P>
+<P>
+Do działania programów pod X-ami potrzebne mogą być uprawnienia do pliku
+ <span class="b">/dev/console</span> a pod konsolą tekstową - do pliku <span class="b">/dev/mem</span>.</P>
+<P>
+Jak widać, teoria nie jest trudna, więc przejdźmy od razu do przykładowych programów.</P>
+<P>
+ Pierwszy z nich ma zaprezentować
+ rysowanie pojedynczego piksela oraz dowolnych linii. Zwróćcie uwagę na
+ <em class="wazne">sposób kompilacji</em>. Korzystamy z bibliotek
+ dostępnych dla programistów języka C, więc do łączenia programu w całość
+ najlepiej użyć GCC - zajmie się on
+ dołączeniem wszystkich niezbędnych bibliotek. A skoro używamy gcc, to funkcja
+ główna zamiast _start, <em class="wazne">musi się
+ nazywać main</em> - tak samo jak funkcja główna w programach napisanych w C.
+ I tak samo, zamiast funkcji wychodzenia
+ z programu, możemy użyć komendy RET, aby zamknąć program.
+</P>
+
+	<BR><a href="#graf_tut_linux01" class="bezdruk">(przeskocz program rysujący linie)</a>
+<PRE>
+; Program do rysowania linii dowolnej z wykorzystaniem SVGAlib
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+; nasm -O999 -f elf -o graf1.o graf1.asm
+; gcc -o graf1 graf1.o -lvga
+
+
+section .text
+global	main
+
+; reszta trybów dostępna w /usr/include/vga.h (wymagany svgalib-devel)
+%define TEXT 	     0
+%define G320x200x256 5
+
+; deklaracje funkcji zewnętrznych:
+
+extern	vga_setmode
+extern	vga_setcolor
+extern	vga_drawline
+extern	vga_drawpixel
+
+main:
+	push	dword G320x200x256
+	call	vga_setmode		; ustawiamy tryb graficzny:
+					; 320x200 w 256 kolorach
+	add	esp, 4			; zdejmujemy argument ze stosu
+
+	push	dword 5			; ustawiamy kolor (5=fioletowy)
+	call	vga_setcolor
+	add	esp, 4
+
+	push	dword 100		; współrzędna y punktu
+	push	dword 160		; współrzędna x punktu
+	call	vga_drawpixel		; rysujemy piksel
+	add	esp, 8
+
+	push	dword 6			; ustawiamy kolor (6=brązowy)
+	call	vga_setcolor
+	add	esp, 4
+
+	push	dword 160
+	push	dword 320
+	push	dword 0
+	push	dword 0
+	call	vga_drawline		; linia od lewego górnego
+					; narożnika do środka prawego boku
+	add	esp, 16
+
+	push	dword 7			; ustawiamy kolor (7=biały)
+	call	vga_setcolor
+	add	esp, 4
+
+	push	dword 10
+	push	dword 20
+	push	dword 110
+	push	dword 50
+	call	vga_drawline
+	add	esp, 16
+
+	mov	dword [t1+timespec.tv_nsec], 0
+	mov	dword [t1+timespec.tv_sec], 5		; czekaj 5 sekund
+
+	mov     eax, 162		; sys_nanosleep
+	mov     ebx, t1			; adres struktury mówiącej,
+					; ile chcemy czekać
+	mov     ecx, 0
+	int     80h			; robimy przerwę...
+
+	push	dword TEXT
+	call	vga_setmode		; ustawiamy tryb tekstowy 80x25
+	add	esp, 4
+
+	xor	eax, eax		; zerowy kod zakończenia (bez błędu)
+	ret				; powrót z funkcji main i
+					; zakończenie programu
+
+section .data
+
+
+struc timespec
+	.tv_sec:	resd 1
+	.tv_nsec:	resd 1
+endstruc
+
+t1 		istruc timespec</PRE>
+
+<P><a name="graf_tut_linux01" id="graf_tut_linux01">Drugi program rysuje okrąg</a>. Środek tego
+okręgu jest w środku ekranu, kolejne punkty (łącznie będzie ich 360)
+ obliczam następująco: współrzędna x = współrzędna x środka + r*cos(t),
+ y = y_środka + r*sin(t), po przerobieniu
+ kąta t na radiany. Do liczenia tych sinusów i kosinusów wykorzystuję FPU.</P>
+
+	<BR><a href="#svgalibmmap" class="bezdruk">(przeskocz program rysujący okrąg)</a>
+<PRE>
+; Program do rysowania okręgu z wykorzystaniem SVGAlib
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+; nasm -O999 -f elf -o kolo_linux.o kolo_linux.asm
+; gcc -o kolo_linux kolo_linux.o -lvga
+
+
+section .text
+global	main
+
+; reszta trybów dostępna w /usr/include/vga.h (wymagany svgalib-devel)
+%define TEXT 	     0
+%define G320x200x256 5
+
+extern	vga_setmode
+extern	vga_setcolor
+extern	vga_drawpixel
+
+main:
+	push	dword G320x200x256
+	call	vga_setmode		; ustawiamy tryb graficzny:
+					; 320x200 w 256 kolorach
+	add	esp, 4			; zdejmujemy argument ze stosu
+
+	push	dword 2			; ustawiamy kolor
+	call	vga_setcolor
+	add	esp, 4
+
+	mov	ebx, 360
+
+	finit				; poniżej będę zapisywał stan
+					; rejestrów FPU, od st0 do st7
+	fldpi				; pi
+	fild	word [sto80]		; 180, pi
+
+	fdivp	st1, st0		; pi/180
+
+	fld1				; 1, pi/180
+	fild	word [r]		; r, 1, pi/180
+	fldz				; kąt=0, r, 1, pi/180
+
+rysuj:
+	fld	st0			; kąt, kąt, r, 1, pi/180
+
+	fmul	st4			; kąt w radianach
+
+	fsin				; sin(kąt), kąt, r, 1, pi/180
+	fmul	st2			; sin(kąt)*r, kąt, r, 1, pi/180
+
+	fistp	dword [wys]		; kąt, r, 1, pi/180
+
+	fld	st0			; kąt, kąt, r, 1, pi/180
+	fmul	st4			; kąt w radianach
+	fcos				; cos(kąt), kąt, r, 1, pi/180
+	fmul	st2			; r*cos(kąt), kąt, r, 1, pi/180
+
+	fistp	dword [szer]		; kąt, r, 1, pi/180
+
+	mov	eax, [wys]
+	mov	edx, [szer]
+	add	eax, 100		; dodajemy współrzędną y środka
+	add	edx, 160		; dodajemy współrzędną x środka
+	push	eax			; umieszczamy współrzędne na stosie
+	push	edx
+	call	vga_drawpixel		; rysujemy piksel
+	add	esp, 8
+
+	fadd	st0, st2		; kąt = kąt + 1
+
+	dec	ebx
+	jnz	rysuj
+
+	mov	dword [t1+timespec.tv_nsec], 0
+	mov	dword [t1+timespec.tv_sec], 5		; 5 sekund
+
+	mov     eax, 162		; sys_nanosleep
+	mov     ebx, t1			; adres struktury mówiącej,
+					; ile chcemy czekać
+	mov     ecx, 0
+	int     80h			; robimy przerwę...
+
+	push	dword TEXT
+	call	vga_setmode		; ustawiamy tryb tekstowy 80x25
+	add	esp, 4
+
+	xor	eax, eax		; zerowy kod zakończenia (bez błędu)
+	ret				; powrót z funkcji main
+
+section .data
+
+
+struc timespec
+	.tv_sec:	resd 1
+	.tv_nsec:	resd 1
+endstruc
+
+t1 		istruc timespec
+
+r		dw	50		; promień okręgu
+szer		dd	0
+wys		dd	0
+sto80		dw	180</PRE>
+
+
+
+
+
+
+<Hr>
+<h2 class="nag"><a name="svgalibmmap" id="svgalibmmap">SVGAlib z mapowaniem pamięci</a></h2>
+	<BR><a href="#allegro" class="bezdruk" tabindex="1">(przeskocz do Allegro)</a>
+
+<P>
+  Aby móc korzystać z SVGAlib, musicie zainstalować pakiety svgalib oraz svgalib-devel
+  lub po prostu samemu skompilować bibliotekę, jeśli pakiety nie są dostępne.</P>
+<P>
+UWAGA: zmieni się sposób kompilacji programu w stosunku do tradycyjnych, asemblerowych programów.
+Korzystamy z bibliotek dostępnych dla programistów języka C, więc do łączenia programu
+w całość najlepiej użyć GCC - zajmie się on dołączeniem wszystkich niezbędnych bibliotek.
+A skoro używamy gcc, to funkcja główna zamiast _start, <em class="wazne">musi się
+nazywać main</em> - tak samo
+jak funkcja główna w programach napisanych w C. I tak samo, zamiast funkcji wychodzenia
+z programu, możemy użyć komendy RET, aby zamknąć program. Sama kompilacja przebiega
+następująco:</P>
+<pre>
+	nasm -O999 -f elf -o graf2.o graf2.asm
+	gcc -o graf2 graf2.o -lvga
+</pre>
+<P>
+Będziemy się zajmować dwoma trybami (ale nic nie stoi na przeszkodzie,
+ aby skorzystać z dowolnego innego).
+ Będą to: tryb 320x200 w 256 kolorach i oczywiście tryb tekstowy (ten, do którego wrócimy
+ po zakończeniu programu). Do ustawienia bieżącego trybu służy funkcja
+ <span class="b">vga_<span lang="en">setmode</span></span>.
+ Przyjmuje ona jeden argument - numer trybu
+ (G320x200x256 = 5, TEXT = 0).</P>
+<P>
+Przed rozpoczęciem pracy ustawiamy tryb graficzny 320x200, wykonując</P>
+<pre>
+	extern	vga_setmode
+		...
+		push	dword 5			; G320x200x256
+		call	vga_setmode		; ustawiamy tryb graficzny:
+						; 320x200 w 256 kolorach
+		add	esp, 4			; zdejmujemy argument ze stosu</pre>
+
+<P>Ale teraz zajmiemy się rysowaniem bez funkcji SVGAlib, poprzez zapis do odpowiednich
+komórek pamięci. Pamięć trybów graficznych znajduje się w segmencie A000, co odpowiada liniowemu
+adresowi A0000, licząc od adresu 0. Oczywiście system, ze względów bezpieczeństwa, nie
+pozwoli nam bezpośrednio pisać pod ten adres, więc musimy sobie poradzić w inny sposób.
+Sposób ten polega na otwarciu specjalnego pliku urządzenia, który symbolizuje całą pamięć
+w komputerze - <span class="b">/dev/mem</span>. Na większości systemów otwarcie tego pliku
+wymaga uprawnień administratora.</P>
+<P>Po otwarciu pliku mamy dwie możliwości. Pierwsza to
+poruszać się po nim funkcjami do zmiany pozycji w pliku, oraz odczytywać i zapisywać
+funkcjami odczytu i zapisu danych z i do pliku. Może to być powolne, ale sposób jest.
+Druga możliwość to zmapować plik do pamięci, po czym korzystać z niego jak ze zwykłej
+tablicy. Tę możliwość opiszę teraz szczegółowo.
+</P>
+<P>Otwieranie pliku odbywa się za pomocą tradycyjnego wywołania:</P>
+<pre>
+	mov	eax, 5		; sys_open
+	mov	ebx, pamiec	; adres nazwy pliku "/dev/mem", 0
+	mov	ecx, 2		; O_RDWR, zapis i odczyt
+	mov	edx, 666o	; pełne prawa
+	int	80h
+	...
+	pamiec		db	"/dev/mem", 0</pre>
+
+<P>Drugim krokiem jest zmapowanie naszego otwartego pliku do pamięci. Odbywa się to za
+pomocą funkcji systemowej <span class="b">sys_mmap2</span>. Przyjmuje ona 6 argumentów:</P>
+<ol>
+ <li>EBX = adres, pod jaki chcielibyśmy zmapować plik. Najlepiej podać zero, wtedy system sam
+ 	wybierze dogodny adres</li>
+ <li>ECX = długość mapowanego obszaru pliku, w bajtach. Podamy to 100000h, by na pewno
+ 	objąć obszar zaczynający się A0000 i długości 64000 bajtów (tyle, ile trzeba na jeden
+ 	ekran w trybie 320x200)</li>
+ <li>EDX = tryb dostępu do zmapowanej pamięci. Jeśli chcemy odczyt i zapis, podamy tutaj
+ 	PROT_READ=1 + PROT_WRITE=2</li>
+ <li>ESI = tryb współdzielenia zmapowanej pamięci. Podamy tu MAP_SHARED=1 (współdzielona,
+ 	nie prywatna)</li>
+ <li>EDI = deskryptor otwartego pliku, który chcemy zmapować</li>
+ <li>EBP = adres początkowy w pliku, od którego mapować. Adres ten jest podawany w
+ 	jednostkach strony systemowej, której wielkość może być różna na różnych systemach.
+ 	Najłatwiej podać tu zero, a do adresów dodawać potem A0000</li>
+</ol>
+<P>Po pomyślnym wykonaniu, system zwróci nam w EAX adres zmapowanego obszaru pamięci, którego
+możemy używać (w przypadku błędu otrzymujemy wartość od -4096 do -1 włącznie).
+Przykładowe wywołanie wygląda więc tak:</P>
+<pre>
+	mov	eax, 192		; sys_mmap2
+	xor	ebx, ebx		; jądro wybierze adres
+	mov	ecx, 100000h		; długość mapowanego obszaru
+	mov	edx, 3			; PROT_READ | PROT_WRITE, możliwość
+					; zapisu i odczytu
+	mov	esi, 1			; MAP_SHARED - tryb współdzielenia
+	mov	edi, [deskryptor]	; deskryptor pliku pamięci, otrzymany
+					; z sys_open w poprzednim kroku
+	mov	ebp, 0			; adres początkowy w pliku
+	int	80h
+</pre>
+<P>Teraz wystarczy już korzystać z otrzymanego wskaźnika, na przykład:</P>
+<pre>	mov	byte [eax+0a0000h], 7</pre>
+
+<P>Kolejne adresy w pamięci oznaczają kolejne piksele określonego wiersza. Po przekroczeniu
+320 bajtów, kolejny bajt oznacza pierwszy piksel kolejnego wiersza i tak dalej.
+</P>
+<P>Bajty zapisywane w pamięci (czyli kolory pikseli) mają takie same wartości, jak w tradycyjnym
+podejściu: 1-niebieski, 2-zielony, 3-jasnoniebieski, 4-czerwony, 5-fioletowy, 6-brązowy, 7-biały.
+</P>
+<P>Zmiany, które zapiszemy w pamięci, mogą jednak nie od razu pojawić się w pliku (czyli
+na ekranie w tym przypadku). Aby wymusić fizyczny zapis danych, korzysta się z funkcji
+<span class="b">sys_msync</span>. Przyjmuje ona 3 argumenty:</P>
+<ol>
+ <li>EBX = adres początku danych do synchronizacji</li>
+ <li>ECX = liczba bajtów do zsynchronizowania</li>
+ <LI>EDX = 0 lub zORowane flagi: MS_ASYNC=1 (wykonaj asynchronicznie), MS_INVALIDATE=2
+ 	(unieważnij obszar po zapisaniu), MS_SYNC (wykonaj synchronicznie)</li>
+</ol>
+<P>Przykładowe wywołanie wygląda więc tak:</P>
+<pre>
+	mov	eax, 144		; sys_msync
+	mov	ebx, 0a0000h		; adres startowy
+	mov	ecx, 4000		; ile zsynchronizować
+	mov	edx, 0			; flagi
+	int	80h</pre>
+
+<P>Po zakończeniu pracy należy przywrócić tryb tekstowy:</P>
+<pre>
+	push	dword 0			; TEXT
+	call	vga_setmode		; ustawiamy tryb tekstowy 80x25
+	add	esp, 4</pre>
+
+<P>oraz odmapować plik:</P>
+<pre>
+	mov	eax, 91			; sys_munmap
+	mov	ebx, [wskaznik]		; wskaźnik otrzymany z sys_mmap2
+	mov	ecx, 100000h		; liczba bajtów
+	int	80h</pre>
+
+<P>i zamknąć go:</P>
+<pre>
+	mov	eax, 6			; sys_close
+	mov	ebx, [deskryptor]	; deskryptor pliku "/dev/mem"
+	int	80h</pre>
+
+<P>Jeśli Wasza grafika ma często się zmieniać (na przykład jest to animacja), to pisanie
+bezpośrednio do zmapowanej pamięci
+(lub pamięci wideo, jeśli macie dostęp) może być zbyt powolne, by efekty graficzne były
+zadowalające. Ale można to obejść na dwa sposoby: uruchamiać <span class="b">sys_msync</span>
+dopiero po zapełnieniu całego ekranu lub cały ekran najpierw zbudować sobie w osobnym
+buforze, po czym jednym ruchem wrzucić cały ten bufor do zmapowanej pamięci czy pamięci
+wideo.
+</P>
+<P>
+Jak widać, mapowanie plików do pamięci jest wygodne, gdyż nie trzeba ciągle skakać po pliku
+funkcją <span class="b">sys_lseek</span> i wykonywać kosztownych czasowo wywołań innych funkcji
+systemowych. Warto więc się z tym zaznajomić. Należy jednak pamiętać, że nie wszystkie
+pliki czy urządzenia dają się zmapować do pamięci - nie należy wtedy zamykać swojego
+programu z błędem, lecz korzystać z tradycyjnego interfejsu funkcji plikowych.
+</P>
+
+
+
+
+
+<br>
+<Hr>
+<h2 class="nag"><a name="allegro" id="allegro">Allegro</a></h2>
+
+<P>
+Biblioteka <acronym lang="en" title="Allegro Low-LEvel Game ROutines">Allegro</acronym>
+powinna na większości systemów być dostępna jako gotowy pakiet, ale w razie czego
+można ją pobrać na przykład ze strony <a href="http://alleg.sourceforge.net"
+hreflang="pl">alleg.sf.net</a>.
+</P>
+<P>Pierwszymi funkcjami, jakie w ogóle należy uruchomić przez rozpoczęciem czegokolwiek są
+<span class="b" lang="en">install_allegro</span> (w języku C - allegro_init)
+ i <span class="b" lang="en">install_keyboard</span>.</P>
+<P>
+Pierwsza służy do inicjalizacji biblioteki. Jako parametry oczekuje: liczbę SYSTEM_AUTODETECT=0,
+adres zmiennej do przechowywania błędów (ale uwaga, próba deklaracji i użycia
+<span class="b" lang="en">errno</span> w naszym programie może skończyć się błędem linkera,
+więc lepiej podać adres jakiegoś naszego własnego DWORDa) oraz wskaźnika na elementy
+uruchamiane przy wyjściu (u nas wpiszemy NULL). Druga funkcja nie przyjmuje żadnych argumentów,
+a służy do
+instalacji funkcji odpowiedzialnych za działanie klawiatury. Allegro samo zajmuje się klawiaturą,
+więc standardowe funkcje czytania z klawiatury mogą nie działać. Do czytania klawiszy
+służy funkcja <span class="b" lang="en">readkey</span>. Nie przyjmuje ona żadnych argumentów,
+a zwraca wartość przeczytanego klawisza.
+</P>
+<P>
+Biblioteka pozwala na ustawienie wielu rozdzielczości, my zajmiemy się rozdzielczością
+640x480 w 8-bitowej głębi kolorów. Do ustawienia głębi kolorów służy funkcja
+<span class="b" lang="en">set_color_depth</span> przyjmująca jeden argument - wartość
+owej głębi, czyli w naszym przypadku 8.</P>
+<P>
+Po inicjalizacji biblioteki, instalacji klawiatury i ustawieniu głębi kolorów można
+przystąpić do ustawienia trybu graficznego. Robi się to za pomocą funkcji
+<span class="b" lang="en">set_gfx_mode</span>. Przyjmuje ona 5 argumentów: sterownik
+(u nas będziemy korzystać z autowykrywania, wpisując tu liczbę GFX_AUTODETECT=0),
+szerokość żądanego trybu w pikselach, wysokość trybu, szerokość okna widoku i
+wysokość okna widoku. U nas oknem widoku będzie cały ekran, więc ostatnie dwa
+parametry przyjmą wartość zero, a całe wywołanie (w języku C) będzie miało postać:
+</P>
+<pre>		set_gfx_mode ( GFX_AUTODETECT, 640, 480, 0, 0 );</pre>
+<P>
+Jeśli ustawienie rozdzielczości się nie powiedzie, wywołanie funkcji zwróci wartość niezerową.
+</P>
+<P>
+Po skończeniu pracy z Allegro należy wywołać funkcję <span class="b" lang="en">allegro_exit</span>
+w celu zamknięcia i odinstalowania biblioteki z programu. Funkcja ta nie przyjmuje
+żadnych argumentów.
+</P>
+<P>
+Aby ustawić domyślną paletę kolorów, wywołujemy funkcję
+<span class="b" lang="en">set_palette</span>. Jako jej jedyny parametr podajemy zewnętrzną
+(pochodzącą z Allegro) zmienną <span class="b" lang="en">default_palette</span>.
+</P>
+<P>
+Do czyszczenia ekranu (a właściwie wypełnienia go określonym kolorem) służy funkcja
+<span class="b" lang="en">clear_to_color</span>. Jej pierwszy parametr mówi, co ma zostać
+wyczyszczone - u nas chcemy wyczyścić cały ekran, więc będzie to zmienna z Allegro o
+nazwie <span class="b" lang="en">screen</span>. Drugi parametr tej funkcji to kolor,
+jakim chcemy wypełnić ekran. Zero oznacza czarny.
+</P>
+<P>
+Do wyświetlania tekstu na ekranie w trybie tekstowym służy funkcja
+<span class="b" lang="en">allegro_message</span>. Jej jedyny argument to tekst do wyświetlenia.
+Aby wyświetlić tekst w trybie graficznym, najpierw należy podjąć decyzję, czy tekst
+ma być na tle, czy tło ma go przykryć. Jeśli tło ma być pod tekstem, należy jednorazowo wywołać
+<span class="b" lang="en">text_mode</span>, jako parametr podając liczbę -1 (minus jeden).
+Potem można już wyświetlać tekst funkcją <span class="b" lang="en">textout</span>. Przyjmuje
+ona 5 argumentów: gdzie wyświetlić (u nas znów <span lang="en">screen</span>), jaką czcionką
+(skorzystamy z domyślnej czcionki w zmiennej Allegro o nazwie <span class="b" lang="en">font</span>),
+co wyświetlić (adres naszego napisu), współrzędna X, współrzędna Y oraz żądany kolor.
+</P>
+<P>
+Współrzędna X rośnie w prawo, a Y - w dół ekranu.</P>
+<P>
+Ale przejdźmy wreszcie do wyświetlania podstawowych elementów.<br>
+Linię wyświetla się funkcją <span class="b" lang="en">line</span>, przyjmującą 6
+argumentów: gdzie wyświetlić (tak, znowu <span lang="en">screen</span>), współrzędna X
+początku, współrzędna Y początku, współrzędna X końca, współrzędna Y końca, kolor.<br>
+Kolor, jak w każdej innej funkcji, możemy podawać ręcznie jako liczbę, ale możemy też
+uruchomić funkcję <span class="b" lang="en">makecol</span>, podając jej wartości od 0
+do 255 kolejno dla kolorów: czerwonego, zielonego, niebieskiego, a wynik tej funkcji
+podajemy tam, gdzie podalibyśmy kolor.<br>
+Okręgi wyświetla się funkcją <span class="b" lang="en">circle</span>, przyjmującą
+5 argumentów: gdzie wyświetlić (i znowu <span lang="en">screen</span>), współrzędna X
+środka, współrzędna Y środka, promień i kolor.
+</P>
+<P>
+Po omówieniu tego, co ma być w programie jeszcze dwa słowa o tworzeniu programu.
+O ile kompilacja pliku w asemblerze jest taka jak zawsze, to linkowanie najlepiej
+przeprowadzić za pomocą GCC. Normalnie naszą funkcję główna nazwalibyśmy <span lang="en">main</span>,
+ale Allegro posiada własną funkcję <span lang="en">main</span>, a oczekuje, że nasza
+funkcja główna będzie sie nazywać <span lang="en">_mangled_main</span> (z podkreśleniem
+z przodu). Ponadto, Allegro oczekuje, że zadeklarujemy zmienną globalną
+<span lang="en">_mangled_main_address</span> i wpiszemy do niej adres
+<span lang="en">_mangled_main</span>. W języku C robi to za nas makro
+<span lang="en">END_OF_MAIN</span>.
+</P>
+<P>
+Niektóre wersje biblioteki Allegro mogą od nas jednak
+wymagać, abyśmy to my mieli funkcję <span lang="en">main</span> - jeśli
+w czasie linkowania wystąpi błąd, to wystarczy
+włączyć dwie odpowiednio oznaczone linijki w poniższym programie.
+</P>
+<P>Program linkuje się następującą komendą:</P>
+<pre>		gcc -o program program.o `allegro-config --libs`</pre>
+<P>
+Zwróćcie uwagę na odwrotne apostrofy. Sprawią one, że wynik zawartej w nich komendy
+(a więc niezbędne biblioteki) zostanie przekazany do GCC, dzięki czemu znajdzie on
+wszystko, co potrzeba.
+</P>
+<P>
+A oto przykładowy program. Wyświetla on tekst, linię i okrąg, po czym czeka na naciśnięcie
+jakiegokolwiek klawisza. Po naciśnięciu klawisza biblioteka Allegro jest zamykana i program
+się kończy.</P>
+	<BR><a href="#graf_koniec" class="bezdruk">(przeskocz przykładowy program Allegro)</a>
+<pre>
+; Program demonstracyjny biblioteki Allegro
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+; nasm -O999 -f elf -o graf2.o graf2.asm
+; gcc -o graf2 graf2.o `allegro-config --libs`
+
+section .text
+; wymagane przez Allegro:
+;global main		; TO WŁĄCZYĆ, JEŚLI ALLEGRO WYMAGA FUNKCJI MAIN
+global _mangled_main
+global _mangled_main_address
+
+; deklaracje elementów zewnętrznych:
+extern	install_allegro
+extern	install_keyboard
+extern	set_color_depth
+extern	set_gfx_mode
+extern	allegro_exit
+extern	text_mode
+extern	set_palette
+extern	default_palette
+extern	clear_to_color
+extern	screen
+extern	textout
+extern	font
+extern	line
+extern	makecol
+extern	circle
+extern	readkey
+
+%define GFX_AUTODETECT 0		; autowykrywanie sterownika
+
+;main:			; TO WŁĄCZYĆ, JEŚLI ALLEGRO WYMAGA FUNKCJI MAIN
+_mangled_main:
+	; inicjalizacja biblioteki:
+	push	dword 0
+	push	err			; nasza zmienna do błędów
+	push	dword 0
+	call	install_allegro
+	add	esp, 3*4		; zdjęcie parametrów ze stosu
+
+	; instalacja klawiatury
+	call	install_keyboard
+
+	; ustawienie głębi kolorów:
+	push	dword 8
+	call	set_color_depth
+	add	esp, 1*4		; zdjęcie parametrów ze stosu
+
+	; ustawienie rozdzielczości:
+	push	dword 0			; wysokość okna
+	push	dword 0			; szerokość okna
+	push	dword 480		; wysokość całego trybu
+	push	dword 640		; szerokość całego trybu
+	push	dword GFX_AUTODETECT
+	call	set_gfx_mode
+	add	esp, 5*4
+
+	; sprawdź, czy się udało
+	cmp	eax, 0
+	jne	koniec
+
+	; ustaw tło pod tekstem
+	push	dword -1
+	call	text_mode
+	add	esp, 1*4
+
+	; ustaw domyślną paletę
+	push	dword default_palette
+	call	set_palette
+	add	esp, 1*4
+
+	; wyczyść ekran
+	push	dword 0			; czyść na czarno
+	push	dword [screen]		; co czyścić
+	call	clear_to_color
+	add	esp, 2*4
+
+	; wyświetl napis
+	push	dword 15		; kolor
+	push	dword 10		; współrzędna Y
+	push	dword 10		; współrzędna X
+	push	dword napis		; napis do wyświetlenia
+	push	dword [font]		; czcionka
+	push	dword [screen]		; gdzie wyświetlić
+	call	textout
+	add	esp, 6*4
+
+	; stwórz kolor biały do narysowania linii
+	push	dword 255		; składowa niebieska
+	push	dword 255		; składowa zielona
+	push	dword 255		; składowa czerwona
+	call	makecol
+	add	esp, 3*4
+
+	; narysuj linię
+	push	eax			; kolor
+	push	dword 240		; współrzędna Y końca
+	push	dword 320		; współrzędna X końca
+	push	dword 400		; współrzędna Y początku
+	push	dword 540		; współrzędna X początku
+	push	dword [screen]
+	call	line
+	add	esp, 6*4
+
+	; stwórz kolor zielony do narysowania koła
+	push	dword 0
+	push	dword 255
+	push	dword 0
+	call	makecol
+	add	esp, 3*4
+
+	; narysuj koło
+	push	eax			; kolor
+	push	dword 20		; promień
+	push	dword 240		; współrzędna Y środka
+	push	dword 320		; współrzędna X środka
+	push	dword [screen]
+	call	circle
+	add	esp, 5*4
+
+	; czekaj na klawisz
+	call	readkey
+
+koniec:
+	; zamknij Allegro
+	call	allegro_exit
+	; powróć z naszej funkcji głównej
+	ret
+
+section .data
+napis			db	"Allegro", 0	; napis do wyświetlenia
+_mangled_main_address	dd	_mangled_main	; wymagane
+err			dd	0		; nasza zmienna błędów</pre>
+
+<P>Jak widać, biblioteka Allegro jest tylko trochę trudniejsza od SVGAlib, ale jej możliwości są
+znacznie większe. Tutaj pokazałem tylko ułamek grafiki dwuwymiarowej. Allegro
+potrafi też wyświetlać grafikę trójwymiarową, wyliczać transformacje, zapisywać
+wyświetlane obrazy do pliku oraz odtwarzać muzykę (w końcu to jest biblioteka do gier,
+nie tylko graficzna). Jak widzicie, jest jeszcze wiele możliwości przed Wami do odkrycia.
+Miłej zabawy!</P>
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm" name="graf_koniec" id="graf_koniec">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

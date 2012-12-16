@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="asm.css" type="text/css">
+
+<TITLE> Wstęp do kursu języka asembler </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="index.htm">
+<link rel="Contents" hreflang="pl" lang="en" href="index.htm">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler - wstęp">
+<META NAME="Keywords" CONTENT="kurs, asm, assembler, asembler, wstęp, przewagi">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 18:00:01 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler?<BR>
+	<h1 class="nag">Wstęp</h1></div>
+<br>
+
+<P>
+Pewnie wiele osób spośród Was słyszało już o tym, <q>jaki ten asembler jest straszny</q>. Ale te
+opinie możecie już śmiało wyrzucić do Kosza (użytkownicy Linuksa mogą skorzystać z /dev/null),
+gdyż przyszła pora na przeczytanie tego oto dokumentu.
+</P>
+<HR>
+<P>
+Na początek, przyjrzyjmy się niewątpliwym zaletom języka asembler:
+<BR><a href="#wstep01" tabindex="1" class="bezdruk">(przeskocz zalety)</a>
+
+<OL>
+ <LI>Mały rozmiar kodu.<BR>
+   Tego nie przebije żaden kompilator żadnego innego języka. Dlaczego? Oto kilka powodów:
+  <UL>
+   <LI>Jako programista języka asembler (<q>asma</q>) wiesz co i gdzie w danej chwili się
+     znajduje. Nie musisz ciągle przeładowywać zmiennych, co zabiera i miejsce, i czas.
+     Możesz eliminować instrukcje, które są po prostu zbędne.
+     <BR><BR></LI>
+   <LI>Do Twojego pięknego kodu nie są dołączane żadne biblioteki z dziesiątkami procedur,
+     podczas gdy Ty używasz tylko jednej z nich. Co za marnotrawstwo!
+     <BR><BR></LI>
+   <LI>Jako znawca zestawu instrukcji wiesz, które z nich są krótsze.</LI>
+  </UL>
+  <BR><BR></LI>
+
+ <LI>Duża szybkość działania.<BR>
+   Znając sztuczki optymalizacyjne, wiedząc, które instrukcje są szybsze, eliminując zbędne
+   instrukcje z pętli, otrzymujesz kod nierzadko dziesiątki razy szybszy od tych napisanych
+   w językach wysokiego poziomu (<span lang="en">high-level languages, HLLs</span>).
+   Nieprzebijalne.
+   <BR><BR></LI>
+
+ <LI>Wiedza.<BR>
+   Nawet jeśli nie piszesz dużo programów w asmie, zdobywasz wprost bezcenną wiedzę o tym, jak
+   naprawdę działa komputer i możesz zobaczyć, jak marną czasem robotę wykonują kompilatory
+   HLL-ów. Zrozumiesz, czym jest wskaźnik i na czym polegają często popełniane błędy z nim związane.
+   <BR><BR></LI>
+
+ <LI>Możliwość tworzenia zmiennych o dużych rozmiarach, a nie ograniczonych do 4 czy 8 bajtów.
+   W asemblerze zmienne mogą mieć dowolną liczbę bajtów.
+   <BR><BR></LI>
+
+ <LI>Wstawki asemblerowe.<BR>
+   Jeśli mimo to nie chcesz porzucić swojego ulubionego dotąd HLLa, to w niektórych językach
+   istnieje możliwość wstawiania kodu napisanego w asemblerze wprost do Twoich programów!
+   <BR><BR></LI>
+
+</OL>
+
+<a name="wstep01" id="wstep01">Teraz przyszła kolej na</a> &nbsp; &nbsp; rzekome &nbsp; &nbsp;
+ argumenty przeciwko językowi asembler:
+<BR><a href="#wstep02" class="bezdruk">(przeskocz wady)</a>
+
+<OL>
+ <LI>Nieprzenośność kodu między różnymi maszynami.<BR>
+   No cóż, prawda. Ale i tak większość tego, co napisane dla procesorów Intela będzie
+   działało na procesorach AMD i innych zgodnych z x86. I na odwrót.<BR>
+   Nieprzenośność jest chyba najczęściej używanym argumentem przeciwko asemblerowi.
+   Jest on zwykle stawiany
+   przez programistów języka C, którzy po <q>udowodnieniu</q>, jaki to język C jest wspaniały,
+   wracają do pisania dokładnie w takim samym stopniu nie-przenośnych programów...<BR>
+   Nie ukrywajmy: bez zmian kodu to tylko programy niewiele przewyższające <q>Witaj, świecie</q>
+   skompilują się i uruchomią pod różnymi systemami.
+   <BR><BR></LI>
+
+ <LI><q>A nowoczesne kompilatory i tak produkują najlepszy kod...</q><BR><BR>
+   Nieprawda, i to z kilku powodów:<BR><BR>
+  <UL>
+   <LI>Kompilator używa zmiennych. No i co z tego, pytacie? A to, że pamięć RAM (o dyskach itp.
+     nie wspominając) jest wiele, wiele razy wolniejsza niż pamięć procesora (czyli
+     rejestry). Nawet pamięć podręczna (cache) jest sporo wolniejsza.
+     <BR><BR></LI>
+   <LI>Kompilator nie wie, co się znajduje na przykład w danym rejestrze procesora, więc pewnie wpisze
+     tam tę samą wartość. Co innego z programistą asma.
+     <BR><BR></LI>
+   <LI>Kompilator nie jest w stanie przewidzieć, co będzie w danej chwili w innych rejestrach.
+     Więc do rejestru, który chce zmienić i tak wpisze jakąś wartość zamiast użyć innego
+     rejestru, co prawie zawsze byłoby szybsze, a więc i lepsze.
+     Co innego zrobiłby programista asma.
+     <BR><BR></LI>
+   <LI>Kompilator może używać dłuższych lub wolniejszych instrukcji.
+   <BR><BR></LI>
+   <LI>Kompilator nie zawsze może poprzestawiać instrukcje, aby uzyskać lepszy kod. Programista
+     asma widzi, co się w jego kodzie dzieje i może wybrać inne, lepsze rozwiązanie (na przykład
+     zmniejszyć rozmiary pętli czy pozbyć się zależności między instrukcjami)
+     <BR><BR></LI>
+   <LI>Kompilator może nie być świadomy technologii zawartych w procesorze. Programista asma wie,
+     jaki ma procesor i za darmo ściąga do niego pełną dokumentację.
+     <BR><BR></LI>
+
+  </UL>
+  <BR><BR></LI>
+
+ <LI>Brak bibliotek standardowych.<BR>
+   I znowu nieprawda. Istnieje co najmniej kilka takich. Zawierają procedury wejścia, wyjścia,
+   alokacji pamięci i wiele, wiele innych.
+   Nawet sam taką jedną bibliotekę napisałem...
+   <BR><BR></LI>
+
+ <LI><q>Kod wygląda dziwniej. Jest bardziej abstrakcyjny.</q><BR>
+   Dziwniej - tak, ale nie oszukujmy się. To właśnie języki wysokiego poziomu są abstrakcyjne!
+   Asembler przecież
+   operuje na tym, co fizycznie istnieje w procesorze - na jego własnych rejestrach przy użyciu
+   jego własnych instrukcji.
+   <BR><BR></LI>
+
+ <LI>Mniejsza czytelność kodu.<BR>
+   Kod w języku C można tak napisać, że nie zrozumie go nawet sam autor. Kod w asmie można tak
+   napisać, że każdy go zrozumie. Wystarczy kilka słów wstępu i komentarze. W HLLach trzeba
+   byłoby wszystkie struktury objaśniać.<BR>
+   A wygląd i czytelność kodu zależą tylko od tego, czy dany programista jest dobry, czy nie.<BR>
+   Dobry programista asemblera nie będzie miał większych kłopotów z odczytaniem kodu w asmie niż
+   dobry programista C kodu napisanego w C.
+   <BR><BR></LI>
+
+ <LI>Brak łatwych do zrozumienia instrukcji sterujących (if, while, ...)<BR>
+   Przecież w procesorze nie ma nic takiego!<BR>
+   Programista asma ma 2 wyjścia: albo używać prawdziwych instrukcji albo napisać własne makra,
+   które takie instrukcje będą udawać (już są takie napisane). Ale nie ma nic uniwersalnego.
+   Na jedną okazję można użyć takich instrukcji, a na inną - innych. Jednak zawsze można wybrać
+   najszybszą wersję według własnego zdania, a nie według zdania kompilatora.<BR>
+   Asembler może i nie jest z początku łatwy do zrozumienia, ale wszystko przyjdzie wraz
+   z doświadczeniem.
+   <BR><BR></LI>
+
+ <LI>Trzeba pisać dużo kodu.<BR>
+   No, tak. Jak się komuś męczą palce, to niech zostanie przy HLLach i żyje w świecie abstrakcji.
+   Prawdziwym programistom nie będzie przecież takie coś przeszkadzać!<BR>
+   Mówi się, że ZŁEJ baletnicy nawet rąbek u sukni przeszkadza.<BR>
+   Poza tym, programista nad samym pisaniem kodu spędza około 30% czasu przeznaczonego na program
+   (reszta to plan wykonania, wdrażanie, utrzymanie, testowanie...). Nawet jeśli programiście
+   asma zabiera to 2 razy więcej czasu niż programiście HLLa, to i tak zysk lub strata wynosi 15%.
+   <BR>Dużo pisania sprawia, że umysł się uczy, zapamiętuje składnię instrukcji i
+   nabiera doświadczenia.
+   <BR><BR></LI>
+
+ <LI>Assmebler jest ciężki do nauki.<BR>
+   Jak każdy nowy język. Nauka C lub innych podobnych przychodzi łatwo, gdy już się zna na przykład
+   Pascala. Próba nauczenia się innych <q>dziwnych</q> języków zajmie dłużej, niż nauka asma.
+   <BR><BR></LI>
+
+ <LI>Ciężko znajdować i usuwać błędy.<BR>
+   Na początku równie ciężko, jak w innych językach. Pamiętacie jeszcze usuwanie błędów ze swoich
+   pierwszych programów w C czy Pascalu?
+   <BR><BR></LI>
+
+ <LI>Programy w asemblerze są ciężkie w utrzymaniu.<BR>
+   Znowu powiem to samo: podobnie jest w innych językach. Najlepiej dany program zna jego autor,
+   co wcale nie oznacza, że w przyszłości będzie dalej rozumiał swój kod (nawet napisany w
+   jakimś HLLu). Dlatego ważne są komentarze. Zdolność do zajmowania się programem w przyszłości
+   także przychodzi wraz z doświadczeniem.
+   <BR><BR></LI>
+
+ <LI>Nowoczesne komputery są tak szybkie, że i tak szybkość nie robi to różnicy...<BR>
+   Napiszmy program z czterema zagnieżdżonymi pętlami po 100 powtórzeń każda. Razem 100 000 000
+   (sto milionów) powtórzeń. Czas wykonania tego programu napisanego w jakimś HLLu liczy się w
+   minutach, a często w dziesiątkach minut (czasem godzin - zależy od tego, co jest w pętlach). To samo
+   zadanie napisane w asemblerze daje program, którego czas działania można liczyć w sekundach
+   lub pojedynczych minutach!<BR>
+   Po prostu najszybsze programy są pisane w asemblerze. Często otrzymuje się program
+   5-10 razy szybszy (lub jeszcze szybszy) niż ten w HLLu.
+   <BR><BR></LI>
+
+ <LI>Chcesz mieć szybki program? Zmień algorytm, a nie język<BR>
+   A co jeśli używasz już najszybszego algorytmu a on i tak działa za wolno?<BR>
+   Każdy algorytm zawsze można zapisać w asemblerze, co poprawi jego wydajność.
+   Nie wszystko da się zrobić w HLLu.
+   <BR><BR></LI>
+
+ <LI>Nowoczesne komputery i tak mają dużo pamięci. Po co więc mniejsze programy?<BR>
+   Wolisz mieć 1 wolno działający program o rozmiarze 1 MB, napisany
+   w HLLu i robić 1 czynność w danej chwili, czy może
+   wolisz wykonywać 10 czynności na raz dziesięcioma programami w asemblerze po 100kB każdy
+   (no, przesadziłem - rzadko który program w asmie sięgnie aż tak gigantycznych rozmiarów!)?
+   <BR><BR></LI>
+
+</OL>
+<a name="wstep02" id="wstep02">To był tylko wstęp do bezkresnej wiedzy</a>, jaką każdy z Was zdobędzie.
+<BR><BR>
+
+Ale nie myślcie, że <span class="b">całkowicie odradzam</span> Wam języki wysokiego poziomu.
+Ja po prostu polecam Wam asemblera.<BR><BR>
+Najlepsze programy pisze się w czystym asemblerze, co sprawia niesamowitą radość,
+ale można przecież łączyć języki. Na przykład, część programu odpowiedzialną za wczytywanie danych
+lub wyświetlanie wyników można napisać w HLLu, a intensywne obliczeniowo pętle pisać w asmie,
+albo robiąc wstawki w kod, albo pisząc w ogóle oddzielne moduły i potem łączyć wszystko w całość.
+<BR><BR>
+Nauka tego wspaniałego języka przyjdzie Wam łatwiej, niż myślicie.
+Pomyślcie też, co powiedzą znajomi, gdy się dowiedzą, co umiecie!
+<br><br>
+
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

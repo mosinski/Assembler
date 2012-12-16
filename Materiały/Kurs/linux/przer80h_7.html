@@ -1,0 +1,466 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: opis przerwania int 80h (7) </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="przer80h_6.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="syscall64_7.html"
+	hreflang="pl" lang="pl" title="Funkcje x86-64: 301-312">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kursy programowania w assemblerze - opis przerwania int 80h">
+<META NAME="Keywords" CONTENT="Assembler, asembler, kurs, nauka, linux, syscall, linuks, int 80h">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Sun, Sep 16 2012 12:57:58 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Opis funkcji przerwania int 80h: 301-349</h1>
+
+<P>
+Jeśli jakaś funkcja zakończy się błędem, w EAX/RAX zwracana jest wartość ujemna z przedziału
+od -4096 do -1 włącznie.</P>
+<P>
+Z drugiej strony, opisy funkcji na stronach manuala mówią, że zwracane jest -1,
+a wartość błędu jest zapisywana do zmiennej errno z biblioteki GLIBC. Dzieje się tak
+tylko w przypadku, gdy korzystamy z interfejsu języka C (czyli deklarujemy i
+uruchamiamy zewnętrzne funkcje odpowiadające wywołaniom systemowym i linkujemy
+nasz program z biblioteką języka C), a nie bezpośrednio z wywołań systemowych (czyli przerwania
+int 80h).
+</P>
+<P>
+Najbardziej aktualne informacje o funkcjach systemowych można znaleźć zazwyczaj
+w sekcji 2 (lub 3) manuala, na przykład <code class="b">man 2 open</code>.
+</P>
+<P>
+Najnowsze wersje jądra można znaleźć na <A HREF="http://www.kernel.org" hreflang="en"
+>www.kernel.org</A>, a pliki z listą funkcji i ich numerów są pod ścieżkami:
+</P>
+<ul>
+ <li>arch/x86/include/asm/unistd_{32,64}.h (w starszych wersjach kodów)</li>
+ <li>arch/x86/syscalls/syscall_{32,64}.tbl (w wersjach bieżących)</li>
+</ul>
+
+<P>
+Najnowsze wersje stron manuala można znaleźć tu: <A HREF="http://www.kernel.org/pub/linux/docs/man-pages/"
+	>www.kernel.org/pub/linux/docs/man-pages</A>.
+</P>
+<P>
+Napis ASCIIZ oznacza łańcuch znaków
+ <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+ zakończony znakiem/bajtem Zerowym.
+</P>
+<P>
+Jeśli potrzeba, przy każdej funkcji jest odnośnik do opisu argumentów i innych
+ <A HREF="dodatk80.html" hreflang="pl" tabindex="1">dodatkowych informacji</a>: typów danych,
+ wartości błędów, możliwych wartości parametrów itp.
+</P>
+
+<TABLE summary="Ta tabela opisuje funkcje od 301 do 349 linuksowego przerwania systemowego int 80h">
+<CAPTION> Podstawowe funkcje przerwania 80h: 301-349</CAPTION>
+<thead>
+<TR><TH style="WIDTH:5%;" id="eax">Numer/ EAX</TH>
+	<TH style="WIDTH:5%;" id="rax">x86-64 RAX</TH> <TH style="WIDTH:20%;" id="opis">Opis</TH>
+	<TH id="arg">Argumenty</TH><TH style="WIDTH:30%;" id="ret">Zwraca</TH></TR>
+
+</thead><tbody>
+<TR class="c"> <TD headers="eax">301<br> </td>  <TD headers="rax"><a name="x64f263">263</a><br> </td>
+	<TD headers="opis"><A NAME="f0301"> Usuń obiekt względnie do katalogu </a> (<span lang="en">sys_ulinkat</span>) <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor otwartego katalogu lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		ECX/RSI = adres ścieżki/nazwy ASCIIZ. Jeśli ścieżka jest względna, jest brana jako względna
+	 		względem podanego katalogu zamiast bieżącego katalogu procesu<BR>
+		EDX/RDX = 0 lub AT_REMOVEDIR (=0x200), gdy chcemy usuwać katalogi
+	 		</td>
+	<TD headers="ret"> EAX = 0 <BR>EAX = błąd EBADF, ENOTDIR, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">302<br> </td>  <TD headers="rax"><a name="x64f264">264</a><br> </td>
+	<TD headers="opis"><A NAME="f0302"> Przenieś plik/Zmień nazwę pliku względnie do katalogu</a> (<span lang="en">sys_renameat</span>) <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor otwartego katalogu źródłowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		ECX/RSI = adres starej nazwy (i ewentualnie ścieżki) ASCIIZ<BR>
+		EDX/RDX = deskryptor otwartego katalogu docelowego<BR>
+		ESI/R10 = adres nowej nazwy (i ewentualnie ścieżki) ASCIIZ<br> </td>
+	<TD headers="ret"> EAX = 0 <BR>EAX = błąd EBUSY, EEXIST, EISDIR, ENOTEMPTY, EXDEV (i inne błędy systemu plików), EBADF, ENOTDIR
+	<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">303<br> </td>  <TD headers="rax"><a name="x64f265">265</a><br> </td>
+	<TD headers="opis"><A NAME="f0303"> Utworzenie twardego dowiązania do pliku względnie do katalogu</a> (<span lang="en">sys_linkat</span>) <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor otwartego katalogu źródłowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		ECX/RSI = adres nazwy istniejącego pliku ASCIIZ<BR>
+		EDX/RDX = deskryptor otwartego katalogu docelowego<BR>
+		ESI/R10 = adres nazwy nowego pliku ASCIIZ<BR>
+		EDI/R8 = 0 (flagi)<br> </td>
+	<TD headers="ret"> EAX = 0 <BR>EAX=błąd EACCES, EIO, EPERM, EEXIST, EFAULT, ELOOP, EMLINK, ENAMETOOLONG,
+		ENOENT, ENOMEM, ENOSPC, ENOTDIR, EROFS, EXDEV<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">304<br> </td>  <TD headers="rax"><a name="x64f266">266</a><br> </td>
+	<TD headers="opis"><A NAME="f0304"> Stwórz dowiązanie symboliczne do pliku względnie do katalogu</a> (<span lang="en">sys_symlinkat</span>) <br> </td>
+	<TD headers="arg"> EBX/RDI = adres nazwy pliku ASCIIZ<BR>
+		ECX/RSI = deskryptor otwartego katalogu docelowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		EDX/RDX = adres nazwy linku ASCIIZ<br> </td>
+	<TD headers="ret"> EAX = 0 <BR> EAX = błędy związane z uprawnieniami lub systemem plików<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">305<br> </td>  <TD headers="rax"><a name="x64f267">267</a><br> </td>
+	<TD headers="opis"><A NAME="f0305"> Przeczytaj zawartość linku symbolicznego względnie do katalogu</a> (<span lang="en">sys_readlinkat</span>) <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor otwartego katalogu źródłowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		ECX/RSI = adres nazwy dowiązania symbolicznego ASCIIZ<BR>
+		EDX/RDX = adres bufora, który otrzyma przeczytaną informację<BR>
+		ESI/R10 = długość bufora<br> </td>
+	<TD headers="ret"> EAX = 0 <BR>EAX = błąd EBADF, ENOTDIR <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">306<br> </td>  <TD headers="rax"><a name="x64f268">268</a><br> </td>
+	<TD headers="opis"><A NAME="f0306"> Zmiana uprawnień obiektu względnie do katalogu</a> (<span lang="en">sys_fchmodat</span>) <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor otwartego katalogu źródłowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		ECX/RSI = adres nazwy pliku ASCIIZ<BR>
+		EDX/RDX = nowe <A HREF="dodatk80.html#tryb">prawa dostępu</a> <br>
+		ESI/R10 = flagi, musi być zero </td>
+	<TD headers="ret"> EAX = 0 <BR>EAX = błąd EBADF, ENOTDIR <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">307<br> </td>  <TD headers="rax"><a name="x64f269">269</a><br> </td>
+	<TD headers="opis"><A NAME="f0307"> Sprawdź uprawnienia dostępu do pliku</a> (<span lang="en">sys_faccessat</span>) <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor otwartego katalogu źródłowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		ECX/RSI = adres nazwy pliku ASCIIZ<BR>
+		EDX/RDX = <A HREF="dodatk80.html#tryb">prawa dostępu / tryb</A> (wartości R_OK, W_OK, X_OK)<br>
+		ESI/R10 = flagi: 0 lub AT_SYMLINK_NOFOLLOW=100h (nie podążaj za dowiązaniami symbolicznymi)
+			lub AT_EACCESS=0x200 (sprawdzanie według efektywnych UID i GID)<br> </td>
+	<TD headers="ret"> EAX = 0 <BR>EAX = błąd EBADF, ENOTDIR, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">308<br> </td>  <TD headers="rax"><a name="x64f270">270</a><br> </td>
+	<TD headers="opis"><A NAME="f0308"> <span lang="en">sys_pselect6</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">309<br> </td>  <TD headers="rax"><a name="x64f271">271</a><br> </td>
+	<TD headers="opis"><A NAME="f0309"> Czekaj na zdarzenia na deskryptorze</a> (<span lang="en">sys_ppoll</span>) <br> </td>
+	<TD headers="arg"> EBX/RDI = adres tablicy struktur <A HREF="dodatk80.html#pollfd">pollfd</A><BR>
+		ECX/RSI = liczba struktur pollfd w tablicy<BR>
+		EDX/RDX = adres struktury <A HREF="dodatk80.html#timespec">timespec</A> - czas oczekiwania lub 0 (nieskończoność)<BR>
+		ESI/R10 = adres struktury <A HREF="dodatk80.html#sigset_t">sigset_t</a> <br> </td>
+	<TD headers="ret"> EAX = liczba odpowiednich deskryptorów<BR>EAX = 0, gdy czas upłynął<BR>EAX = błąd
+		 EFAULT, EINTR, EINVAL, EBADF, ENOMEM<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">310<br> </td>  <TD headers="rax"><a name="x64f272">272</a><br> </td>
+	<TD headers="opis"><A NAME="f0310"> Cofnij współdzielanie</a> (<span lang="en">sys_unshare</span>) <br> </td>
+	<TD headers="arg"> EBX/RDI = CLONE_FILES, CLONE_FS lub CLONE_NEWNS spośród
+		<A HREF="dodatk80.html#flagi_klonowania">flag</A> <br> </td>
+	<TD headers="ret"> EAX = 0<BR> EAX=błąd EPERM, ENOMEM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">311<br> </td>  <TD headers="rax"><a name="x64f273">273</a><br> </td>
+	<TD headers="opis"><A NAME="f0311"> Ustaw listę sprawnych futeksów (<span lang="en">sys_set_robust_list</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = adres pierwszego elementu listy struktur
+			typu <A HREF="dodatk80.html#robust_list_head">robust_list_head</A><BR>
+		ECX/RSI = rozmiar elementu listy podanej przez EBX/RDI </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">312<br> </td>  <TD headers="rax"><a name="x64f274">274</a><br> </td>
+	<TD headers="opis"><A NAME="f0312"> Pobierz listę sprawnych futeksów (<span lang="en">sys_get_robust_list</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = PID procesu<BR>
+		ECX/RSI = adres zmiennej, która otrzyma adres pierwszego elementu listy struktur
+			typu <A HREF="dodatk80.html#robust_list_head">robust_list_head</A><BR>
+		EDX/RDX = adres zmiennej, która otrzyma rozmiar elementu listy podanej przez ECX/RSI </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EPERM, ESRCH, EFAULT <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">313<br> </td>  <TD headers="rax"><a name="x64f275">275</a><br> </td>
+	<TD headers="opis"><A NAME="f0313"> Spleć dane z/do potoku (<span lang="en">sys_splice</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = wejściowy deskryptor pliku<BR>
+		ECX/RSI = offset w pliku wejściowym, skąd czytać dane (0 dla potoków)<BR>
+		EDX/RDX = wyjściowy deskryptor pliku<BR>
+		ESI/R10 = offset w pliku wyjściowym, dokąd zapisać dane (0 dla potoków)<br>
+		EDI/R8 = maksymalna liczba bajtów do przeniesienia<br>
+		EBP/R9 = <A HREF="dodatk80.html#flagi_splice">flagi</a> </td>
+	<TD headers="ret"> EAX = liczba przeniesionych bajtów<BR> EAX=błąd EBADF, ESPIPE, ENOMEM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">314<br> </td>  <TD headers="rax"><a name="x64f277">277</a><br> </td>
+	<TD headers="opis"><A NAME="f0314"> Synchronizuj segment pliku z dyskiem </a> (<span lang="en">sys_sync_file_range</span>) <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor pliku<br>
+		EDX:ECX/RSI? = początek zakresu danych do synchronizacji / ECX/RSI wskazuje na 64 bity adresu początku danych?<Br>
+		EDI:ESI/RDX? = liczba bajtów do zsynchronizowania / EDX/RDX wskazuje na 64-bitową liczbę bajtów do zsynchronizowania?<br>
+		EBP/ESI (odpowiednio) / R10 = <A HREF="dodatk80.html#flagi_sync_file_range">flagi synchronizacji</a>
+		<br> </td>
+	<TD headers="ret"> EAX = 0<BR> EAX=błąd EBADF, EIO, EINVAL, ENOMEM, ENOSPC, ESPIPE <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">315<br> </td>  <TD headers="rax"><a name="x64f276">276</a><br> </td>
+	<TD headers="opis"><A NAME="f0315"> Duplikowanie zawartości potoku (<span lang="en">sys_tee</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = wejściowy deskryptor pliku<BR>
+		ECX/RSI = wyjściowy deskryptor pliku<BR>
+		EDX/RDX = maksymalna liczba bajtów do przeniesienia<br>
+		ESI/R10 = <A HREF="dodatk80.html#flagi_splice">flagi</a> (te same, co dla sys_splice)
+		</td>
+	<TD headers="ret"> EAX = liczba zduplikowanych bajtów<BR> EAX=błąd ENOMEM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">316<br> </td>  <TD headers="rax"><a name="x64f278">278</a><br> </td>
+	<TD headers="opis"><A NAME="f0316"> Spleć strony pamięci do potoku (<span lang="en">sys_vmsplice</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = wejściowy deskryptor potoku<BR>
+		ECX/RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</a><BR>
+		EDX/RDX = liczba elementów w tablicy pod [ECX/RSI]<br>
+		ESI/R10 = <A HREF="dodatk80.html#flagi_splice">flagi</a> (te same, co dla sys_splice)</td>
+	<TD headers="ret"> EAX = liczba bajtów przeniesionych do potoku<BR> EAX=błąd EBADF, ENOMEM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">317<br> </td>  <TD headers="rax"><a name="x64f279">279</a><br> </td>
+	<TD headers="opis"><A NAME="f0317"> Przesuń strony pamięci procesu (<span lang="en">sys_move_pages</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = PID procesu<BR>
+		ECX/RSI = liczba stron do przeniesienia <BR>
+		EDX/RDX = adres tablicy adresów stron<BR>
+		ESI/R10 = adres tablicy liczb całkowitych określających żądane miejsce dla danej strony<br>
+		EDI/R8 = adres tablicy na liczby całkowite, które otrzymają status wykonanej operacji<br>
+		EBP/R9 = flagi określające typ stron do przeniesienia (MPOL_MF_MOVE=2 oznacza tylko strony procesu,
+			MPOL_MF_MOVE_ALL=4 oznacza wszystkie strony)<br> </td>
+	<TD headers="ret"> EAX = 0<BR> EAX=błąd E2BIG, EACCES, EFAULT, EINVAL, ENODEV, ENOENT, EPERM, ESRCH <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">318<br> </td>  <TD headers="rax">309<br> </td>
+	<TD headers="opis"><A NAME="f0318"> Pobierz procesor, na którym działa wątek (<span lang="en">sys_getcpu</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = 0 lub adres zmiennej, która otrzyma numer procesora<BR>
+		ECX/RSI = 0 lub adres zmiennej, która otrzyma numer węzła NUMA<BR>
+		EDX/RDX = adres struktury <A HREF="dodatk80.html#getcpu_cache">getcpu_cache</a>, która służyła
+			jako pamięć podręczna dla tej funkcji; nieużywane<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">319<br> </td>  <TD headers="rax"><a name="x64f281">281</a><br> </td>
+	<TD headers="opis"><A NAME="f0319"> Czekaj na deskryptorze pliku epoll (<span lang="en">sys_epoll_pwait</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor epoll <BR>
+ 		ECX/RSI = adres tablicy struktur <A HREF="dodatk80.html#epoll_event">epoll_event</A> <BR>
+		EDX/RDX = maksymalna liczba zdarzeń, na które będziemy czekać <BR>
+		ESI/R10 = czas czekania w milisekundach (-1 = nieskończoność)<br>
+		EDI/R8 = adres zestawu sygnałów (tablicy 32 DWORDów), które też przerwą czekanie</td>
+	<TD headers="ret"> EAX = liczba deskryptorów gotowych <BR> EAX = błąd EFAULT, EINTR, EBADF, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">320<br> </td>  <TD headers="rax"><a name="x64f280">280</a><br> </td>
+	<TD headers="opis"><A NAME="f0320"> Zmień znaczniki czasu pliku (<span lang="en">sys_utimensat</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor otwartego katalogu lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		ECX/RSI = adres nazwy pliku <BR>
+		EDX/RDX = adres dwuelementowej tablicy struktur <A HREF="dodatk80.html#timespec">timespec</a>,
+			opisujących czas dostępu i zmiany<BR>
+		ESI/R10 = flagi: 0 lub AT_SYMLINK_NOFOLLOW=0x100 (nie podążaj za dowiązaniami symbolicznymi)<br> </td>
+	<TD headers="ret"> EAX = 0<BR> EAX=błąd EACCES, EBADF, EFAULT, EINVAL, ELOOP, ENAMETOOLONG, ENOENT, ENOTDIR, EPERM, EROFS, ESRCH<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">321<br> </td>  <TD headers="rax"><a name="x64f282">282</a><br> </td>
+	<TD headers="opis"><A NAME="f0321"> Stwórz deskryptor pliku do otrzymywania sygnałów (<span lang="en">sys_signalfd</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor: -1, gdy tworzymy nowy lub nieujemny, gdy zmieniamy istniejący <BR>
+ 		ECX/RSI = adres <A HREF="dodatk80.html#sigaction">maski sygnałów (sigset)</a>, które chcemy otrzymywać <BR> </td>
+	<TD headers="ret"> EAX = deskryptor pliku<BR> EAX=błąd EBADF, EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">322<br> </td>  <TD headers="rax"><a name="x64f283">283</a><br> </td>
+	<TD headers="opis"><A NAME="f0322"> Stwórz nowy czasomierz (<span lang="en">sys_timerfd_create</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = identyfikator zegara (CLOCK_REALTIME=0 lub CLOCK_MONOTONIC=1) <BR>
+ 		ECX/RSI = flagi: 0 lub zORowane wartości TFD_NONBLOCK (=04000 ósemkowo, operacje mają być nieblokujące),
+			TFD_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)<br> </td>
+	<TD headers="ret"> EAX = deskryptor pliku<BR> EAX=błąd EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">323<br> </td>  <TD headers="rax"><a name="x64f284">284</a><br> </td>
+	<TD headers="opis"><A NAME="f0323"> Stwórz deskryptor pliku do otrzymywania zdarzeń (<span lang="en">sys_eventfd</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = wstępna wartość licznika zdarzeń </td>
+	<TD headers="ret"> EAX = deskryptor pliku<BR> EAX=błąd EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">324<br> </td>  <TD headers="rax"><a name="x64f285">285</a><br> </td>
+	<TD headers="opis"><A NAME="f0324"> Manipulacja przestrzenią pliku (<span lang="en">sys_fallocate</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor pliku <BR>
+ 		ECX/RSI = tryb = FALLOC_FL_KEEP_SIZE (alokuje i zeruje przestrzeń na dysku w podanym zakresie bajtów) = 1 <BR>
+		EDX/RDX = offset początku zakresu bajtów w pliku<BR>
+		ESI/R10 = liczba bajtów w zakresie<br>
+		</td>
+	<TD headers="ret"> EAX = liczba deskryptorów gotowych <BR> EAX = błąd EFAULT, EINTR, EBADF, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">325<br> </td>  <TD headers="rax"><a name="x64f286">286</a><br> </td>
+	<TD headers="opis"><A NAME="f0325"> Uruchom lub zatrzymaj czasomierz (<span lang="en">sys_timerfd_settime</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor pliku czasomierza <BR>
+ 		ECX/RSI = flagi (0 uruchamia czasomierz względy, TFD_TIMER_ABSTIME=1 - bezwzględny) <BR>
+		EDX/RDX = adres struktury <A HREF="dodatk80.html#itimerspec">itimerspec</A>, zawierającej początkowy czas<BR>
+		ESI/R10 = adres struktury <A HREF="dodatk80.html#itimerspec">itimerspec</A>, która otrzyma aktualny czas<br> </td>
+	<TD headers="ret"> EAX = 0<BR> EAX=błąd EINVAL, EFAULT, EBADF <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">326<br> </td>  <TD headers="rax"><a name="x64f287">287</a><br> </td>
+	<TD headers="opis"><A NAME="f0326"> Pobierz czas na czasomierzu (<span lang="en">sys_timerfd_gettime</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor pliku czasomierza <BR>
+ 		ECX/RSI = adres struktury <A HREF="dodatk80.html#itimerspec">itimerspec</A>, która otrzyma aktualny czas<br> </td>
+	<TD headers="ret"> EAX = 0<BR> EAX=błąd EINVAL, EFAULT, EBADF <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">327<br> </td>  <TD headers="rax"><a name="x64f289">289</a><br> </td>
+	<TD headers="opis"><A NAME="f0327"> Stwórz deskryptor pliku do otrzymywania sygnałów (<span lang="en">sys_signalfd4</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor: -1, gdy tworzymy nowy lub nieujemny, gdy zmieniamy istniejący <BR>
+ 		ECX/RSI = adres <A HREF="dodatk80.html#sigaction">maski sygnałów (sigset)</a>, które chcemy otrzymywać <BR>
+		EDX/RDX = flagi: 0 lub zORowane wartości SFD_NONBLOCK (=04000 ósemkowo, operacje mają być nieblokujące),
+			SFD_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)<br> </td>
+	<TD headers="ret"> EAX = deskryptor pliku<BR> EAX=błąd EBADF, EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">328<br> </td>  <TD headers="rax"><a name="x64f290">290</a><br> </td>
+	<TD headers="opis"><A NAME="f0328"> Stwórz deskryptor pliku do otrzymywania zdarzeń (<span lang="en">sys_eventfd2</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = wstępna wartość licznika zdarzeń <BR>
+ 		ECX/RSI = flagi: 0 lub zORowane wartości EFD_NONBLOCK (=04000 ósemkowo, operacje mają być nieblokujące),
+			EFD_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)<br> </td>
+	<TD headers="ret"> EAX = deskryptor pliku<BR> EAX=błąd EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">329<br> </td>  <TD headers="rax"><a name="x64f291">291</a><br> </td>
+	<TD headers="opis"><A NAME="f0329"> Utwórz deskryptor pliku epoll (<span lang="en">sys_epoll_create1</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = flagi: 0 lub EPOLL_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)<br> </td>
+	<TD headers="ret"> EAX = nowy deskryptor pliku <BR> EAX = błąd ENOMEM, EINVAL, EMFILE, ENFILE <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">330<br> </td>  <TD headers="rax"><a name="x64f292">292</a><br> </td>
+	<TD headers="opis"><A NAME="f0330"> Zamień deskryptor zduplikowanym deskryptorem pliku (<span lang="en">sys_dup3</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = deskryptor do zduplikowania<BR>
+		ECX/RSI = deskryptor, do którego powinien być przyznany duplikat<br>
+		EDX/RDX = flagi: 0 lub O_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)</td>
+	<TD headers="ret">EAX = zduplikowany deskryptor<BR>EAX = błąd EBADF, EMFILE, EBUSY, EINTR, EINVAL<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">331<br> </td>  <TD headers="rax"><a name="x64f293">293</a><br> </td>
+	<TD headers="opis"><A NAME="f0331"> Utwórz potok (<span lang="en">sys_pipe2</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres tablicy dwóch DWORDów<br>
+		ECX/RSI = flagi: 0 lub zORowane wartości O_NONBLOCK (=04000 ósemkowo, operacje mają być nieblokujące),
+			O_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec) </td>
+	<TD headers="ret">EAX = 0 i pod [EBX/RDI]: deskryptor odczytu z potoku fd(0) pod [EBX/RDI], deskryptor zapisu do potoku
+		fd(1) pod [EBX/RDI+4]<BR>EAX = błąd EFAULT, EMFILE, ENFILE, EINVAL<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">332<br> </td>  <TD headers="rax"><a name="x64f294">294</a><br> </td>
+	<TD headers="opis"><A NAME="f0332"> Inicjalizacja kolejki zdarzeń inotify (<span lang="en">sys_inotify_init1</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = flagi: 0 lub zORowane wartości IN_NONBLOCK (=04000 ósemkowo, operacje mają być nieblokujące),
+			IN_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)<br> </td>
+	<TD headers="ret"> EAX = deskryptor kolejki <BR>EAX = błąd EMFILE, ENFILE, ENOMEM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">333<br> </td>  <TD headers="rax"><a name="x64f295">295</a><br> </td>
+	<TD headers="opis"><A NAME="f0333"> Odczyt danych do wielu buforów (<span lang="en">sys_preadv</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = deskryptor otwartego pliku<BR>
+		ECX/RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A>, do których zapisać dane<BR>
+		EDX/RDX = liczba struktur iovec spod [ECX/RSI]<BR>
+		ESI/R10 = numer bajtu, od którego czytać (offset w pliku) </td>
+	<TD headers="ret"> EAX = liczba odczytanych bajtów<BR>EAX = błąd funkcji sys_read, sys_lseek lub EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">334<br> </td>  <TD headers="rax"><a name="x64f296">296</a><br> </td>
+	<TD headers="opis"><A NAME="f0334"> Zapis danych z wielu buforów (<span lang="en">sys_pwritev</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = deskryptor otwartego pliku<BR>
+		ECX/RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A>,
+			z których brać dane do zapisania<BR>
+		EDX/RDX = liczba struktur iovec spod [ECX/RSI]<BR>
+		ESI/R10 = numer bajtu, od którego zapisywać (offset w pliku) </td>
+	<TD headers="ret"> EAX = liczba zapisanych bajtów<BR>EAX = błąd funkcji sys_write, sys_lseek lub EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">335<br> </td>  <TD headers="rax"><a name="x64f297">297</a><br> </td>
+	<TD headers="opis"><A NAME="f0335"> <span lang="en">sys_rt_tgsigqueueinfo</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">336<br> </td>  <TD headers="rax"><a name="x64f298">298</a><br> </td>
+	<TD headers="opis"><A NAME="f0336"> <span lang="en">sys_perf_counter_open</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">337<br> </td>  <TD headers="rax"><a name="x64f299">299</a><br> </td>
+	<TD headers="opis"><A NAME="f0337"> Odbierz wiele wiadomości z gniazda (<span lang="en">sys_recvmmsg</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor otwartego gniazda<BR>
+		ECX/RSI = adres tablicy struktur <A HREF="dodatk80.html#mmsghdr">mmsghdr</A>,
+			do których zapisać dane<BR>
+		EDX/RDX = liczba struktur mmsghdr spod [ECX/RSI]<BR>
+		ESI/R10 = 0 lub zORowane <a href="dodatk80.html#sendto_fl"
+			hreflang="pl">flagi funkcji recvmsg</a> i dodatkowa flaga
+			MSG_WAITFORONE (=0x10000) oznaczająca czekanie na jedną wiadomość<br>
+		EDI/R8 = adres struktury <A HREF="dodatk80.html#timespec">timespec</A>
+			oznaczającej czas czekania lub 0 (czekanie bez końca) </td>
+	<TD headers="ret"> EAX = liczba otrzymanych wiadomości<BR>EAX = błąd funkcji recvmsg lub EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">338<br> </td>  <TD headers="rax"><a name="x64f300">300</a><br> </td>
+	<TD headers="opis"><A NAME="f0338"> <span lang="en">sys_fanotify_init</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">339<br> </td>  <TD headers="rax"><a name="x64f301">301</a><br> </td>
+	<TD headers="opis"><A NAME="f0339"> <span lang="en">sys_fanotify_mark</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">340<br> </td>  <TD headers="rax"><a name="x64f302">302</a><br> </td>
+	<TD headers="opis"><A NAME="f0340"> <span lang="en">sys_prlimit64</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">341<br> </td>  <TD headers="rax"><a name="x64f303">303</a><br> </td>
+	<TD headers="opis"><A NAME="f0341"> <span lang="en">sys_name_to_handle_at</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">342<br> </td>  <TD headers="rax"><a name="x64f304">304</a><br> </td>
+	<TD headers="opis"><A NAME="f0342"> <span lang="en">sys_open_by_handle_at</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">343<br> </td>  <TD headers="rax"><a name="x64f305">305</a><br> </td>
+	<TD headers="opis"><A NAME="f0343"> <span lang="en">sys_clock_adjtime</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">344<br> </td>  <TD headers="rax"><a name="x64f306">306</a><br> </td>
+	<TD headers="opis"><A NAME="f0344"> <span lang="en">sys_syncfs</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">345<br> </td>  <TD headers="rax"><a name="x64f307">307</a><br> </td>
+	<TD headers="opis"><A NAME="f0345"> Wyślij wiele wiadomości z gniazda (<span lang="en">sys_sendmmsg</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor otwartego gniazda<BR>
+		ECX/RSI = adres tablicy struktur <A HREF="dodatk80.html#mmsghdr">mmsghdr</A>,
+			z których brać dane do wysłania<BR>
+		EDX/RDX = liczba struktur mmsghdr spod [ECX/RSI]<BR>
+		ESI/R10 = 0 lub zORowane <a href="dodatk80.html#sendto_fl"
+			hreflang="pl">flagi funkcji sendmsg</a> </td>
+	<TD headers="ret"> EAX = liczba wysłanych wiadomości<BR>EAX = błąd funkcji sendmsg <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">346<br> </td>  <TD headers="rax"><a name="x64f308">308</a><br> </td>
+	<TD headers="opis"><A NAME="f0346"> Powiąż wątek z przestrzenią nazw (<span lang="en">sys_setns</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = deskryptor jednego z plików w /proc/[pid]/ns/ <BR>
+	        ECX/RSI = 0 (oznaczające dowolny typ przestrzeni nazw lub jeden z
+			<A HREF="dodatk80.html#setns_nstype">typów przestrzeni nazw</A>) <br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EBADF, EINVAL, ENOMEM, EPERM <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">347<br> </td>  <TD headers="rax"><a name="x64f310">310</a><br> </td>
+	<TD headers="opis"><A NAME="f0347"> Czytaj dane innego procesu (<span lang="en">sys_process_vm_readv</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = PID procesu<BR>
+		ECX/RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A> na odczytane dane<BR>
+		EDX/RDX = liczba struktur w [ECX/RSI]<BR>
+		ESI/R10 = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A> z adresami danych do odczytania<BR>
+		EDI/R8 = liczba struktur w [ESI/R10]<BR>
+		EBP/R9 = flagi (nieużwyane, ustawić na zero)<br> </td>
+	<TD headers="ret"> EAX = liczba odczytanych bajtów<BR>EAX = błąd EINVAL, EFAULT, ENOMEM, EPERM, ESRCH <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">348<br> </td>  <TD headers="rax"><a name="x64f311">311</a><br> </td>
+	<TD headers="opis"><A NAME="f0348"> Zapisz dane w innym procesie (<span lang="en">sys_process_vm_writev</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = PID procesu<BR>
+		ECX/RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A> na dane do zapisania<BR>
+		EDX/RDX = liczba struktur w [ECX/RSI]<BR>
+		ESI/R10 = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A> z adresami miejsc do zapisania<BR>
+		EDI/R8 = liczba struktur w [ESI/R10]<BR>
+		EBP/R9 = flagi (nieużwyane, ustawić na zero)<br> </td>
+	<TD headers="ret"> EAX = liczba zapisanych bajtów<BR>EAX = błąd EINVAL, EFAULT, ENOMEM, EPERM, ESRCH <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">349<br> </td>  <TD headers="rax"><a name="x64f312">312</a><br> </td>
+	<TD headers="opis"><A NAME="f0349"> <span lang="en">sys_kcmp</span> </a> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+
+
+
+
+</TABLE>
+
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="przer80h_6.html">Poprzednia część</a> (Alt+3)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

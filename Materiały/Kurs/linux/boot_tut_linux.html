@@ -1,0 +1,322 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Pisanie bootsektorów </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Pisanie bootsektorów w asemblerze pod Linuksem">
+<META NAME="Keywords" CONTENT="boot, bootsector, bootsektor, assembler, asm, asembler">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:56 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Pisanie <span lang="en">boot</span>-sektorów pod Linuksem</h1>
+
+<P>
+Gdy już choć średnio znacie asemblera, to po pewnym czasie pojawiają się pytania
+ (mogą one być spowodowane tym, co usłyszeliście lub Waszą własną ciekawością):</P>
+<OL>
+ <LI>Co się dzieje, gdy ma zostać uruchomiony jest system operacyjny?</LI>
+ <LI>Skąd <acronym lang="en" title="Basic Input/Output System">BIOS</acronym>
+ 	ma wiedzieć, którą część systemu uruchomić?</LI>
+ <LI>Jak BIOS odróżnia systemy operacyjne, aby móc je uruchomić?</LI>
+</OL>
+<P>Odpowiedź na pytanie 2 brzmi: nie wie. Odpowiedź na pytanie 3 brzmi: wcale. Wszystkie Wasze
+wątpliwości rozwieje odpowiedź na pytanie 1.</P>
+
+<P>
+Gdy zakończył się POST (<span lang="en">Power-On Self Test</span>), wykrywanie dysków i innych urządzeń,
+ BIOS przystępuje do czytania pierwszych sektorów tych urządzeń, na których ma być szukany system
+operacyjny (u mnie jest ustawiona kolejność: <acronym lang="en"
+title="Compact Disc Read-Only Memory">CD-ROM</acronym>,
+ stacja dyskietek, dysk twardy).<BR>
+Gdy znajdzie sektor odpowiednio zaznaczony: bajt nr 510 = 55h i bajt 511 = AAh
+(pamiętajmy, że 1 sektor ma 512 bajtów, a liczymy od zera), to wczytuje go pod adres
+bezwzględny 07C00h i uruchamia kod w nim zawarty (po prostu wykonuje skok pod ten adres). Nie należy
+jednak polegać na tym, że segment kodu CS = 0, a adres instrukcji IP=7C00h (choć najczęściej tak jest).
+</P>
+<P>
+ To właśnie <span lang="en">boot</span>-sektor jest odpowiedzialny za ładowanie odpowiednich
+ części właściwego systemu operacyjnego. Na komputerach z wieloma systemami operacyjnymi
+ sprawa też nie jest tak bardzo skomplikowana. Pierwszy sektor dysku twardego, zwany
+ <span lang="en">Master Boot Record</span> (MBR),
+zawiera program ładujący (<span lang="en">Boot Manager</span>, jak LILO czy GRUB), który z kolei
+uruchamia <span lang="en">boot</span>-sektor wybranego systemu operacyjnego.
+</P>
+<P>
+My oczywiście nie będziemy operować na dyskach twardych, gdyż byłoby to niebezpieczne. Z
+dyskietkami zaś można eksperymentować do woli...<BR>
+A instrukcja jest
+prosta: umieszczamy nasz programik w pierwszym sektorze dyskietki, zaznaczamy go
+odpowiednimi ostatnimi bajtami i tyle. No właśnie... niby proste, ale jak o tym pomyśleć
+to ani to pierwsze, ani to drugie nie jest sprawą banalną.
+</P>
+<P>
+Do zapisania naszego <span lang="en">boot</span>sektorka na dyskietkę możemy oczywiście użyć
+ gotowców - programów typu <CODE>dd</CODE> itp. Ma to pewne zalety - program był już używany
+ przez dużą liczbę osób, jest sprawdzony i działa.<BR>
+Przykładowy sposób użycia (po skompilowaniu bootsektora):</P>
+<PRE>		dd count=1 if=boot.bin of=/dev/fd0</PRE>
+
+
+<P>Ale coś by było nie tak, gdybym w kursie programowania w asemblerze kazał Wam używać
+cudzych programów. Do napisania swojego własnego programu zapisującego dany plik w pierwszym
+sektorze dyskietki w zupełności wystarczy Wam wiedza uzyskana po przeczytaniu części mojego
+kursu poświęconej operacjom na plikach.</P>
+<P>Schemat działania jest taki:</P>
+<UL>
+ <LI>Otwórz plik zawierający skompilowany bootsektor</LI>
+ <LI>Przeczytaj z niego 512 bajtów (do zadeklarowanej tablicy w pamięci)</LI>
+ <LI>Zamknij ten plik</LI>
+ <LI>Otwórz plik /dev/fd0 do zapisu</LI>
+ <LI>Zapisz do niego wcześniej odczytane dane</LI>
+ <LI>Zamknij ten plik</LI>
+</UL>
+<P>Sprawa jest tak prosta, że tym razem nie podam gotowca.</P>
+
+<P>
+Gdy już mamy program zapisujący bootsektor na dyskietkę, trzeba się postarać o to, aby
+nasz programik (który ma stać się tym bootsektorem) miał dokładnie 512 bajtów i aby 2 ostatnie
+jego bajty to 55h, AAh.<BR>
+Oczywiście, nie będziemy ręcznie dokładać tylu bajtów, ile trzeba, aby dopełnić nasz program
+do tych 512. Zrobi to za nas kompilator. Wystarczy po całym kodzie i wszystkich danych, na
+szarym końcu, umieścić takie coś:
+</P>
+<PRE>	times 510 - ($ - start) db 0
+	dw 0aa55h</PRE>
+
+<P>To wyrażenie mówi tyle: od bieżącej pozycji w kodzie odejmij pozycję początku kodu (tym
+samym obliczając długość całego kodu), otrzymaną liczbę odejmij od 510 - i dołóż tyle
+właśnie bajtów zerowych. Gdy już mamy program długości 510 bajtów, to dokładamy jeszcze
+znacznik i wszystko jest dobrze.
+</P>
+<P>
+Jest jednak jeszcze jedna sprawa, o której nie wspomniałem - ustawienie DS i wartości ORG
+dla naszego kodu. Otóż, jeśli stwierdzimy, że nasz kod powinien zaczynać się od offsetu
+0 w naszym segmencie, to ustawmy sobie <q>org 0</q> i DS=07C0h (tak, liczba zer się zgadza), ale
+możemy też mieć <q>org 7C00h</q> i DS=0. Żadne z tych nie wpływa w żaden sposób na długość
+otrzymanego programu, a należy o to zadbać, gdyż nie mamy gwarancji, że DS będzie pokazywał
+na nasze dane po uruchomieniu <span lang="en">boot</span>sektora.
+</P>
+<P>
+Teraz, uzbrojeni w niezbędną wiedzę, zasiadamy do pisania kodu naszego bootsektora. Nie
+musi to być coś wielkiego - tutaj pokażę coś, co w lewym górnym rogu ekranu pokaże cyfrę jeden
+(o bezpośredniej manipulacji ekranem możecie przeczytać w moim innym artykule) i po naciśnięciu
+dowolnego klawisza zresetuje komputer (na jeden ze sposobów podanych w jeszcze innym
+artykule...).</P>
+<P>
+Oto nasz kod (NASM):</P>
+	<BR><a href="#boot_tut_linux01" class="bezdruk" tabindex="1">(przeskocz przykładowy <span lang="en">boot</span>sektor)</a>
+<PRE>
+	; nasm -o boot.bin -f bin boot.asm
+
+	org 7c00h			; lub &nbsp; &nbsp; &quot;org 0&quot;
+
+	start:
+		mov	ax, 0b800h
+		mov	es, ax		; ES = segment pamięci ekranu
+
+		mov	byte [es:0], &quot;1&quot; ; piszemy &quot;1&quot;
+
+		xor	ah, ah
+		int	16h		; czekamy na klawisz
+
+		mov	bx, 40h
+		mov	ds, bx
+		mov	word [ds:72h], 1234h	; 40h:72h = 1234h -
+						; wybieramy gorący reset
+
+		jmp	0ffffh:0000h		; reset
+
+	times 510 - ($ - start) db 0		; dopełnienie do 510 bajtów
+	dw 0aa55h				; znacznik</PRE>
+
+
+<P><a name="boot_tut_linux01" id="boot_tut_linux01">Nie było to długie ani trudne</a>, prawda?
+ Rzecz jasna, nie można w <span lang="en">boot</span>sektorach
+ używać żadnych funkcji systemowych, na przykład linuksowego int 80h, bo żaden system po prostu
+ nie jest uruchomiony i załadowany.
+Tak napisany programik kompilujemy do formatu binarnego.
+Po kompilacji umieszczamy go na dyskietce przy użyciu programu napisanego już przez nas
+wcześniej. Resetujemy komputer (i upewniamy się, że BIOS spróbuje uruchomić system z
+dyskietki), wkładamy dyskietkę i.... cieszymy się swoim dziełem (co prawda ta jedynka
+może być mało widoczna, ale rzeczywiście znajduje się na ekranie).
+</P>
+<P>
+Zauważcie też, że system nie rozpoznaje już naszej dyskietki, mimo iż przedtem była
+sformatowana. Dzieje się tak dlatego, że w bootsektorze umieszczane są informacje o dysku.<BR>
+Bootsektor typu <acronym lang="en" title="File Allocation Table">FAT</acronym>12
+(vfat) powinien się zaczynać mniej-więcej tak:</P>
+	<BR><a href="#boot_tut_linux02" class="bezdruk">(przeskocz systemowy obszar <span lang="en">boot</span>sektora)</a>
+<PRE title="obszar bootsektora używany przez system">
+	org 7c00h			; lub org 0, oczywiście
+
+	start:
+		jmp short kod
+		nop
+
+		db &quot;        &quot;	; nazwa OS i wersja OEM (8B)
+		dw 512		; bajtów/sektor (2B)
+		db 1		; sektory/jednostkę alokacji (1B)
+		dw 1		; zarezerwowane sektory (2B)
+		db 2		; liczba tablic alokacji (1B)
+		dw 224		; liczba pozycji w katalogu głównym (2B)
+				; 224 to typowa wartość
+		dw 2880		; liczba sektorów (2B)
+		db 0f0h		; Media Descriptor Byte (1B)
+		dw 9		; sektory/FAT (2B)
+		dw 18		; sektory/ścieżkę (2B)
+		dw 2		; liczba głowic (2B)
+		dd 0		; liczba ukrytych sektorów (4B)
+		dd 0		; liczba sektorów (część 2),
+				; jeśli wcześniej było 0 (4B)
+		db 0		; numer dysku (1B)
+		db 0		; zarezerwowane (1B)
+		db 0		; rozszerzona sygnatura bloku ładującego
+		dd 0bbbbddddh	; numer seryjny dysku (4B)
+		db &quot;           &quot;; etykieta (11B)
+		db &quot;FAT 12  &quot;	; typ FAT (8B), zwykle  &quot;FAT 12  &quot;
+
+	kod:
+		; tutaj dopiero kod bootsektora</PRE>
+
+<P><a name="boot_tut_linux02" id="boot_tut_linux02">Ta porcja danych oczywiście uszczupla</a> ilość
+kodu, którą można umieścić w <span lang="en">boot</span>sektorze. Nie jest to
+jednak duży problem, gdyż i tak jedyną rolą większości <span lang="en">boot</span>sektorów
+ jest uruchomienie innych programów (<span lang="en">second stage bootloaders</span>),
+ które dopiero zajmują się ładowaniem właściwego systemu.
+</P>
+<P>
+Jeszcze ciekawostka: co wypisuje BIOS, gdy dysk jest niewłaściwy (niesystemowy)?<BR>
+Otóż - nic! BIOS bardzo chętnie przeszedłby do kolejnego urządzenia.<BR>
+Dlaczego więc tego nie robi i skąd ten napis o niewłaściwym dysku systemowym??<BR>
+Odpowiedź jest prosta - sformatowana dyskietka posiada <span lang="en">boot</span>sektor!<BR>
+Dla BIOSu jest wszystko OK, uruchamia więc ten <span lang="en">boot</span>sektor.
+ Dopiero ten wypisuje informację
+o niewłaściwym dysku, czeka na naciśnięcie klawisza, po czym uruchamia int 19h. O tym, co
+robi przerwanie 19h możecie przeczytać w artykule o resetowaniu.
+</P>
+<P>
+Miłego <span lang="en">boot</span>owania systemu!</P>
+<P>
+P.S. Jeśli nie chcecie przy najdrobniejszej zmianie kodu resetować komputera, możecie poszukać
+w Internecie programów, które symulują procesor (w tym fazę ładowania systemu).
+Jednym z takich programów jest
+<A HREF="http://bochs.sourceforge.net/" hreflang="en">Bochs</A>.</P>
+
+
+
+
+
+
+
+<Br>
+<hr>
+<h2 class="nag">Co dalej?</h2>
+<P>
+
+Mimo iż <span lang="en">boot</span>sektor jest ograniczony do 512 bajtów, to może w dość
+ łatwy sposób posłużyć do wczytania do pamięci o wiele większych programów. Wystarczy użyć
+ funkcji czytania sektorów. W
+ <A HREF="http://www-2.cs.cmu.edu/afs/cs.cmu.edu/user/ralf/pub/WWW/files.html" hreflang="en"
+>spisie Przerwań Ralfa <span lang="en">Brown</span>'a</A> czytamy:</P>
+	<BR><a href="#boot_tut_linux05" class="bezdruk">(przeskocz opis int 13h, ah=2)</a>
+<PRE lang="en" title="int 13h, ah=2">
+	INT 13 - DISK - READ SECTOR(S) INTO MEMORY
+		AH = 02h
+		AL = number of sectors to read (must be nonzero)
+		CH = low eight bits of cylinder number
+		CL = sector number 1-63 (bits 0-5)
+		     high two bits of cylinder (bits 6-7, hard disk only)
+		DH = head number
+		DL = drive number (bit 7 set for hard disk)
+		ES:BX -> data buffer
+	Return: CF set on error
+		CF clear if successful</PRE>
+
+<P><a name="boot_tut_linux05" id="boot_tut_linux05">Wystarczy więc wybrać nieużywany segment</a>
+pamięci, na przykład ES=8000h i począwszy od offsetu BX=0,
+ czytać sektory zawierające nasz kod, zwiększając BX o 512 za każdym razem. Kod do załadowania
+ nie musi być oczywiście w postaci pliku na dyskietce, to by tylko utrudniło pracę (gdyż trzeba
+ wtedy czytać tablicę plików FAT). Najłatwiej załadować kod tym samym sposobem, co
+ <span lang="en">boot</span>sektor, ale oczywiście do innych sektorów.
+ Najłatwiej to zrobić, sklejając skompilowany plik <span lang="en">boot</span>sektora
+ ze skompilowanym kodem i potem nagrać na dyskietkę:</P>
+<pre>
+		cat boot.bin system.bin > wszystko.bin
+		dd if=wszystko.bin of=/dev/fd0	</pre>
+<P>
+
+Po załadowaniu całego potrzebnego kodu do pamięci przez <span lang="en">boot</span>sektor,
+ wystarczy wykonać skok:</P>
+<pre>	jmp	8000h:0000h</pre>
+<P>Wtedy kontrolę przejmuje kod wczytany z dyskietki.</P>
+<P>
+Ale jest jeden kruczek - trzeba wiedzieć, jakie numery cylindra, głowicy i sektora podać
+ do funkcji czytające sektory, żeby rzeczywiście odczytała te właściwe.<br>
+Struktura standardowej dyskietki jest następująca: 512 bajtów na sektor, 18 sektorów na ścieżkę,
+ 2 ścieżki na cylinder (bo są dwie strony dyskietki, co daje 36 sektorów na cylinder),
+ 80 cylindrów na głowicę. Razem 2880 sektorów po 512 bajtów, czyli 1.474.560 bajtów.
+</P>
+<P>
+Mając numer sektora (bo wiemy, pod jakimi sektorami zapisaliśmy swój kod na dyskietce),
+ odejmujemy od niego 1 (tak by zawsze wszystkie numery sektorów zaczynały się od zera),
+ po czym dzielimy go przez 36. Uzyskany iloraz to numer cylindra (rejestr CH),
+ reszta zaś oznacza numer sektora w tymże cylindrze (rejestr CL). Jeśli ta reszta
+ jest większa bądź równa 18, należy wybrać głowicę numer 1 (rejestr DH), zaś od numeru
+ sektora (rejestr CL) odjąć 18. W przeciwnym przypadku należy wybrać głowicę numer 0 i nie robić nic
+ z numerem sektora.<br>
+W ten sposób otrzymujemy wszystkie niezbędne dane i możemy bez przeszkód w pętli czytać kolejne
+ sektory zawierające nasz kod.</P>
+<P>
+Całą tę procedurę ilustruje ten przykładowy kod:</P>
+	<BR><a href="#boot_tut_linux06" class="bezdruk">(przeskocz procedurę czytania sektorów)</a>
+<pre title="procedura czytania sektorów">
+secrd:
+;wejście: ax=sektor, es:bx wskazuje na dane
+
+	dec ax		; z numerów 1-36 na 0-35
+	mov cl,36	; liczba sektorów na cylinder = 36
+	xor dx,dx	; zakładamy na początek: głowica 0, dysk 0 (a:)
+	div cl		; AX (numer sektora) dzielimy przez 36
+	mov ch,al	; AL=cylinder, AH=przesunięcie względem
+			;	początku cylindra, czyli sektor
+	cmp ah,18	; czy numer sektora mniejszy od 18?
+	jb .sec_ok	; jeśli tak, to nie robimy nic
+	sub ah,18	; jeśli nie, to odejmujemy 18
+	inc dh		; i zmieniamy głowicę
+.sec_ok:
+	mov cl, ah	; CL = numer sektora
+	mov ax,0201h	; odczytaj 1 sektor
+	inc cl		; zwiększ z powrotem z zakresu 0-17 do 1-18
+
+	push dx		; niektóre biosy niszczą DX, nie ustawiają
+			;	flagi CF, lub zerują flagę IF
+	stc
+	int 13h		; wykonaj czytanie
+	sti
+	pop dx</pre>
+
+
+
+
+
+
+<br><br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm" name="boot_tut_linux06" id="boot_tut_linux06">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

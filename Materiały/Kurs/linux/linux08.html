@@ -1,0 +1,612 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 8 - Zaawansowane programy </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux07.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux09.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="linux, linuks, kurs, asm, asembler, assembler">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Mon, Oct 29 2012 17:22:20 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 8 - Zaawansowane programy, czyli zobaczmy,
+	 co ten język naprawdę potrafi</h1></div>
+
+<P>
+No cóż, nie jesteśmy już amatorami i przyszła pora, aby przyjrzeć się temu, w czym asembler
+wprost błyszczy: algorytmy intensywne obliczeniowo. Specjalnie na potrzeby tego kursu
+napisałem następujący programik. Zaprezentuję w nim kilka sztuczek i pokażę, do jakich rozmiarów
+(tutaj: 2 instrukcje) można ścisnąć główną pętlę programu.<BR>
+Oto ten programik:</P>
+	<BR><a href="#linux0801" tabindex="1" class="bezdruk">(przeskocz program obliczający sumę liczb)</a>
+<PRE title="program obliczający sumę liczb od 1 do n">
+; Program liczący sumę liczb od 1 do liczby wpisanej z klawiatury
+;
+; Autor: Bogdan D.
+;
+; kompilacja:
+;
+; nasm -O999 -f elf ciag_ar.asm
+; ld -s -o ciag_ar ciag_ar.o bibl/lib/libasmio.a
+;
+; fasm ciag_ar.asm ciag_ar.o
+; ld -s -o ciag_ar ciag_ar.o bibl/lib/libasmio.a
+
+; FASM:
+; format ELF
+; include &quot;bibl/incl/linuxbsd/fasm/std_bibl.inc&quot;
+; section &quot;.text&quot; executable
+; public _start
+
+; NASM
+%include &quot;bibl/incl/linuxbsd/nasm/std_bibl.inc&quot;
+section .text
+global _start
+
+
+
+_start:
+	pisz
+	db	&quot;Program liczy sume liczb od 1 do podanej liczby.&quot;,lf
+	db	&quot;Podaj liczbe calkowita: &quot;,0
+
+	we32e		; pobieramy z klawiatury liczbę do rejestru EAX
+	jnc	liczba_ok	; flaga CF=1 oznacza błąd
+
+
+blad:
+	pisz
+	db	lf, &quot;Zla liczba!&quot;,lf,0
+
+	wyjscie 1		; mov ebx, 1 / mov eax, 1 / int 80h
+
+liczba_ok:
+	test	eax, eax	; jeśli EAX=0, to też błąd
+	jz	blad
+
+	mov	ebx, eax	; zachowaj liczbę. EBX=n
+	xor	edx, edx	; EDX = nasza suma
+	mov	ecx, 1
+
+petla:
+	add	edx, eax	; dodaj liczbę do sumy
+	sub	eax, ecx	; odejmij 1 od liczby
+	jnz	petla		; liczba różna od zera?
+				; to jeszcze raz dodajemy
+
+	pisz
+	db	lf, &quot;Wynik z sumowania 1+2+3+...+n= &quot;,0
+
+	mov	eax, edx	; EAX = wynik
+	pisz32e			; wypisz EAX
+
+	mov	eax, ebx	; przywrócenie liczby
+	add	eax, 1		; EAX = n+1
+	mul	ebx		; EDX:EAX = EAX*EBX = n*(n+1)
+
+	shr	edx, 1
+	rcr	eax, 1		; EDX:EAX = EDX:EAX/2
+
+	pisz
+	db	lf, &quot;Wynik ze wzoru: n(n+1)/2= &quot;,0
+
+	pisz64		; wypisuje na ekranie 64-bitową liczbę całkowitą
+			; z EDX:EAX
+
+
+	nwln
+	wyjscie 0</PRE>
+
+<P><a name="linux0801" id="linux0801">Jak widać, nie jest on ogromny</a>,
+ a jednak spełnia swoje zadanie. Teraz przeanalizujemy ten krótki programik:</P>
+<UL>
+ <LI>Komentarz nagłówkowy.
+  <P>Mówi, co program robi oraz kto jest jego autorem. Może zawierać informacje o wersji programu,
+  o niestandardowym sposobie kompilacji/uruchomienia i wiele innych szczegółów.</P></LI>
+
+ <LI>pisz, we32e, pisz32e oraz pisz64.
+  <P>To są makra uruchamiające procedury z mojej biblioteki. Używam ich, bo są sprawdzone i nie
+  muszę ciągle umieszczać kodu tych procedur w programie.</P></LI>
+
+ <LI><P>Makro <q>wyjscie</q> zawiera w sobie kod wyjścia z programu, napisany obok.</P></LI>
+
+ <LI><CODE>test rej, rej / jz ... / jnz ...</CODE>
+   <P>Instrukcja <code>TEST</code> jest szybsza niż <CODE>cmp rej, 0</CODE>
+    i nie zmienia zawartości rejestru, w przeciwieństwie do <code>OR</code>.
+    Jest to najszybszy sposób na sprawdzenie, wartość rejestru wynosi 0.
+   </P></LI>
+
+ <LI>Pętla główna.
+   <P>Jak widać, najpierw do sumy dodajemy n, potem n-1, potem n-2, i na końcu 1. Umożliwiło to
+   znaczne skrócenie kodu pętli, a więc zwiększenie jej szybkości. Napisanie <CODE>sub eax, ecx</CODE>
+   zamiast <CODE>sub eax, 1</CODE> skraca rozmiar instrukcji i powoduje jej przyspieszenie,
+   gdyż dzięki temu w samej pętli procesor operuje już tylko na rejestrach.</P></LI>
+
+ <LI><CODE>shr edx, 1 / rcr eax, 1</CODE>
+   <P>Wynik musimy podzielić przez 2, zgodnie ze wzorem.
+   Niestety, nie ma instrukcji <CODE>shr</CODE> dla 64 bitów. Więc trzeba ten brak jakoś obejść.
+   Najpierw, <CODE>shr edx, 1</CODE> dzieli EDX przez 2, a bit 0 ląduje we fladze CF. Teraz,
+   <CODE>rcr eax, 1</CODE> (<span lang="en">rotate THROUGH CARRY</span>) wartość CF
+    (czyli stary bit 0 EDX) umieści w bicie 31 EAX. I o to chodziło!</P></LI>
+</UL>
+
+<hr>
+<P>
+Poniższy programik też napisałem dla tego kursu. Ma on pokazać złożone sposoby adresowania oraz
+instrukcje warunkowego przesunięcia (<code>CMOV..</code>):</P>
+
+	<BR><a href="#linux0802" class="bezdruk">(przeskocz program z macierzą)</a>
+
+<PRE title="program znajdujący największy i namniejszy element macierzy">
+; Program wczytuje od użytkownika macierz 3x3, po czym znajduje
+; element największy i najmniejszy
+;
+; Autor: Bogdan D.
+;
+; kompilacja:
+; nasm -O999 -f elf macierze.asm
+; ld -s -o macierze macierze.o -Lbibl/lib -lasmio
+;
+; fasm macierze.asm macierze.o
+; ld -s -o macierze macierze.o -Lbibl/lib -lasmio
+
+; FASM:
+; format ELF
+; include &quot;bibl/incl/linuxbsd/fasm/std_bibl.inc&quot;
+; section &quot;.text&quot; executable
+; public _start
+; rozmiar = 3
+
+; NASM
+%include &quot;bibl/incl/linuxbsd/nasm/std_bibl.inc&quot;
+%define rozmiar 3
+section .text
+global _start
+
+
+_start:
+
+	pisz
+	db	&quot;Prosze podac wszystkie 9 elementow macierzy,&quot;
+	db	lf, &quot;a ja znajde najwiekszy i najmniejszy.&quot;,lf,0
+
+	xor	edx, edx			; ECX = 0
+	mov	ebx, macierz
+
+petla_wczyt:
+	pisz
+	db	&quot;Prosze podac element numer &quot;,0
+	mov	eax, edx
+	add	eax, 1
+	pisz32e				; wypisz numer elementu
+
+	push	ebx
+	push	edx
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, dwukspc
+	mov	edx, 2
+	int	80h			; wypisz dwukropek i spację
+
+	pop	edx
+	pop	ebx
+
+	we32e				; wczytaj element
+	jc	blad
+	mov	[ebx+4*edx], eax	; umieść w macierzy
+
+	add	edx, 1			; zwiększ licznik elementów
+					; i równocześnie pozycję w macierzy
+
+	cmp	edx, rozmiar*rozmiar
+	jb	petla_wczyt
+
+	jmp	wczyt_gotowe
+
+blad:
+	pisz
+	db	lf, &quot;Zla liczba!&quot;,lf,0
+
+	wyjscie 1
+
+wczyt_gotowe:
+					; EBP = max, EDI = min
+
+	mov	ebp, [ebx]
+	mov	edi, [ebx]		; pierwszy element
+	mov	edx, 1
+	mov	eax, 1
+	mov	esi, rozmiar*rozmiar
+
+znajdz_max_min:
+	mov	ecx, [ ebx + 4*edx ]
+	cmp	ebp, ecx		; EBP &lt; macierz[edx] ?
+	cmovb	ebp, ecx		; jeśli tak, to EBP = macierz[edx]
+
+	cmp	edi, ecx		; EDI &gt; macierz[edx] ?
+	cmova	edi, ecx		; jeśli tak, to EDI = macierz[edx]
+
+	add	edx, eax
+	cmp	edx, esi
+	jb	znajdz_max_min
+
+	pisz
+	db	lf, &quot;Najwiekszy element: &quot;,0
+	mov	eax, ebp
+	pisz32e
+
+	pisz
+	db	lf, &quot;Najmniejszy element: &quot;,0
+	mov	eax, edi
+	pisz32e
+
+	nwln
+	wyjscie 0
+
+; FASM: section &quot;.data&quot; writeable
+section .data
+
+macierz		times	rozmiar*rozmiar		dd 0
+dwukspc		db &quot;: &quot;</PRE>
+
+
+
+<P><a name="linux0802" id="linux0802">Przypatrzmy się teraz miejscom</a>, gdzie można zwątpić
+w swoje umiejętności:</P>
+<UL>
+ <LI><CODE>mov	[ebx+4*edx], eax</CODE>
+  <P>EBX = adres macierzy. EDX = 0, 1, 2, ..., rozmiar*rozmiar=9. Elementy macierzy mają rozmiar po
+  4 bajty każdy, stąd EDX mnożymy przez 4. Innymi słowy, pierwszy EAX idzie do [ebx+4*0]=[ebx],
+  drugi do [ebx+4] (na 2 miejsce macierzy), trzeci do [ebx+8] itd.</P></LI>
+
+ <LI>Fragment kodu:<BR>
+  <PRE>
+	mov	ecx, [ ebx + 4*edx ]
+	cmp	ebp, ecx	; EBP &lt; macierz[edx] ?
+	cmovb	ebp, ecx	; jeśli tak, to EBP = macierz[edx]
+
+	cmp	edi, ecx	; EDI &gt; macierz[edx] ?
+	cmova	edi, ecx	; jeśli tak, to EDI = macierz[edx]
+
+	add	edx, eax
+	cmp	edx, esi
+	jb	znajdz_max_min   </PRE>
+
+  <P>Najpierw, do ECX idzie aktualny element. Potem porównujemy EBX z tym elementem i, gdy EBP &lt; ECX,
+  kopiujemy ECX do EBP. Do tego właśnie służy instrukcja <CODE>CMOVB</CODE>
+   (<span lang="en">Conditional MOVe if Below</span>).
+    Instrukcje z rodziny <code>(F)CMOV</code> umożliwiają pozbywanie się skoków warunkowych,
+  które obniżają wydajność kodu.<BR>
+  Podobnie, porównujemy EDI=min z ECX.<BR>
+  Potem, zwiększamy EDX o 1 i sprawdzamy, czy nie przeszliśmy przez każdy element macierzy.
+  </P></LI>
+</UL>
+
+<P>Powyższy program trudno nazwać <q>intensywnym obliczeniowo</q>, bo ograniczyłem rozmiar macierzy do
+3x3. Ale to był tylko przykład. Prawdziwe programy mogą operować na macierzach/tablicach
+zawierających
+miliony elementów. Podobny program napisany w HLLu jak C czy Pascal po prostu zaliczyłby się na
+śmierć.
+</P>
+<hr>
+<P>
+Teraz pokażę program, który ewoluował od nieoptymalnej formy (zawierającej na przykład więcej skoków
+warunkowych w głównej pętli oraz inne nieoptymalne instrukcje) do czegoś takiego:</P>
+	<BR><a href="#linux0803" class="bezdruk">(przeskocz program znajdujący liczby magiczne)</a>
+<PRE title="program znajdujący liczby magiczne">
+; L_mag.asm
+;
+; Program wyszukuje liczby, które są sumą swoich dzielników
+;
+; Autor: Bogdan D.
+; kontakt: bogdandr (at) op (dot) pl
+;
+; nasm -O999 -f elf l_mag.asm
+; ld -s -o l_mag l_mag.o
+;
+; fasm l_mag.asm l_mag
+
+; FASM:
+; format ELF executable
+; entry _start
+; segment readable executable
+; lf = 10
+
+; NASM
+%define lf 10		; znak przejścia do nowej linii (Line Feed)
+section .text
+global _start
+
+
+_start:
+	mov	ebx,1		; liczba początkowa
+
+	mov	ebp,1
+
+align 16
+start2:
+	mov	esi,ebx		; ESI = liczba
+
+	mov	ecx,ebp		; EBP = 1
+	shr	esi,1		; zachowanie połowy liczby
+
+	xor	edi,edi		; suma dzielników=0
+
+align 16
+petla:
+	xor	edx,edx		; dla dzielenia
+	nop
+	cmp	ecx,esi		; czy ECX (dzielnik)&gt;liczba/2?
+	mov	eax,ebx		; przywrócenie liczby do dzielenia
+	nop
+	ja	dalej2		; Jeśli ECX &gt; ESI, to koniec
+				; dzielenia tej liczby
+
+	nop
+	div	ecx		; EAX = EDX:EAX / ECX, EDX=reszta
+
+	nop
+	nop
+	add	ecx,ebp		; zwiększamy dzielnik o 1
+	nop
+
+	test	edx,edx		; czy ECX jest dzielnikiem?
+				; (czy EDX=reszta=0?)
+	nop
+	nop
+	jnz	petla		; nie? - dzielimy przez następną liczbę
+
+				; tak? -
+	lea	edi,[edi+ecx-1]	; dodajemy dzielnik do sumy,
+				; nie sprawdzamy na przepełnienie.
+				; ECX-1 bo dodaliśmy EBP=1 do ECX po DIV.
+
+	jmp	short petla	; dzielimy przez kolejną liczbę
+	ud2
+
+align 16
+dalej2:
+	cmp	ebx,edi		; czy to ta liczba?
+				; (czy liczba=suma dzielników?)
+	jne	nie		; nie
+
+	push	ebx
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, jest
+	mov	edx, jest_dlugosc
+	int	80h		; tak - napis &quot;znaleziono&quot;
+
+	pop	ebx
+
+	mov	eax,ebx
+	call	pl		; wypisujemy liczbę
+
+align 16
+nie:
+
+	cmp	ebx,0ffffffffh	; czy już koniec zakresu?
+	nop
+	je	koniec		; tak
+
+	add	ebx,ebp		; nie, zwiększamy liczbę badaną o 1
+	nop
+	jmp	start2		; i idziemy od początku
+	ud2
+
+align 16
+koniec:
+
+	push	ebx
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, meta
+	mov	edx, meta_dlugosc
+	int	80h
+
+	pop	eax
+	call	pl		; wypisujemy ostatnią sprawdzoną liczbę
+
+        mov     eax, 4
+        mov     ebx, 1
+        mov     ecx, nwln
+        mov     edx, 1
+        int     80h		; wypisz znak nowej linii
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h
+
+	ud2
+
+align 16
+pc:				; wypisuje cyfrę w AL
+	push	eax
+	or	al, &quot;0&quot;
+	mov	[cyfra], al
+
+	push	ebx
+	push	ecx
+	push	edx
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, cyfra
+	mov	edx, 1
+	int	80h
+
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+
+	ret
+	ud2
+
+align 16
+pl:			; wyświetla liczbę dziesięciocyfrową w EAX
+	mov	ecx,1000000000
+	xor	edx,edx
+	div	ecx
+	call	pc
+
+	mov	eax,edx
+	mov	ecx,100000000
+	xor	edx,edx
+	div	ecx
+	call	pc
+
+	mov	eax,edx
+	mov	ecx,10000000
+	xor	edx,edx
+	div	ecx
+	call	pc
+
+	mov	eax,edx
+	mov	ecx,1000000
+	xor	edx,edx
+	div	ecx
+	call	pc
+
+	mov	eax,edx
+	mov	ecx,100000
+	xor	edx,edx
+	div	ecx
+	call	pc
+
+	mov	eax,edx
+	mov	ecx,10000
+	xor	edx,edx
+	div	ecx
+	call	pc
+
+	mov	eax,edx
+	xor	edx,edx
+	mov	ecx,1000
+	div	ecx
+	call	pc
+
+	mov	eax,edx
+	mov	cl,100
+	div	cl
+	mov	ch,ah
+	call	pc
+
+	mov	al,ch
+	xor	ah,ah
+	mov	cl,10
+	div	cl
+	mov	ch,ah
+	call	pc
+
+	mov	al,ch
+	call	pc
+	ret
+	ud2
+
+
+; FASM:  segment readable writeable
+section .data align=4
+
+jest	db	lf,&quot;Znaleziono: &quot;
+jest_dlugosc	equ	$-jest	; FASM: "=" zamiast "equ"
+
+meta	db	lf,&quot;Koniec. ostatnia liczba: &quot;
+meta_dlugosc	equ	$-meta	; FASM: "=" zamiast "equ"
+
+cyfra	db	0
+nwln	db	lf</PRE>
+
+<a name="linux0803" id="linux0803">A oto analiza</a>:
+<UL>
+ <LI>Pętla główna:
+	<P>Dziel EBX przez kolejne przypuszczalne dzielniki. Jeśli trafisz na prawdziwy dzielnik
+	(reszta=EDX=0), to dodaj go do sumy=EDI.<BR>
+	Unikałem ustawiania obok siebie takich instrukcji, które zależą od siebie, jak na przykład
+	<CODE>CMP / JA</CODE> czy <CODE>DIV / ADD</CODE>
+	</P></LI>
+
+ <LI>Nie za dużo tych <CODE>NOP</CODE>ów?
+	<P>Nie. Zamiast czekać na wynik poprzednich instrukcji, procesor zajmuje się... robieniem
+	niczego. Ale jednak się zajmuje. Współczesne procesory potrafią wykonywać wiele
+	niezależnych instrukcji praktycznie równolegle. Więc w czasie, jak procesor czeka na
+	wykonanie poprzednich instrukcji, może równolegle wykonywać NOPy. Zwiększa to
+	przepustowość, utrzymuje układy dekodujące w ciągłej pracy, kolejka instrukcji
+	oczekujących na wykonanie nie jest pusta.
+	</P></LI>
+
+ <LI>Co robi instrukcja <CODE>lea edi,[edi+ecx-1]</CODE> ?
+	<P><code>LEA</code> -<span lang="en"> Load Effective Address</span>. Do rejestru EDI
+	załaduj ADRES (elementu, którego) ADRES
+	wynosi EDI+ECX-1. Czyli, w paskalowej składni: EDI := EDI+ECX-1. Do EDI dodajemy
+	znaleziony dzielnik. Musimy odjąć 1, bo wcześniej (po dzieleniu) zwiększyliśmy ECX o 1.
+	</P></LI>
+
+ <LI>Co robi instrukcja <CODE>UD2</CODE> i czemu jest umieszczona po instrukcjach JMP ?
+	<P>Ta instrukcja (<span lang="en">UnDefined opcode</span> 2) wywołuje wyjątek wykonania nieprawidłowej
+	instrukcji przez procesor. Umieściłem ją w takich miejscach, żeby nigdy nie była
+	wykonana.<BR>
+	Po co ona w ogóle jest w tym programie w takich miejscach?<BR>
+	Ma ona interesującą właściwość: powstrzymuje jednostki dekodujące instrukcje od dalszej
+	pracy. Po co dekodować instrukcje, które i tak nie będą wykonane (bo były po skoku
+	bezwarunkowym)? Strata czasu.
+	</P></LI>
+
+ <LI>Po co ciągle <CODE><span lang="en">align</span> 16</CODE> ?
+	<P>Te dyrektywy są tylko przed etykietami, które są celem skoku. Ustawianie kodu od
+	adresu, który dzieli się przez 16 może ułatwić procesorowi umieszczenie go w całej jednej
+	linii pamięci podręcznej (cache). Mniej instrukcji musi być pobieranych z pamięci
+	(bo te, które są najczęściej wykonywane już są w cache), więc szybkość dekodowania
+	wzrasta. Układania kodu i danych zwiększa ogólną wydajność programu
+	</P></LI>
+
+</UL>
+<P>O tych wszystkich sztuczkach, które tu zastosowałem, można przeczytać w podręcznikach dotyczących
+optymalizacji programów, wydanych zarówno przez Intel, jak i AMD (u AMD są też wymienione
+sztuczki, których można użyć do optymalizacji programów napisanych w języku C).<BR>
+Podaję adresy (te same co zwykle):
+<A class="amd_link" href="http://developer.amd.com/Resources/documentation/guides/Pages/default.aspx" hreflang="en"><acronym title="Advanced Micro Devices" lang="en">AMD</acronym></A>,
+<A class="intel_link" href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html" hreflang="en">Intel</A>.</P>
+<P>
+Życzę ciekawej lektury i miłej zabawy.</P>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux07.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux09.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Napisz program obliczający Największy Wspólny Dzielnik i Najmniejszą Wspólną Wielokrotność
+	dwóch liczb wiedząc, że:<BR>
+	NWD(a,b) = NWD(b, reszta z dzielenia a przez b) i NWD(n,0)=n (algorytm Euklidesa)<BR>
+	NWW(a,b) = a*b / NWD(a,b)
+	<BR><BR></LI>
+ <LI>Napisz program rozkładający daną liczbę na czynniki pierwsze (liczba może być umieszczona
+	w kodzie programu).</LI>
+</OL>
+
+</BODY></HTML>

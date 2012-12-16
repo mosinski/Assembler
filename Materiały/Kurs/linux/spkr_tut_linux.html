@@ -1,0 +1,200 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Programowanie głośniczka </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="spkr_tut_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="PC Speaker - programowanie pod Linuksem">
+<META NAME="Keywords" CONTENT="linux, linuks, PC Speaker, głośniczek, asm, assembler, asembler">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 18:00:00 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Programowanie głośniczka w asemblerze pod Linuksem</h1>
+
+<P>
+Czy nie myślicie czasem, jakby to było, gdyby można było wzbogacić swój
+program oprócz efektu wizualnego, także o efekt dźwiękowy?</P>
+<P>
+Programowanie kart dźwiękowych (zwłaszcza tych nowoczesnych) może sprawiać
+niemałe kłopoty. Stary, poczciwy <span lang="en">PC-Speaker</span> jest jednak urządzeniem względnie
+prostym w programowaniu i to właśnie tutaj udowodnię. Najpierw troszkę teorii, potem - do dzieła!
+</P>
+<P>
+Linux jest systemem działającym w pełni w trybie chronionym. Dlatego bez uprawnień
+administratora nie możemy bezpośrednio pisać do interesujących nas portów (42h, 43h, 61h).</P>
+<P>
+Na szczęście istnieje funkcja systemowa <span class="b">sys_ioctl</span> (numer 54)
+ i to ona nam pomoże w ożywieniu głośniczka systemowego. Funkcja ta jako parametry przyjmuje:</P>
+<UL>
+ <LI>EBX = deskryptor otwartego pliku (dla nas będzie to /dev/console lub
+ 	standardowe wyjście - STDOUT) do zapisu</LI>
+ <LI>ECX = stała KIOCSOUND = 0x4B2F (patrz: /usr/include/linux/kd.h)</LI>
+ <LI>EDX =
+  <UL>
+   <LI>0 gdy chcemy wyłączyć dźwięk</LI>
+   <LI>1234DDh / częstotliwość, gdy chcemy mieć dźwięk o żądanej częstotliwości</LI>
+  </UL></LI>
+</UL>
+<P>Ale to nie wszystko. Chcemy, by nasz dźwięk chwilę potrwał. W tym celu skorzystamy z
+funkcji <span class="b">sys_nanosleep</span> (numer 162). Jej składnia jest prosta:</P>
+<UL>
+ <LI>EBX = adres struktury timespec wyglądającej tak (w składni FASM):
+	<PRE>
+	struc	timespec
+	 {
+		.tv_sec		rd 1
+		.tv_nsec	rd 1
+	 }</PRE>
+
+	i zawierającej wpisane ilości sekund i nanosekund, które należy odczekać.</LI>
+ <LI>ECX = adres struktury timespec, do której funkcja zapisze wynik swojego działania.</LI>
+</UL>
+<P>Jak widać schemat działania naszego programu jest dość prosty:</P>
+<OL>
+ <LI>Otworzyć /dev/console do zapisu. W przypadku niepowodzenia użyć STDOUT</LI>
+ <LI>Ewentualnie wywołać sys_ioctl z EDX=0 w celu wyłączenia aktualnie trwającego dźwięku</LI>
+ <LI>Tyle razy ile trzeba, wywołać sys_ioctl z odpowiednimi wartościami w EDX i korzystać z funkcji
+	sys_nanosleep</LI>
+ <LI>Wywołać sys_ioctl z EDX=0 w celu wyłączenia dźwięku</LI>
+ <LI>Jeśli otworzyliśmy /dev/console, zamknąć ten deskryptor</LI>
+</OL>
+
+<P>Przykładowy program wygląda tak (używanie załączników z mojej biblioteki nie jest
+konieczne - w kodzie mówię, jak i co zamienić):</P>
+	<BR><a href="#spkr_tut_linux01" class="bezdruk" tabindex="1">(przeskocz program)</a>
+<PRE>
+; Program wytwarzający dźwięki z głośniczka przez sys_ioctl
+; Autor: Bogdan D.
+; Kontakt: bogdandr (at) op (dot) pl
+;
+; kompilacja:
+;   fasm spkr.asm spkr
+
+format ELF executable
+entry _start
+
+segment readable executable
+
+include &quot;bibl/incl/linuxbsd/fasm/fasm_system.inc&quot;
+
+KIOCSOUND	= 0x4B2F
+
+_start:
+	mov	eax, sys_open	; sys_open = 5
+	mov	ebx, konsola
+	mov	ecx, O_WRONLY	; O_WRONLY = 1
+	mov	edx, 777o
+	int	80h
+
+	cmp	eax, 0		; czy wystąpił błąd (EAX &lt; 0) ?
+	jg	.otw_ok
+
+	mov	eax, 1		; jak nie otworzyliśmy konsoli, piszemy
+				; na STDOUT (1)
+.otw_ok:
+	mov	ebx, eax	; EBX = uchwyt do pliku
+
+	mov	eax, sys_ioctl	; sys_ioctl = 54
+	mov	ecx, KIOCSOUND
+	xor	edx, edx	; wyłączenie ewentualnych dźwięków
+	int	80h
+
+	mov	eax, sys_ioctl
+	mov	edx, 2711	; 2711 = 1234DDh/440. 440 Hz to dźwięk A
+	int	80h
+
+        mov     cx, 0fh
+        mov     dx, 4240h	; 0F4240h to 1 milion dziesiętnie
+        call    pauza
+
+        mov     eax, sys_ioctl
+	mov	ecx, KIOCSOUND
+	xor	edx, edx	; wyłączamy dźwięk
+	int     80h
+
+	cmp	ebx, 2		; sprawdzamy, czy używamy /dev/console
+				; czy STDOUT
+	jbe	.koniec
+
+	mov	eax, sys_close	; sys_close = 6
+	int	80h		; zamykamy otwarty plik konsoli
+
+.koniec:
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h
+
+pauza:				;procedura pauzująca przez CX:DX milisekund
+	push    ebx
+	push    ecx
+	push    edx
+
+	mov     ax, cx
+	shl     eax, 16
+	mov     ebx, 1000000
+	mov     ax, dx 			; EAX = CX:DX
+	xor     edx, edx
+	div     ebx			; CX:DX dzielimy przez milion
+	mov     [t1.tv_sec], eax 	; EAX = liczba sekund
+
+	mov     ebx, 1000
+	mov     eax, edx		;EAX = pozostała liczba mikrosekund
+	mul     ebx
+	mov     [t1.tv_nsec], eax 	; EAX = liczba nanosekund
+
+	mov     eax, sys_nanosleep	; funkcja numer 162
+	mov     ebx, t1
+	mov     ecx, t2
+	int     80h
+
+	pop     edx
+	pop     ecx
+	pop     ebx
+
+	ret
+
+segment readable writeable
+
+konsola		db	&quot;/dev/console&quot;, 0
+
+struc	timespec
+ {
+	.tv_sec		rd 1
+	.tv_nsec	rd 1
+ }
+
+t1 timespec
+t2 timespec</PRE>
+
+<P>
+<a name="spkr_tut_linux01" id="spkr_tut_linux01">Mam nadzieję, że podałem</a> wystarczająco informacji, abyście
+ samodzielnie zaczęli programować głośniczek. Jeśli mi się nie udało, to zawsze
+ możecie skorzystać z gotowej procedury z mojej biblioteki.</P>
+<P>Jeśli program nie powoduje wydawania żadnych dźwięków, może trzeba wkompilować obsługę głośniczka
+do jądra (lub załadować odpowiedni moduł). Czasem mogą być potrzebne uprawnienia administratora.
+</P>
+<P>
+To już koniec. Miłej zabawy!</P>
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

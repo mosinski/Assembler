@@ -1,0 +1,452 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 17 - Pobieranie i wyświetlanie </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux16.htm">
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, assembler, assembler, wejście/wyjście, wczytywanie liczb,
+	wyświetlanie">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:58 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 17 - Pobieranie i wyświetlanie, czyli jak komunikować się ze światem</h1>
+	</div>
+
+<p>
+O ile wyświetlanie i pobieranie od użytkownika tekstów jest łatwe do wykonania - wystarczy
+uruchomić tylko jedną funkcję systemową (eax=3 lub 4 przerwania 80h) -
+to pobieranie i wyświetlanie na przykład liczb
+wcale nie jest takie proste i każdemu może przysporzyć problemów. W tej części podam parę
+algorytmów, dzięki którym każdy powinien sobie z tym poradzić.
+</p>
+
+<BR>
+
+<HR>
+	<h2 class="nag">Wyświetlanie tekstu</h2>
+
+	<BR><a href="#pobieranie_txt" tabindex="1" class="bezdruk">(przeskocz wyświetlanie tekstu)</a>
+<P>
+Co prawda wszyscy już to umieją, ale dla porządku też o tym wspomnę.<br>
+Wszyscy znają funkcję EAX=4 przerwania Linuksa - w EBX podajemy deskryptor, na który wyświetlamy
+(1 oznacza standardowe wyjście, najczęściej ekran), w ECX - adres bufora z napisem do wyświetlenia, a
+w EDX - liczba bajtów do wyświetlenia. Po wywołaniu <code>int 80h</code>
+w EAX dostajemy liczba zapisanych bajtów (jeśli EAX jest ujemny, to wystąpił błąd).
+</P>
+<P>
+Zawsze można też <a href="tryb_txt_linux.html" hreflang="pl">wyświetlać tekst ręcznie</a>.</P>
+
+
+
+
+
+<BR>
+
+<HR>
+	<h2 class="nag"><a name="pobieranie_txt" id="pobieranie_txt">Pobieranie tekstu</a></h2>
+
+	<BR><a href="#wysw_liczb" class="bezdruk">(przeskocz pobieranie tekstu)</a>
+<P>
+Do pobierania tekstów od użytkownika służy funkcja EAX=3 przerwania Linuksa -
+w EBX podajemy deskryptor, z którego czytamy
+(0 oznacza standardowe wejście, najczęściej klawiaturę), w ECX - adres bufora na dane, a
+w EDX - liczba bajtów do przeczytania. Po wywołaniu <code>int 80h</code> w buforze dostajemy
+dane, a w EAX - liczba przeczytanych bajtów (jeśli EAX jest ujemny, to wystąpił błąd).
+</P>
+
+
+
+
+<HR>
+	<h2 class="nag"><a name="wysw_liczb" id="wysw_liczb">Wyświetlanie liczb</a></h2>
+
+	<BR><a href="#pobieranie_liczb" class="bezdruk">(przeskocz wyświetlanie liczb)</a>
+<P>
+Są generalnie dwa podejścia do tego problemu:</P>
+<ol>
+<li>dzielenie przez coraz mniejsze potęgi liczby 10 (zaczynając od najwyższej
+  odpowiedniej) i wyświetlanie ilorazów</li>
+<li>dzielenie przez 10 i wyświetlanie reszt wspak</li>
+</ol>
+<P>Podejście pierwsze jest zilustrowane takim kodem dla liczb 16-bitowych (0-65535):</P>
+<pre>
+	mov	ax, [liczba]
+	xor	dx, dx
+	mov	cx, 10000
+	div	cx
+	or	al, '0'
+	; wyświetl AL jako znak
+	mov	ax, dx
+	xor	dx, dx
+	mov	cx, 1000
+	div	cx
+	or	al, '0'
+	; wyświetl AL jako znak
+	mov	ax, dx
+	mov	cl, 100
+	div	cl
+	or	al, '0'
+	; wyświetl AL jako znak
+	mov	al, ah
+	xor	ah, ah
+	mov	cl, 10
+	div	cl
+	or	ax, '00'
+	; wyświetl AL jako znak
+	; potem wyświetl AH jako znak</pre>
+
+<P>Jak widać, im więcej cyfr może mieć liczba, tym więcej będzie takich bloków. Trzeba zacząć
+od najwyższej możliwej potęgi liczby 10, bo inaczej może dojść do przepełnienia. W każdym
+kroku dzielnik musi mieć o jedno zero mniej, gdyż inaczej nie uda się wyświetlić prawidłowego
+wyniku (może być dwucyfrowy i wyświetli się tylko jakiś znaczek). Ponadto, jeśli liczba wynosi
+na przykład 9, to wyświetli się 00009, czyli wiodące zera nie będą skasowane. Można to
+oczywiście ominąć.</P>
+
+<P>
+Podejście drugie jest o tyle wygodniejsze, że można je zapisać za pomocą pętli. Jest to
+zilustrowane procedurą _pisz_ld z
+<a href="linux04.html" hreflang="pl">części czwartej</a> oraz kodem z mojej biblioteki:</P>
+<pre>
+	mov	ax, [liczba]
+	xor	si, si			; indeks do bufora
+	mov	cx, 10			; dzielnik
+_pisz_l_petla:				; wpisujemy do bufora reszty z
+					; dzielenia liczby przez 10,
+	xor	dx, dx			; czyli cyfry wspak
+	div	cx			; dziel przez 10
+	or	dl, '0'			; dodaj kod ASCII cyfry zero
+	mov	[_pisz_bufor+si], dl	; zapisz cyfrę do bufora
+	inc	si			; zwiększ indeks
+	test	ax, ax			; dopóki liczba jest różna od 0
+	jnz	_pisz_l_petla
+
+_pisz_l_wypis:
+	mov	al, [_pisz_bufor+si-1]	; pobierz znak z bufora
+	call	far _pisz_z		; wyświetla znak
+	dec	si			; przejdź na poprzedni znak
+	jnz	_pisz_l_wypis</pre>
+
+<P>Zmienna _pisz_bufor to bufor odpowiedniej liczby bajtów.</P>
+
+
+
+
+
+
+
+<BR>
+
+<HR>
+	<h2 class="nag"><a name="pobieranie_liczb" id="pobieranie_liczb">Pobieranie liczb</a></h2>
+
+	<BR><a href="#spr" class="bezdruk">(przeskocz pobieranie liczb)</a>
+<P>
+Do tego zagadnienia algorytm jest następujący:</P>
+<ol>
+<li>wczytaj łańcuch znaków od razu w całości lub wczytuj znak po znaku w kroku 3</li>
+<li>wstępnie ustaw wynik na 0</li>
+<li>weź kolejny znak z wczytanego łańcucha znaków (jeśli już nie ma, to koniec)</li>
+<li>zamień go na jego wartość binarną. Jeśli znak wczytałeś do AL, to wystarczy:<br>
+    <code>sub al, '0'</code></li>
+<li>przemnóż bieżący wynik przez 10</li>
+<li>dodaj do niego wartość AL otrzymaną z kroku 4</li>
+<li>skacz do 3</li>
+</ol>
+<P>Przykładową ilustrację można znaleźć także w mojej bibliotece:</P>
+<pre>
+	xor	bx, bx		; miejsce na liczbę
+l_petla:
+	call	far _we_z	; pobierz znak z klawiatury
+
+	cmp	al, lf		; czy Enter?
+	je	l_juz		; jeśli tak, to wychodzimy
+	cmp	al, cr
+	je	l_juz
+				; przepuszczamy Spacje:
+	cmp	al, spc
+	je	l_petla
+
+	cmp	al, '0'		; jeśli nie cyfra, to błąd
+	jb	l_blad
+	cmp	al, '9'
+	ja	l_blad
+
+	and	al, 0fh		; izolujemy wartość (sub al, '0')
+	mov	cl, al
+	mov	ax, bx
+
+	shl	bx, 1		; zrobimy miejsce na nową cyfrę
+	jc	l_blad
+
+	shl	ax, 1
+	jc	l_blad
+	shl	ax, 1
+	jc	l_blad
+	shl	ax, 1
+	jc	l_blad
+
+	add	bx, ax		; BX=BX*10 - bieżącą liczbę mnożymy przez 10
+	jc	l_blad
+
+	add	bl, cl		; dodajemy cyfrę
+	adc	bh, 0
+	jc	l_blad		; jeśli przekroczony limit, to błąd
+
+	jmp	short l_petla
+l_juz:
+	; wynik w AX</pre>
+
+
+<BR>
+
+<HR>
+	<h2 class="nag"><a name="spr" id="spr">Sprawdzanie rodzaju znaku</a></h2>
+
+	<BR><a href="#wyswietlanie_ulamkow" class="bezdruk">(przeskocz sprawdzanie rodzaju znaku)</a>
+<P>
+Powiedzmy, że użytkownik naszego programu wpisał nam jakieś znaki (tekst, liczby).
+ Jak teraz sprawdzić, co dokładnie otrzymaliśmy? Sprawa nie jest trudna, lecz wymaga czasem
+ zastanowienia i tablicy
+ <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+ pod ręką.</P>
+<ol>
+ <li>Cyfry<br>
+	<P>Cyfry w kodzie ASCII zajmują miejsca od 30h (zero) do 39h (dziewiątka). Wystarczy więc
+	sprawdzić, czy wczytany znak mieści się w tym zakresie:</P>
+	<pre>
+		cmp	al, '0'
+		jb	nie_cyfra
+		cmp	al, '9'
+		ja	nie_cyfra
+		; tu wiemy, że AL reprezentuje cyfrę.
+		; Pobranie wartości tej cyfry:
+		and	al, 0fh	; skasuj wysokie 4 bity, zostaw 0-9</pre>
+ 	</li>
+
+ <li>Litery<br>
+ 	<P>Litery, podobnie jak cyfry, są uporządkowane w kolejności w dwóch osobnych grupach
+ 	(najpierw wielkie, potem małe). Aby sprawdzić, czy znak w AL jest literą, wystarczy kod</P>
+	<pre>
+			cmp	al, 'A'
+			jb	nie_litera	; na pewno nie litera
+			cmp	al, 'Z'
+			ja	sprawdz_male	; na pewno nie wielka,
+						; sprawdź małe
+			; tu wiemy, że AL reprezentuje wielką literę.
+			; ...
+		sprawdz_male:
+			cmp	al, 'a'
+			jb	nie_litera	; na pewno nie litera
+			cmp	al, 'z'
+			ja	nie_litera
+			; tu wiemy, że AL reprezentuje małą literę.</pre>
+ 	</li>
+
+ <li>Cyfry szesnastkowe<br>
+	<P>Tu sprawa jest łatwa: należy najpierw sprawdzić, czy dany znak jest cyfrą.
+	Jeśli nie, to sprawdzamy, czy jest wielką literą z zakresu od A do F. Jeśli nie,
+	to sprawdzamy, czy jest małą literą z zakresu od a do f. Wystarczy połączyć powyższe
+	fragmenty kodu. Wyciągnięcie wartości wymaga jednak więcej kroków:</P>
+	<pre>
+		; jeśli AL to cyfra '0'-'9'
+		and	al, 0fh
+		; jeśli AL to litera 'A'-'F'
+		sub	al, 'A' - 10
+		; jeśli AL to litera 'a'-'f'
+		sub	al, 'a' - 10</pre>
+
+	<P>Jeśli AL jest literą, to najpierw odejmujemy od niego kod odpowiedniej (małej
+	lub wielkiej) litery A. Dostajemy wtedy wartość od 0 do 5. Aby dostać realną wartość
+	danej litery w kodzie szesnastkowym, wystarczy teraz dodać 10. A skoro AL-'A'+10 to
+	to samo, co AL-('A'-10), to już wiecie, skąd się wzięły powyższe instrukcje.
+ 	</P></li>
+
+ <li>Przerabianie wielkich liter na małe i odwrotnie<br>
+ 	<P>Oczywistym sposobem jest odjęcie od litery kodu odpowiedniej litery A (małej lub wielkiej),
+ 	po czym dodanie kodu tej drugiej, czyli:</P>
+ 	<pre>
+ 		; z małej na wielką
+ 		sub	al, 'a'
+ 		add	al, 'A'
+ 		; z wielkiej na małą
+ 		sub	al, 'A'
+ 		add	al, 'a'</pre>
+
+ 	<P>lub nieco szybciej:</P>
+ 	<pre>
+ 		; z małej na wielką
+ 		sub	al, 'a' - 'A'
+ 		; z wielkiej na małą
+ 		sub	al, 'A' - 'a'</pre>
+
+ 	<P>Ale jest lepszy sposób: patrząc w tabelę kodów ASCII widać, że litery małe od wielkich
+ 	różnią się tylko jednym bitem - bitem numer 5. Teraz widać, że wystarczy</P>
+ 	<pre>
+ 		; z małej na wielką
+ 		and	al, 5fh
+ 		; z wielkiej na małą
+ 		or	al, 20h</pre>
+ 	</li>
+</ol>
+
+
+
+<BR><BR>
+
+<HR>
+<h2 class="nag"><a name="wyswietlanie_ulamkow" id="wyswietlanie_ulamkow">Wyświetlanie liczb niecałkowitych</a></h2>
+
+<BR><a href="#pobieranie_ulamkow" class="bezdruk">(przeskocz wyświetlanie liczb niecałkowitych)</a>
+<P>
+To zagadnienie można rozbić na dwa etapy:</P>
+<ol>
+ <li>wyświetlenie części całkowitej liczby</li>
+ <li>wyświetlenie części ułamkowej liczby</li>
+</ol>
+<P>Do wyświetlenia części całkowitej może nam posłużyć procedura wyświetlania liczb całkowitych,
+wystarczy z danej liczby wyciągnąć część całkowitą. W tym celu najpierw ustawiamy tryb zaokrąglania
+na obcinanie (gdyż inaczej na przykład część całkowita z liczby 1,9 wyniosłaby 2):</P>
+<pre>
+	fnstcw	[status]			  ; status to 16-bitowe słowo
+	or	word [status], (0Ch &lt;&lt; 8)  ; zaokrąglanie: obcinaj
+	;or	word [status], (0Ch shl 8) ; dla FASMa
+	fldcw	[status]</pre>
+
+<P>W trakcie całej procedury wyświetlania będziemy korzystać z tego właśnie trybu zaokrąglania.
+<em class="wazne">Pamiętajcie</em>, aby przy wyjściu z procedury przywrócić poprzedni stan
+słowa kontrolnego koprocesora (na przykład poprzez skopiowanie wartości zmiennej <code>status</code>
+przed jej zmianą do innej zmiennej, po czym załadowanie słowa kontrolnego z tej drugiej zmiennej).
+</P>
+<P>
+Teraz wyciągamy część całkowitą liczby następującym kodem:</P>
+<pre>
+	frndint				; jeśli liczba była w ST0
+	fistp	qword [cz_calkowita]</pre>
+
+<P>Pojawia się jednak problem, gdy część całkowita nie zmieści się nawet w 64 bitach. Wtedy trzeba
+skorzystać z tego samego sposobu, który był podany dla liczb całkowitych: ciągłe dzielenie przez 10
+i wyświetlenie reszt z dzielenia wspak.<br>
+W tym celu ładujemy na stos <acronym title="Floaing-Point Unit" lang="en">FPU</acronym> część całkowitą
+z naszej liczby oraz liczbę 10:</P>
+<pre>
+	frndint				; jeśli liczba była w ST0
+	fild	word [dziesiec]		; zmienna zawierająca wartość 10
+	fxch	st1			; stos: ST0=część całkowita, ST1=10</pre>
+
+<P>Stos koprocesora zawiera teraz część całkowitą naszej liczby w ST0 i wartość 10 w ST1. Po wykonaniu</P>
+<pre>
+	fprem				; stos: ST0=mod (część całkowita,10), ST1=10</pre>
+
+<P>w ST0 dostajemy resztę z dzielenia naszej liczby przez 10 (czyli cyfrę jedności, do wyświetlenia jako
+ostatnią). Resztę tę zachowujemy do bufora na cyfry. Teraz dzielimy liczbę przez 10:</P>
+<pre>
+					; ST0=część całkowita, ST1=10
+	fdiv	st0, st1		; ST0=część całkowita/10, ST1=10
+	frndint				; ST0=część całkowita z poprzedniej
+					; podzielonej przez 10, ST1=10</pre>
+
+<P>i powtarzamy całą procedurę do chwili, w której część całkowita stanie się zerem, co sprawdzamy takim
+na przykład kodem:</P>
+<pre>
+	ftst				; zbadaj liczbę w ST0 i ustaw flagi FPU
+	fstsw	[status]		; zachowaj flagi FPU do zmiennej
+	mov	ax, [status]
+	sahf				; zapisz AH do flag procesora
+	jnz	powtarzamy_dzielenie</pre>
+
+<P>Po wyświetleniu części całkowitej należy wyświetlić separator (czyli przecinek), po czym zabrać się
+do wyświetlania części ułamkowej. To jest o tyle prostsze, że uzyskane cyfry można od razu wyświetlić,
+bez korzystania z żadnego bufora.</P>
+<P>
+Algorytm jest podobny jak dla liczb całkowitych, z tą różnicą, że teraz liczba jest na każdym kroku
+mnożona przez 10:</P>
+<pre>
+					; ST0=część ułamkowa, ST1=10
+	fmul	st0, st1		; ST0=część ułamkowa * 10, ST1=10
+	fist	word [liczba]		; cyfra (część ułamkowa*10) do zmiennej</pre>
+
+<P>Po wyświetleniu wartości znajdującej się we wskazanej zmiennej, należy odjąć ją od bieżącej liczby,
+dzięki czemu na stosie znów będzie liczba mniejsza od jeden i będzie można powtórzyć procedurę:</P>
+<pre>
+	fild	word [liczba]		; ST0=część całkowita,
+					; ST1=część całkowita + część ułamkowa,
+					; ST2=10
+	fsubp	st1, st0		; ST0=nowa część ułamkowa, ST1=10</pre>
+
+<P>Po każdej iteracji sprawdzamy, czy liczba jeszcze nie jest zerem (podobnie jak powyżej).</P>
+
+<BR>
+
+<HR>
+<h2 class="nag"><a name="pobieranie_ulamkow" id="pobieranie_ulamkow">Pobieranie liczb niecałkowitych</a></h2>
+
+<P>
+Procedurę wczytywania liczb niecałkowitych można podzielić na dwa etapy:</P>
+<ol>
+ <li>wczytanie części całkowitej</li>
+ <li>wczytanie części ułamkowej</li>
+</ol>
+<P>Wczytywanie części całkowitej odbywa się podobnie, jak dla liczb całkowitych: bieżącą liczbę
+pomnóż przez 10, po czym dodaj aktualnie wprowadzoną cyfrę. Kluczowa część kodu wyglądać może więc
+podobnie do tego fragmentu:</P>
+<pre>
+	; kod wczytujący cyfrę ładuje ją do zmiennej WORD [cyfra]
+					; ST0=10, ST1=aktualna liczba
+	fmul	st1, st0		; ST0=10, ST1=liczba*10
+	fild	word [cyfra]		; ładujemy ostatnią cyfrę,
+					; ST0=cyfra, ST1=10, ST2=10 * liczba
+	faddp	st2, st0		; ST0=10, ST1=liczba*10 + cyfra</pre>
+
+<P>Procedurę tę powtarza się do chwili napotkania separatora części ułamkowej (czyli przecinka, ale
+można akceptować też kropkę). Od chwili napotkania separatora następuje przejście do wczytywania
+części ułamkowej.</P>
+<P>
+Aby wczytać część ułamkową, najlepiej powrócić do algorytmu z dzieleniem. Wszystkie wprowadzane cyfry
+najpierw ładujemy do bufora, potem odczytujemy wspak, dodajemy do naszej liczby i dzielimy ją przez 10.
+Zasadnicza część pętli mogłaby wyglądać podobnie do tego:</P>
+<pre>
+	fild	word [cyfra]	; ST0=cyfra, ST0=bieżąca część ułamkowa, ST2=10
+	faddp	st1, st0	; ST0=cyfra+bieżąca część ułamkowa, ST1=10
+	fdiv	st0, st1	; ST0=nowa liczba/10 = nowy ułamek, ST1=10</pre>
+
+<P>Po wczytaniu całej części ułamkowej pozostaje tylko dodać ją do uprzednio wczytanej części całkowitej
+i wynik gotowy.</P>
+<P>
+<em class="wazne">Pamiętajcie</em> o dobrym wykorzystaniu stosu koprocesora: nigdy nie przekraczajcie
+ośmiu elementów i nie zostawiajcie więcej, niż otrzymaliście jako parametry.</P>
+
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux16.html">Poprzednia część kursu</a> (Alt+3)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+<HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <li>Korzystając z przedstawionych tu algorytmów, napisz algorytmy wczytujące i wyświetlające
+ 	liczby dziesiętne 8-bitowe.</li>
+ <li>Korzystając z przedstawionych tu algorytmów, napisz algorytmy wczytujące i wyświetlające
+ 	liczby szesnastkowe 16-bitowe (wystarczy zmienić liczby, przez które mnożysz i dzielisz
+ 	oraz to, jakie znaki są dozwolone i wyświetlane - dochodzą litery od A do F).</li>
+</OL>
+
+</BODY></HTML>

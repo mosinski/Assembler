@@ -1,0 +1,297 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="asm.css" type="text/css">
+
+<TITLE> Programy w asemblerze i nie tylko </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="index.htm">
+<link rel="Contents" hreflang="pl" lang="en" href="index.htm">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Programy w asemblerze">
+<META NAME="Keywords" CONTENT="Assembler, asembler, kurs, nauka, programy, kody, źródła">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="Kwrite">
+
+<!-- <base href="http://rudy.mif.pg.gda.pl/~bogdro/"> -->
+<meta http-equiv="Last-Modified" content="Sun, Mar 18 2012 12:04:08 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Moje (i nie tylko moje) programy</h1>
+<br>
+<ol>
+ <LI><a name="programy05" id="programy05">Kilka moich
+	<acronym lang="en" title="Disk Operating System">DOS</acronym>-owych programów</a> (rzecz jasna,
+ 	były one testowane - ale i tak <em class="wazne">uruchamiasz na WŁASNĄ
+	odpowiedzialność</em>). Rozszerzenia zostały zmienione na .TXT, aby można je było
+	poprawnie oglądać w przeglądarce. Po ściągnięciu plików ich rozszerzenia można zmienić z
+	powrotem na .ASM:<BR>
+	<a href="programy.htm#s06" tabindex="1" class="bezdruk">(przeskocz programy dla DOSa)</a>
+  <UL>
+   <LI>Program zamieniający polskie literki w pliku na ich bezogonkowe odpowiedniki:
+    	<A HREF="dos/asm/bez_pol.txt">bez_pol.txt</A></LI>
+   <LI>Program zapisujący boot-sektor dyskietki w pliku:
+    	<A HREF="dos/asm/bootrd.txt">bootrd.txt</A></LI>
+   <LI>Program czyszczący dyskietkę:
+    	<A HREF="dos/asm/czyscdsk.txt">czyscdsk.txt</A></LI>
+   <LI>Program uruchmiający inny program ze zmienioną datą systemową:
+    	<A HREF="dos/asm/data_f.txt">data_f.txt</A></LI>
+   <LI>Program usuwający pliki po ich uprzednim wyczyszczeniu:
+    	<A HREF="dos/asm/usun.txt">usun.txt</A></LI>
+   <LI>Program zapisujący całą dyskietkę w pliku:
+    	<A HREF="dos/asm/dysk_rd.txt">dysk_rd.txt</A></LI>
+   <LI>Program tworzący dyskietkę z pliku (odwrotność dysk_rd):
+    	<A HREF="dos/asm/dysk_wr.txt">dysk_wr.txt</A></LI>
+   <LI>Program wyświetlający FLAGI procesora (25 bajtów!)
+    	<A HREF="dos/asm/flagi.txt">flagi.txt</A></LI>
+   <LI>Program liczący liczby pierwsze
+    	<A HREF="dos/asm/ile_pier.txt">ile_pier.txt</A></LI>
+   <LI>Program powodujący miganie diód na klawiaturze:
+    	<A HREF="dos/asm/klaw.txt">klaw.txt</A></LI>
+   <LI>Program wyłączający monitor (oszczędza energię i ekran, tylko 31 bajtów):
+    	<A HREF="dos/asm/mon_off.txt">mon_off.txt</A></LI>
+   <LI>Program zamieniający wszystkie litery w danym pliku na wielkie:
+    	<A HREF="dos/asm/na_duze.txt">na_duze.txt</A></LI>
+   <LI>Program zamieniający wszystkie litery w danym pliku na małe:
+    	<A HREF="dos/asm/na_male.txt">na_male.txt</A></LI>
+   <LI>Program wyświetlający wartości rejestrów tuż po uruchomieniu (.com):
+	<A HREF="dos/asm/rej32.txt">rej32.txt</A></LI>
+   <LI>Program wyświetlający wartości rejestrów tuż po uruchomieniu (.exe):
+    	<A HREF="dos/asm/rej32e.txt">rej32e.txt</A></LI>
+   <LI>Program rysujący okrąg w trybie graficznym 320x200:
+    	<A HREF="dos/asm/kolo.txt">kolo.txt</A></LI>
+   <LI>Program rysujący ramki (okienka) w trybie tekstowym:
+    	<A HREF="dos/asm/ramki.txt">ramki.txt</A></LI>
+   <LI>Program wyświetlający swoją linię poleceń i zmienne środowiska:
+    	<A HREF="dos/asm/liniap.txt">liniap.txt</A></LI>
+   <LI>Program wyświetlający obrazek typu BMP 320x200 w 256 kolorach:
+    	<A HREF="dos/asm/bmp1.txt">bmp1.txt</A></LI>
+   <LI>Program zamieniający wyrażenie na Odwrotną Notację Polską (patrz cz. 5 kursu):
+    	<A HREF="dos/asm/onp.txt">onp.txt</A></LI>
+
+   <LI>Wszystkie moje programy spakowane ZIP-em:
+    <A HREF="dos/asm/programy.zip">programy.zip</A><BR><BR></LI>
+
+  </UL>
+<!--
+   Wskazówki:
+
+    <OL>
+     <LI>Napis "(NASM)" oznacza kod źródłowy w składni NASMa (gdzie ściągnąć? - patrz dalej).
+	Sposób kompilacji jest umieszczony w kodach źródłowych.
+	</LI>
+     <LI>Napis "(FASM)" oznacza kod źródłowy w składni FASMa (gdzie ściągnąć? - patrz
+         dalej). Kompilacja jest prosta - należy sciągnąć kompilator w wersji GUI, uruchomić
+	 go, otworzyć plik z kodem i z menu "Run" wybrać "Run".</LI>
+
+     <LI>Napis "(Windows)" oznacza, że program można uruchamiać TYLKO pod Windowsem.</LI>
+    </OL>
+-->
+ <BR></LI>
+
+ <LI><a name="programy06" id="programy06">Kilka moich Linuksowych programów</a> (rzecz jasna,
+ 	były one testowane - ale i tak <em class="wazne">uruchamiasz na WŁASNĄ
+	odpowiedzialność</em>). Rozszerzenia zostały zmienione na .TXT, aby można je było
+	poprawnie oglądać w przeglądarce. Po ściągnięciu plików ich rozszerzenia można zmienić z
+	powrotem na .ASM:<BR>
+	<a href="programy.htm#s07" class="bezdruk">(przeskocz programy dla Linuksa)</a>
+  <UL>
+   <LI>Program zamieniający polskie literki w pliku na ich bezogonkowe odpowiedniki:
+    	<A HREF="linux/asm/bez_pol.txt">bez_pol.txt - lnx</A></LI>
+   <LI>Program zapisujący boot-sektor dyskietki w pliku:
+    	<A HREF="linux/asm/bootrd.txt">bootrd.txt - lnx</A></LI>
+   <LI>Program czyszczący dyskietkę:
+    	<A HREF="linux/asm/czyscdsk.txt">czyscdsk.txt - lnx</A></LI>
+   <LI>Program usuwający pliki po ich uprzednim wyczyszczeniu:
+    	<A HREF="linux/asm/usun.txt">usun.txt - lnx</A></LI>
+   <LI>Program zapisujący całą dyskietkę w pliku:
+    	<A HREF="linux/asm/dysk_rd.txt">dysk_rd.txt - lnx</A></LI>
+   <LI>Program tworzący dyskietkę z pliku (odwrotność dysk_rd):
+    	<A HREF="linux/asm/dysk_wr.txt">dysk_wr.txt - lnx</A></LI>
+   <LI>Program wyświetlający FLAGI procesora:
+	<A HREF="linux/asm/flagi.txt">flagi.txt - lnx</A></LI>
+   <LI>Program liczący liczby pierwsze:
+	<A HREF="linux/asm/ile_pier.txt">ile_pier.txt - lnx</A></LI>
+   <LI>Program powodujący miganie diód na klawiaturze:
+    	<A HREF="linux/asm/klaw.txt">klaw.txt - lnx</A></LI>
+   <LI>Program zamieniający wszystkie litery w danym pliku na wielkie:
+    	<A HREF="linux/asm/na_duze.txt">na_duze.txt - lnx</A></LI>
+   <LI>Program zamieniający wszystkie litery w danym pliku na małe:
+    	<A HREF="linux/asm/na_male.txt">na_male.txt - lnx</A></LI>
+   <LI>Program wyświetlający wartości rejestrów tuż po uruchomieniu:
+	<A HREF="linux/asm/rej32.txt">rej32.txt - lnx</A></LI>
+   <LI>Program wyświetlający swoją linię poleceń i zmienne środowiska:
+	<A HREF="linux/asm/liniap.txt">liniap.txt - lnx</A></LI>
+   <LI>Program zamieniający wyrażenie na Odwrotną Notację Polską (patrz cz. 5 kursu):
+    	<A HREF="linux/asm/onp.txt">onp.txt - lnx</A></LI>
+
+   <LI>Wszystkie powyższe programy spakowane TAR+GZ:
+    <A HREF="linux/asm/programy.tar.gz">programy.tar.gz</A><BR><BR></LI>
+
+  </UL>
+<!--
+   Wskazówki:
+   <OL>
+     <LI>Napis "(NASM)" oznacza kod źródłowy w składni NASMa (gdzie ściągnąć? - patrz
+	 dalej). Sposób kompilacji jest umieszczony w kodach źródłowych.</LI>
+     <LI>Napis "(FASM)" oznacza kod źródłowy w składni FASMa (gdzie ściągnąć? - patrz
+         dalej). Sposób kompilacji jest umieszczony w kodach źródłowych.</LI>
+
+    </OL>
+-->
+ <BR></LI>
+
+ <LI><a name="programy07" id="programy07">Inne moje programy</a>: procedury niezależne od systemu
+ 	(czyli działające bez żadnego, tylko na
+ 	<acronym lang="en" title="Basic Input/Output System">BIOS</acronym>ie/
+	<acronym title="Complementary Metal-Oxide Semiconductor" lang="en">CMOS</acronym>ie)
+ 	oraz skrypty co prawda nie w asemblerze, ale związane z tym językiem.
+ 	Jak poprzednio: <em class="wazne">żadnej gwarancji działania</em>.<BR>
+	<a href="programy.htm#s08" class="bezdruk">(przeskocz inne programy)</a>
+
+  <UL>
+   <LI>Procedury czytania i zapisywania sektora dyskietki w pierwszej stacji dyskietek oraz do wyświetlenia
+   	bitmapy 320x200x256 (mając daną tablicę z całą zawartością pliku) + plik nagłówkowy dla C:
+   	<A HREF="inne/bmp-sek.txt" type="text/plain">bmp-sek.txt</A>,
+   	<A HREF="inne/bmp-sek.h" type="text/plain">bmp-sek.h</A></LI>
+   <LI>Procedura zimnego resetu + plik nagłówkowy dla C:
+   	<A HREF="inne/coldboot.txt" type="text/plain">coldboot.txt</A>,
+	<A HREF="inne/coldboot.h" type="text/plain">coldboot.h</A></LI>
+   <LI>Procedury ustawiania i pobierania daty i czasu + plik nagłówkowy dla C:
+   	<A HREF="inne/dataczas.txt" type="text/plain">dataczas.txt</A>,
+   	<A HREF="inne/dataczas.h" type="text/plain">dataczas.h</A></LI>
+   <LI>Procedura wykrywania modelu procesora + plik nagłówkowy dla C:
+   	<A HREF="inne/procesor.txt" type="text/plain">procesor.txt</A>,
+   	<A HREF="inne/procesor.h" type="text/plain">procesor.h</A></LI>
+   <LI>Skrypt
+   	<A HREF="http://www.perl.org" hreflang="en"><acronym
+   	title="Practical Extraction and Reporting Language" lang="en">Perla</acronym></A>
+   	przerabiający pliki nagłówkowe C na ich odpowiedniki dla
+   	<A HREF="http://flatassembler.net" title="Flat Assembler" hreflang="en"
+	>FASM</A>a: <A HREF="inne/konw-fasm.txt" type="text/plain">konw-fasm.txt</A></LI>
+   <LI>Skrypt Perla przerabiający pliki nagłówkowe C na ich odpowiedniki dla
+   	<A HREF="http://sourceforge.net/projects/nasm" title="Strona domowa NASMa" hreflang="en"
+	><acronym lang="en" title="Netwide Assembler">NASM</acronym></A>a:
+	<A HREF="inne/konw-nasm.txt" type="text/plain">konw-nasm.txt</A></LI>
+   <LI>Skrypt Perla przerabiający pliki nagłówkowe C na ich odpowiedniki dla
+   	GNU asemblera:
+	<A HREF="inne/konw-gas.txt" type="text/plain">konw-gas.txt</A></LI>
+   <LI>Kilka ciekawych makr dla FASMa: ciąg Fibonacciego, linux_makedev, checksum i 16-bitowy CALL FAR:
+   	<A HREF="inne/makra-fasm.txt" type="text/plain">makra-fasm.txt</A></LI>
+   <LI>Kolorowanie składni FASMa w edytorach <a href="http://www.kate-editor.org/"
+   	hreflang="en">Kate i KWrite</a> (skopiuj plik do $HOME/.kde/share/apps/katepart/syntax/)
+   	<A HREF="inne/fasm.xml" type="text/plain">fasm.xml</A></LI>
+   <LI>Ulepszone kolorowanie składni NASMa w edytorach Kate i KWrite (skopiuj plik do
+   	$HOME/.kde/share/apps/katepart/syntax/) <A HREF="inne/nasm.xml" type="text/plain">nasm.xml</A></LI>
+   <LI>Skrypt Perla przerabiający programy GNU asemblera na programy FASMa:
+   	<A HREF="inne/gas2fasm.txt" type="text/plain">gas2fasm.txt</A></LI>
+   <LI>Skrypt Perla przerabiający programy GNU asemblera na programy NASMa:
+   	<A HREF="inne/gas2nasm.txt" type="text/plain">gas2nasm.txt</A></LI>
+   <LI>Skrypt Perla przerabiający programy NASMa na programy FASMa:
+   	<A HREF="inne/nasm2fasm.txt" type="text/plain">nasm2fasm.txt</A></LI>
+   <LI>Skrypt Perla przerabiający programy FASMa na programy NASMa:
+   	<A HREF="inne/fasm2nasm.txt" type="text/plain">fasm2nasm.txt</A></LI>
+   <LI>Skrypt Perla generujący Makefile'e dla FASMa:
+   	<A HREF="inne/make4fasm.txt" type="text/plain">make4fasm.txt</A></LI>
+   <LI>Skrypt Perla generujący sekcję __versions w modułach jądra 2.6, napisanych w składni FASMa:
+   	<A HREF="inne/symvers-fasm.txt" type="text/plain">symvers-fasm.txt</A></LI>
+   <LI>Skrypt Perla przerabiający programy FASMa na programy GNU asemblera:
+   	<A HREF="inne/fasm2gas.txt" type="text/plain">fasm2gas.txt</A></LI>
+   <LI>Skrypt Perla przerabiający programy NASMa na programy GNU asemblera:
+   	<A HREF="inne/nasm2gas.txt" type="text/plain">nasm2gas.txt</A></LI>
+   <LI>Skrypt Perla generujący dokumentację HTML z plików źródłowych:
+   	<A HREF="inne/asmdoc.txt" type="text/plain; charset=utf-8">asmdoc.txt</A> </LI>
+   <LI>Zestaw makr dla <a href="http://www.gnu.org/software/autoconf/autoconf.html"
+	hreflang="en">Autoconfa</a> sprawdzających obecność kompilatorów asemblera i ich opcje:
+   	<A HREF="inne/ac_prog_asm.zip">ac_prog_asm.zip</A>, dostępne także w <a
+   	href="http://autoconf-archive.cryp.to/" hreflang="en">Archiwum Autoconfa</a>. </LI>
+   <LI>Skrypt Perla przerabiający odpowiednio udokumentowane pliki asemblera na składnię
+   	pseudo-C, by program <a href="http://www.doxygen.org/" hreflang="en">Doxygen</a>
+   	mógł wygenerować dla nich dokumentację. Składnia komentarzy jest
+   	taka sama, jak dla AsmDoc powyżej. Szczegóły w środku:
+   	<A HREF="inne/asm4doxy.txt" type="text/plain">asm4doxy.txt</A> </LI>
+   <li>Asm::X86 - Moduł Perla pozwalający sprawdzić, czy dany łańcuch znaków jest rejestrem lub
+   	instrukcją procesora, dający pełną listę rejestrów i instrukcji w składniach Intela i
+   	AT&amp;T oraz możliwość konwersji między składniami. Dostępny jest na
+   	<A href="inne/#asm_x86" hreflang="en">anglojęzycznej stronie z programami</A>.
+  </UL><br>
+  Wszystkie skrypty Perla i definicje kolorowania składni można też znaleźć na mojej <a
+  href="inne/" hreflang="en">anglojęzycznej podstronie</a>.
+
+ <BR><BR></LI>
+
+ <LI><a name="programy08" id="programy08">Kilka programów innych osób</a>
+  <ul>
+   <li>Autor: <em class="wazne">Remek</em>.<BR>
+<!-- 	<a href="programy.htm#s09" class="bezdruk">(przeskocz programy Remka)</a><br> -->
+ 	Krótki opis i instrukcje do kompilacji znajdują się wpliku czytaj.txt.<BR>
+ 	Katalogi z programami (Win32): ArytmDuzych, Bat (pliki do kompilacji), dec_bin_hex,
+ 	Dialog, Dzielenie, Hex na dec, movzb, ortograf (schemat podmiany niektórych wyrazów), wsprintf,
+ 	ASCII_na_znak, dec_hex, Dll (biblioteka wymagana przez niektóre programy), Haslo,
+ 	Mnozenie, na_ASCII, Potega, Silnia.<BR>
+ 	Archiwum: <A HREF="dos/asm/inni/remek-2006-03-07.zip">remek-2006-03-07.zip</A>
+      <BR><BR>
+   </li>
+   <li>Autor: <em class="wazne">Yesma</em>.<BR>
+   	<ul>
+<!--   	 <li>Program monitorujący sieć - wyświetla informacje o pakietach (Linux64):
+ 	  <A HREF="linux/asm/inni/monitor-net-yesma.txt" type="text/plain; charset=utf-8"
+ 	  	>monitor-net-yesma.txt</A>
+	 </li>-->
+   	 <li>Program monitorujący sieć (Linux):
+ 	  <A HREF="linux/asm/inni/net_monitor_i386.zip">net_monitor_i386.zip</A>
+	 </li>
+   	 <li>Prosty edytor tekstu pod X11 (Linux):
+ 	  <A HREF="linux/asm/inni/yesmaX11prog1.zip">yesmaX11prog1.zip</A>
+ 	 </li>
+   	 <li>Program do wyszukiwania tekstu w plikach (Linux64):
+ 	  <A HREF="linux/asm/inni/yesma-find_str.zip">yesma-find_str.zip</A>
+ 	 </li>
+   	 <li>Program do rekursywnego uruchamiania programów w danym katalogu z danymi parametrami (Linux64):
+ 	  <A HREF="linux/asm/inni/yesma-RunRecursive.zip">yesma-RunRecursive.zip</A>
+ 	 </li>
+ 	</ul>
+      <BR>
+   </li>
+   <LI>Autor: <em class="wazne">marikaz</em>.<br>
+   	Program umożliwiający logowanie za pomocą hasła (DOS):
+   	<A HREF="dos/asm/inni/spass.txt">spass.txt</A>
+      <BR><BR>
+   </LI>
+   <LI>Autor: <em class="wazne">johnny</em>.<br>
+   	<ul>
+   	 <li>Program wyświetlający 15000 liczb pierwszych (DOS):
+   	 	<A HREF="dos/asm/inni/prime.txt">prime.txt</A></LI>
+   	 <LI>Program wyświetlający 15000 liczb pierwszych (Linux):
+   	 	<A HREF="linux/asm/inni/prime.txt">prime.txt - lnx</A></LI>
+   	</ul>
+      <BR>
+      </li>
+   <LI>Autor: <em class="wazne">fishcake</em>.<br>
+   	Bootloader dla dysków twardych z systemem plików FAT16:
+   	<A HREF="dos/asm/inni/bootloader.txt">bootloader.txt</A>
+      <BR><BR>
+   </LI>
+   <LI>Autor: <em class="wazne">Waldemar Sudoł</em>.<br>
+   	Program do interpretowania zapisów w <a href="dos/a_kurs05.htm" hreflang="pl"
+		>Odwrotnej Notacji Polskiej</a>:
+   	<A HREF="dos/asm/inni/onp-proj.txt" type="text/plain; charset=windows-1250">onp-proj.txt</A>
+      <BR><BR>
+   </LI>
+  </ul>
+ </LI>
+
+
+</ol>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</body></html>

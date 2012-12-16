@@ -1,0 +1,638 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Własne biblioteki </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Tworzenie własnych bibliotek pod Linuksem">
+<META NAME="Keywords" CONTENT="biblioteka, lib, asm, linux, linuks, assembler, asembler">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:56 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Pisanie własnych bibliotek w języku asembler pod Linuksem</h1>
+
+
+<P>Pewnie zdarzyło się już wam usłyszeć o kimś innym:<BR>
+<q>Ależ on(a) jest świetnym(ą) programistą(ką)! Nawet pisze własne biblioteki!</q><BR>
+Pokażę teraz, że nie jest to trudne, nie ważne jak przerażającym się to może wydawać.
+Osoby, które przeczytają ten artykuł i zdobędą troszkę wprawy będą mogły mówić:<BR>
+<q>Phi, a co to za filozofia pisać własne biblioteki!</q></P>
+
+<P>Zacznijmy więc od pytania: co powinno się znaleźć w takiej bibliotece?<BR>
+Mogą to być:</P>
+<UL>
+ <LI> Funkcje wejścia i wyjścia, podobnie jak na przykład w języku C<BR><BR></LI>
+ <LI> Funkcje, które już przepisywaliśmy ze 20 razy w różnych programach<BR><BR></LI>
+ <LI> Sprawdzone funkcje, napisane przez kogoś innego, których nie umielibyśmy sami
+      napisać, lub które po prostu mogą się przydać<BR><BR></LI>
+</UL>
+
+<P>Co to zaś jest to owa biblioteka?<BR>
+Jest to plik na który składa się skompilowany kod, a więc na przykład pliki .o.
+Sama biblioteka najczęściej ma rozszerzenie .a (gdy zawiera statyczny kod) lub .so.*
+ (dla bibliotek współdzielonych).
+Biblioteka eksportuje na zewnątrz nazwy
+procedur w niej zawartych, aby linker wiedział, jaki adres podać programowi, który chce
+skorzystać z takiej procedury.</P>
+<P>
+Będę w tym artykule używał składni i linii poleceń  NASMa (<span lang="en">Netwide Assembler</span>)
+ z linkerem LD i archiwizatorem AR.</P>
+<P>Napiszmy więc jakiś prosty kod źródłowy. Oto on:</P>
+	<BR><a href="#bibl_tut_linux01" tabindex="1" class="bezdruk">(przeskocz przykładowy moduł biblioteki)</a>
+<PRE title="przykładowy moduł biblioteki">
+;  Biblioteka Standardowa
+;  Emisja dźwięku przez głośniczek
+;  Autor: Bogdan Drozdowski, 09.2002
+;  kontakt: bogdandr MAŁPKA op.pl
+;  Wersja Linux: 05.02.2004
+;  Ostatnia modyfikacja: 29.08.2004
+
+%include &quot;../incl/linuxbsd/nasm/n_system.inc&quot;
+
+global  _graj_dzwiek
+
+KIOCSOUND       equ     0x4B2F
+
+section .data
+
+konsola		db	&quot;/dev/console&quot;, 0
+
+struc timespec
+        .tv_sec:	resd 1
+        .tv_nsec:	resd 1
+endstruc
+
+t1 istruc timespec
+t2 istruc timespec
+
+segment biblioteka_dzwiek
+
+
+_graj_dzwiek:
+
+;  graj
+
+;  wejście:	BX = żądana częstotliwość dźwięku w Hz, co najmniej 19
+;		CX:DX = czas trwania dźwięku w mikrosekundach
+;
+;  wyjście:	CF = 0 - wykonane bez błędów
+;		CF = 1 - błąd:	 BX za mały
+
+	pushfd
+	push    eax
+	push    ebx
+	push    ecx
+	push    edx
+	push	esi
+
+	cmp     bx, 19		;najniższa możliwa częstotliwość to ok. 18Hz
+	jb      ._graj_blad
+
+	push	ecx
+	push	edx
+	push	ebx
+
+	mov     eax, sys_open	; otwieramy konsolę do zapisu
+	mov     ebx, konsola
+	mov     ecx, O_WRONLY
+	mov     edx, 600q
+	int     80h
+
+        cmp     eax, 0
+        jg      .otw_ok
+
+        mov     eax, 1  	; jak nie otworzyliśmy konsoli,
+        			; piszemy na standardowe wyjście
+.otw_ok:
+        mov     ebx, eax	; EBX = uchwyt do pliku
+	mov	esi, eax	; ESI = uchwyt do pliku
+
+	mov     eax, sys_ioctl	; sys_ioctl = 54
+	mov     ecx, KIOCSOUND
+	xor     edx, edx	; wyłączenie ewentualnych dźwięków
+	int     80h
+
+	pop	ebx		; BX = częstotliwość
+	mov	eax, 1234ddh
+	xor	edx, edx
+	div	ebx		; EAX=1234DD/EBX - ta liczba idzie do ioctl
+
+	mov     edx, eax
+	mov	ebx, esi	; EBX = uchwyt do konsoli lub stdout
+	mov     eax, sys_ioctl
+	int     80h
+
+	pop	edx
+	pop	ecx
+
+				; pauza o długości CX:DX mikrosekund:
+	mov	eax, ecx
+	shl	eax, 16
+	mov	ebx, 1000000
+	mov	ax, dx		; EAX = CX:DX
+	xor	edx, edx
+	div     ebx
+	mov     [t1+timespec.tv_sec], eax ;  EAX = liczba sekund
+
+	mov     ebx, 1000
+	mov     eax, edx
+	mul     ebx
+	mov     [t1+timespec.tv_nsec], eax ;  EAX = liczba nanosekund
+
+	mov     eax, sys_nanosleep
+	mov     ebx, t1
+	mov     ecx, t2
+	int     80h		; robimy przerwę...
+
+
+	mov	eax, sys_ioctl
+	mov	ebx, esi	; EBX = uchwyt do konsoli/stdout
+	mov	ecx, KIOCSOUND
+	xor	edx, edx	; wyłączamy dźwięk
+	int	80h
+
+	cmp	ebx, 2		; nie zamykamy stdout
+	jbe	._graj_koniec
+
+        mov	eax, sys_close  ; sys_close = 6
+        int	80h
+
+
+._graj_koniec:
+	pop	esi
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+	popfd
+	clc			;  zwróć brak błędu
+
+	ret
+
+
+._graj_blad:
+	pop	esi
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+
+	popfd
+	stc			;  zwróć błąd
+
+	ret
+
+</PRE>
+<P><a name="bibl_tut_linux01" id="bibl_tut_linux01">Jest to moja procedura</a> wytwarzająca dźwięk
+w głośniczku (patrz mój <a href="spkr_tut_linux.html" hreflang="pl">artykuł o programowaniu głośniczka</a>).
+Trochę tego jest, co? Ale jest tu dużo spraw, które można omówić.</P>
+
+<P>Zacznijmy więc po kolei:</P>
+<OL>
+ <LI> <CODE>global...</CODE>
+      <P>Funkcje, które mają być widoczne na zewnątrz tego pliku, a więc możliwe do użycia przez
+      inne programy, muszą być zadeklarowane jako <q lang="en">public</q> (w NASMie: global).
+       Tutaj jest to na wszelki wypadek.
+      Niektóre kompilatory domyślnie traktują wszystkie symbole jako publiczne, inne nie.
+      Jeśli w programie będziemy chcieli korzystać z takiej funkcji, należy ją zadeklarować
+      jako <q>extrn</q> (FASM) lub <q>extern</q> (NASM).
+	</P></LI>
+ <LI> Deklaracja segmentu
+      <P>Żaden przyzwoity kompilator nie pozwoli na pisanie kodu poza jakimkolwiek segmentem
+      (no chyba, że domyślnie zakłada segment kodu, jak NASM).
+      Normalnie, w zwykłych programach, rolę tę pełni dyrektywa <q lang="en">section .text</q>.
+	</P></LI>
+ <LI> Gwiazdki lub inne elementy oddzielające (tu usunięte)
+      <P>Mogą się wydawać śmieszne lub niepotrzebne, ale gdy liczba procedur w pliku zaczyna
+      sięgać 10-20, to NAPRAWDĘ zwiększają czytelność kodu, oddzielając procedury, dane itd.
+	</P></LI>
+ <LI> Deklaracja procedury (wcześniej zadeklarowanej jako global)
+      <P>Znak podkreślenia z przodu jest tylko po to, by w razie czego nie był identyczny z jakąś
+      etykietą w programie korzystającym z biblioteki.
+	</P></LI>
+ <LI> To, czego procedura oczekuje i to, co zwraca.
+      <P>Jedną procedurę łatwo zapamiętać. Ale co zrobić, gdy jest ich już 100? Analizować kod każdej,
+      aby sprawdzić, co robi, bo akurat szukamy takiej jednej....? No przecież nie.
+	</P></LI>
+ <LI> <P>Dobrą techniką programowania jest deklaracja stałych w stylu EQU
+ 	(lub #<span lang="en">define</span> w C).
+      Zamiast nic nie znaczącej liczby można użyć wiele znaczącego zwrotu, co przyda się dalej
+      w kodzie. I nie kosztuje to ani jednego bajtu. Oczywiście, ukrywa to część kodu (tutaj:
+      numery portów), ale w razie potrzeby zmienia się tę wielkość tylko w 1 miejscu, a nie
+      w 20.
+	</P></LI>
+ <LI> Zachowywanie zmienianych rejestrów (<span lang="en">push</span>)
+      <P>Poza wartościami zwracanymi nic nie może być zmienione! Nieprzyjemnym uczuciem byłoby
+      spędzenie kilku godzin przy odpluskwianiu (debugowaniu) programu tylko dlatego, że ktoś
+      zapomniał zachować jakiegoś rejestru, prawda?
+	</P></LI>
+ <LI> <P>Sprawdzanie warunków wejścia, czy są prawidłowe. Zawsze należy wszystko przewidzieć.
+	</P></LI>
+ <LI> <P>Kod procedury. Z punktu widzenia tego artykułu jego treść jest dla nas nieistotna.
+	</P></LI>
+ <LI> Punkt(y) wyjścia
+      <P>Procedura może mieć dowolnie wiele punktów wyjścia. Tutaj zastosowano
+      dwa, dla dwóch różnych sytuacji:</P>
+      <OL>
+       <LI> parametr był dobry, procedura zakończyła się bez błędów<BR><BR></LI>
+       <LI> parametr był zły, zwróć informację o błędzie<BR><BR></LI>
+      </OL></LI>
+</OL>
+
+<P>Mamy więc już plik źródłowy. Co z nim zrobić? Skompilować, oczywiście!</P>
+<PRE>nasm -f elf naszplik.asm</PRE>
+<P>(-f - określ format pliku wyjściowego: <span lang="en">Executable-Linkable</span> Format,
+ typowy dla Linuksa)
+</P>
+<P>
+Mamy już plik naszplik.o. W pewnym sensie on już jest biblioteką! I można go używać w innych
+programach, na przykład w pliku program2.asm mamy (FASM):</P>
+<PRE>
+	...
+	extrn _graj_dzwiek		; NASM: extern _graj_dzwiek
+
+	...
+	...
+	mov bx,440
+	mov cx,0fh
+	mov dx,4240h
+	call _graj_dzwiek
+	...</PRE>
+
+<P>I możemy teraz zrobić:</P>
+<PRE>
+	nasm -f elf program2.asm
+	ld -s -o program2 program2.o naszplik.o</PRE>
+
+<P>a linker zajmie się wszystkim za nas - utworzy plik program2, zawierający także
+naszplik.o. Jaka z tego korzyść? Plik program2.asm może będzie zmieniany w przyszłości
+wiele razy, ale naszplik.asm/.o będzie ciągle taki sam. A w razie chęci zmiany procedury
+_graj_dzwiek wystarczy ją zmienić w jednym pliku i tylko jego ponownie skompilować, bez potrzeby
+wprowadzania tej samej zmiany w kilkunastu innych programach. Te programy wystarczy
+tylko ponownie skompilować z nową <q>biblioteką</q>, bez jakichkolwiek zmian kodu.
+</P>
+<P>
+No dobra, ale co z plikami .a?<BR>
+Otóż są one odpowiednio połączonymi plikami .o. I wszystko działa tak samo.</P>
+<P>No ale jak to zrobić?<BR>
+Służą do tego specjalne programy, w DOSie nazywane <q lang="en">librarian</q> (bibliotekarz).
+ My tutaj użyjemy
+archiwizatora AR. Pliki .o, które chcemy połączyć w bibliotekę podajemy na linii poleceń:</P>
+<PRE>	ar -r libasm.a plik1.o plik2.o</PRE>
+
+<P>I otrzymujemy plik libasm.a, który można dołączać linkerem do programów:</P>
+<PRE>	ld -s -o naszprog naszprog.o -L/ścieżka_do_pliku.a -lasm</PRE>
+<P>lub:</P>
+<PRE>	ld -s -o naszprog naszprog.o /ścieżka_do_pliku.a/libasm.a</PRE>
+<BR>
+
+
+
+
+
+<HR>
+<h2 class="nag">Biblioteki współdzielone .so</h2>
+
+<P>
+Prawie wszystkie programy w Linuksie używają podstawowej biblioteki systemu - biblioteki
+ języka C. Wyobrażacie sobie, ile miejsca w pamięci zajęłyby wszystkie używane kopie tej biblioteki?
+ Na pewno niemało. A poradzono sobie z tym, tworząc specjalny rodzaj plików - bibliotekę
+ współdzieloną, ładowaną i łączoną z programem dynamicznie (w chwili uruchomienia). Pliki
+ te (o rozszerzeniu .so) są odpowiednikami plików DLL znanych z systemów Windows. Teraz
+ pokażę, jak pisać i kompilować takie pliki. Wszystko to znajdziecie też w dokumentacji
+ kompilatora NASM.</P>
+<P>
+Reguły są takie:</P>
+<OL>
+ <LI><P>Dalej trzymajcie się wszystkich powyższych uwag do kodu (komentarze itp.).</P></LI>
+
+ <LI><span class="b">NIE</span> możemy już się odwoływać normalnie do swoich własnych zmiennych!
+  <P>Dlaczego?
+ Przyczyna jest prosta: biblioteki współdzielone są pisane jako kod niezależny od pozycji
+  (<span lang="en">Position-Independent Code</span>, PIC) i po prostu nie wiedzą,
+   pod jakim adresem zostaną załadowane przez system. Adres
+ może za każdym razem być inny. Do swoich zmiennych musimy się więc odwoływać trochę inaczej, niż to
+ było do tej pory. Do biblioteki współdzielonej linker dołącza strukturę Globalnej Tablicy Offsetów
+ (<span lang="en">Global Offset Table</span>, GOT). Biblioteka deklaruje ją
+  jako zewnętrzną i korzysta z niej do ustalenia
+ adresu swojego kodu. Wystarczy wykonać <code>call zaraz / zaraz: pop ebx</code>
+  i już adres etykiety <q>zaraz</q>
+ znajduje się w EBX. Dodajemy do niego adres GOT od początku sekcji
+ (<span lang="en">_GLOBAL_OFFSET_TABLE_</span> wrt ..gotpc) i adres początku sekcji, otrzymując realny adres tablicy GOT +
+ adres etykiety <q>zaraz</q>. Potem już tylko wystarczy odjąć adres etykiety <q>zaraz</q> i już EBX
+ zawiera adres GOT. Do zmiennych możemy się teraz odnosić poprzez <code>[ebx+nazwa_zmiennej]</code>.
+ 	</P></LI>
+
+ <LI>Kompilacja i łączenie.
+  <P>O ile kompilacja NASMem jest taka, jak zawsze, to łączenie programu jest zdecydowanie inne.
+   Popatrzcie na opcje LD:</P>
+ <UL>
+  <LI><code lang="en">-shared</code>
+  	<P>Mówi o tym, że LD ma zbudować bibliotekę współdzieloną, zamiast zwyczajnego pliku wykonywalnego.
+  	LD zadba o wszystko, co trzeba (GOT itd).</P></LI>
+  <LI><code>-soname biblso.so.1</code>
+  	<P>Nazwa biblioteki. Ale uwaga - NIE jest to nazwa pliku, tylko wewnętrzna nazwa samej biblioteki.
+  	Jak będziecie dodawać kolejne wersje, to nie zmieniajcie nazwy wewnętrznej, tylko nazwę pliku .so,
+  	a zróbcie dowiązanie symboliczne do tego pliku, z nazwą taką jak wewnętrzna nazwa biblioteki, na przykład
+  	waszabibl.so.1 jako link do waszabibl.so.1.1.5.</P></LI>
+ </UL></LI>
+
+ <LI>Deklaracje zmiennych i funkcji globalnych.
+ 	<P>Każda funkcja, którą chcemy zrobić globalną (widoczną dla programów korzystających z biblioteki),
+ 	musi być zadeklarowana nie tylko jako extern, ale musimy podać też, że jest to funkcja. Pełna
+ 	dyrektywa wygląda teraz:</P>
+ 	<PRE>		global nazwaFunkcji:function</PRE>
+ 	<P>Przy eksportowaniu danych dodajemy słowo <q>data</q> i rozmiar danych, na przykład dla tablic:</P>
+	<PRE>
+
+	global tablica1:data tablica1_dlugosc
+
+	tablica1:		resb	100
+	tablica1_dlugosc	equ	$ - tablica1</PRE></LI>
+
+ <LI>Uruchamianie funkcji zewnętrznych (na przykład z biblioteki C)
+ 	<P>Sprawa jest już dużo prostsza niż w przypadku danych. Funkcję zewnętrzną deklarujemy oczywiście
+ 	słowem <q>extern</q>, a zamiast <q>call nazwaFunkcji</q> piszemy</P>
+ 	<PRE>		call nazwaFunkcji wrt ..plt</PRE>
+ 	<P>PLT oznacza <span lang="en">Procedure Linkage Table</span>,
+ 	czyli tablicę linkowania procedur (funkcji). Zawiera ona skoki do
+ 	odpowiednich miejsc, gdzie znajduje się dana funkcja.</P></LI>
+
+</OL>
+<P>A oto gotowy przykład. Biblioteka eksportuje jedną funkcję, która po prostu wyświetla napis.</P>
+	<BR><a href="#bibl_tut_linux02" class="bezdruk">(przeskocz przykładową bibliotekę współdzieloną)</a>
+<PRE title="przykładowa biblioteka współdzielona">
+; Przykład linuksowej biblioteki współdzielonej .so
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+;   nasm -f elf -o biblso.o biblso.asm
+;   ld -shared -soname biblso.so.1 -o biblso.so.1 biblso.o
+
+
+section	.text
+extern	_GLOBAL_OFFSET_TABLE_	; zewnętrzny, uzupełniony przez linker
+global	info:function		; eksportowana funkcja
+;extern	printf			; funkcja zewnętrzna
+
+; makro do pobierania adresu GOT; wynik w EBX.
+%imacro	wez_GOT	0
+
+	call	%%zaraz
+	%%zaraz:
+	pop	ebx
+	add	ebx, _GLOBAL_OFFSET_TABLE_ + $$ - %%zaraz wrt ..gotpc
+%endmacro
+
+info:
+				; zachowanie zmienianych rejestrów
+	push	eax
+	push	ebx
+	push	ecx
+	push	edx
+
+	wez_GOT			; pobieramy adres GOT
+	push	ebx		; zachowujemy EBX
+
+	mov	eax, 4		; funkcja pisania do pliku
+			; do ECX załaduj ADRES napisu (stad LEA a nie MOV)
+	lea	ecx, [ebx + napis wrt ..gotoff]
+	mov	ebx, 1		; plik = 1 = standardowe wyjście (ekran)
+	mov	edx, napis_dl	; długość napisu
+	int	80h		; wyświetl
+
+; a tak uruchamiamy funkcje zewnętrzne:
+	pop	ebx		; przywracamy EBX
+	lea	ecx, [ebx + napis wrt ..gotoff]	; ECX = adres napisu
+	push	ecx		; adres na stos (jak dla funkcji z C)
+;	call	printf wrt ..plt	; uruchomienie funkcji
+	add	esp, 4		; usunięcie argumentów ze stosu
+
+				; przywracanie rejestrów
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+
+	xor	eax, eax	; funkcja zwraca 0 jako brak błędu
+	ret
+
+section .data
+
+napis		db	&quot;Jestem biblioteka wspoldzielona!&quot;, 10, 0
+napis_dl	equ	$ - napis</PRE>
+
+<P><a name="bibl_tut_linux02" id="bibl_tut_linux02">Program sprawdzający</a>, czy biblioteka działa
+jest wyjątkowo prosty: jedno uruchomienie funkcji z biblioteki i wyjście. Na uwagę zasługuje
+ jednak ta długa linijka z uruchomieniem LD. Przyjrzyjmy się bliżej:</P>
+ <UL>
+  <LI>-<span lang="en">dynamic</span>-linker /lib/ld-linux.so.2
+  	<P>Mówi o nazwie programu, którego trzeba użyć do dynamicznego łączenia. Bez tej opcji
+  	nasz program nie podziała i dostaniemy błąd
+  	<q lang="en">Accessing a corrupted shared library</q></P></LI>
+
+  <LI>-nostdlib
+  	<P>Nie dołącza żadnych standardowych bibliotek.</P></LI>
+
+  <LI>-o biblsotest biblsotest.o
+  	<P>Nazwy pliku wyjściowego i wejściowego.</P></LI>
+
+  <LI>biblso.so.1
+  	<P>Biblioteka, z którą należy połączyć ten program</P></LI>
+ </UL>
+
+	<BR><a href="#bibl_tut_linux03" class="bezdruk">(przeskocz test biblioteki współdzielonej)</a>
+<PRE>
+; Program testujący linuksową bibliotekę współdzieloną .so
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+; nasm -f elf -o biblsotest.o biblsotest.asm
+; ld -dynamic-linker /lib/ld-linux.so.2 -nostdlib \
+;	-o biblsotest biblsotest.o biblso.so.1
+
+
+section	.text
+global	_start
+
+extern	info
+
+_start:
+
+	call	info
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h</PRE>
+
+<P><a name="bibl_tut_linux03" id="bibl_tut_linux03">Jeśli dostajecie błąd</a>
+<q lang="en">/usr/lib/libc.so.1: bad ELF interpreter: No such file or directory</q>,
+ to utwórzcie w katalogu /usr/lib (jako root) plik libc.so.1 jako dowiązanie symboliczne do libc.so
+ i upewnijcie się, że plik /usr/lib/libc.so ma
+ prawa <span class="b">wykonywania dla wszystkich</span>.</P>
+
+<P>
+Jeśli system nie widzi biblioteki współdzielonej (a nie chcecie jej pakować do globalnych katalogów
+ jak /lib czy /usr/lib), należy ustawić dodatkową ścieżkę ich poszukiwania.<br>
+Ustawcie sobie zmienną środowiskową LD_LIBRARY_PATH tak, by zawierała ścieżki do Waszych
+ bibliotek. Ja u siebie mam ustawioną <code>LD_LIBRARY_PATH=$HOME:.</code>&nbsp;, co oznacza, że
+ poza domyślnymi katalogami, ma być przeszukany także mój katalog domowy oraz katalog bieżący
+ (ta kropka po dwukropku), jakikolwiek by nie był.</P>
+
+
+
+<HR>
+<h2 class="nag">Ładowanie bibliotek w czasie pracy programu</h2>
+<P>
+Gdy nasz program jest na sztywno (statycznie lub nie) łączony z jakąś biblioteką współdzieloną,
+ to w trakcie jego uruchamiania system szuka pliku tej biblioteki, aby móc uruchomić nasz program.
+ Jeśli system nie znajdzie biblioteki, to nawet nie uruchomi naszego programu. Czasem jednak
+ chcemy mieć możliwość zareagowania na taki problem. Oczywiście, bez kluczowych bibliotek
+ nie ma szans uruchomić programu, ale całą resztę można dość łatwo ładować w czasie działania
+ programu. Daje to pewne korzyści:</P>
+<ol>
+ <li>oszczędza pamięć - ładujemy tylko te biblioteki, których nam naprawdę potrzeba, a tuż po
+ 	zakończeniu pracy z biblioteką, można zwolnić pamięć przez nią zajmowaną.</li>
+ <li>daje możliwość reagowania na brak biblioteki - na przykład można wyświetlić komunikat, że
+ 	niektóre funkcje programu będą niedostępne. Ale program może nadal działać i
+ 	wykonać swoje zadanie.</li>
+</ol>
+<P>Ładowanie bibliotek w czasie pracy programu polega na wykorzystaniu funkcji z
+ biblioteki <span class="b">libdl</span>. Konkretnie, użyjemy trzech funkcji:</P>
+<ol>
+ <li>dlopen - otwiera i ładuje bibliotekę
+ 	<P>Przyjmuje ona dwa argumenty. Od lewej (ostatni wkładany na stos) są to: nazwa pliku
+ 	biblioteki współdzielonej (razem ze ścieżką, jeśli jest w niestandardowej) oraz jedna
+ 	z liczb: RTLD_LAZY (wartość 1), RTLD_NOW (wartość 2), RTLD_GLOBAL (wartość 100h).
+ 	Określają one sposób dostępu do funkcji w bibliotece, odpowiednio są to:</P>
+ 	<ul>
+ 	 <li> RTLD_LAZY - znajduj adres funkcji w chwili jej wywołania.</li>
+ 	 <li> RTLD_NOW - znajduj adres funkcji od razu, w czasie ładowania biblioteki</li>
+ 	 <li> RTLD_GLOBAL - symbole biblioteki (nazwy funkcji) będą od razu widoczne dla programu
+ 	 	tak, jakby biblioteka była włączona na stałe do programu.</li>
+ 	</ul>
+ 	<P>Funkcja dlopen zwraca (w EAX) adres załadowanej biblioteki, którego będziemy potem używać.
+ 	</P></li>
+
+ <li>dlsym - wyławia z biblioteki adres interesującej nas funkcji
+ 	<P>Ta funkcja też przyjmuje dwa argumenty. Od lewej (ostatni wkładany na stos) są to:
+ 	adres biblioteki, który otrzymaliśmy od funkcji dlopen oraz nazwa funkcji, która nas
+ 	interesuje <em class="wazne">jako łańcuch znaków</em>.<br>
+ 	Funkcja dlsym zwraca nam (w EAX) adres żądanej funkcji.
+ 	</P></li>
+
+ <li>dlclose - zamyka załadowaną bibliotekę
+ 	<P>Jedynym argumentem tej funkcji jest adres biblioteki, który otrzymaliśmy od funkcji dlopen.
+ 	</P></li>
+</ol>
+<P>Jest też funkcja systemowa sys_uselib, ale jej dokumentacja jest skromna. W użyciu pewnie byłaby
+ trudniejsza niż libdl.</P>
+<P>
+Pora na przykładowy program. Jego zadaniem będzie załadować bibliotekę biblso.so.1, którą
+ utworzyliśmy w poprzednim podrozdziale, oraz uruchomienie jej jedynej funkcji - info. Oto kod
+ w składnie NASM:</P>
+
+	<BR><a href="#bibl_tut_linux04" class="bezdruk">(przeskocz program ładujący bibliotekę)</a>
+<pre title="program ładujący bibliotekę">
+; Program korzystający z biblioteki współdzielonej tak, że
+;	nie musi być z nią łączony
+;
+; Autor: Bogdan D., bogdandr (na) op . pl
+;
+; kompilacja:
+;   nasm -f elf -o shartest.o shartest.asm
+;   gcc -s -o shartest shartest.o -ldl
+
+section .text
+
+; będziemy korzystać z biblioteki języka C, więc nasza funkcja
+;  główna musi się nazywać &nbsp;<q lang="en">main</q>
+global main
+
+%define RTLD_LAZY	0x00001	; znajduj adres funkcji w chwili wywołania
+%define RTLD_NOW	0x00002	; znajduj adres funkcji od razu, w czasie
+				; ładowania biblioteki
+%define RTLD_GLOBAL	0x00100	; czy symbole będą od razu widoczne
+
+extern dlopen
+extern dlsym
+extern dlclose
+
+main:
+
+	push	dword RTLD_LAZY	; ładowanie na żądanie
+	push	dword bibl	; adres nazwy pliku
+	call	dlopen		; otwieramy bibliotekę
+	add	esp, 2*4	; zwalniamy argumenty ze stosu
+
+	test	eax, eax	; sprawdzamy, czy nie błąd (EAX=0)
+	jz	.koniec
+
+	mov	[uchwyt], eax	; zachowujemy adres biblioteki
+
+	push	dword funkcja	; adres nazwy żądanej funkcji
+	push	dword [uchwyt]	; adres biblioteki
+	call	dlsym		; szukamy adresu
+	add	esp, 2*4
+
+	mov	[adr_fun], eax	; EAX = znaleziony adres
+	call	eax		; uruchomienie bezpośrednie
+	call	[adr_fun]	; uruchomienie pośrednie
+
+	push	dword [uchwyt]	; adres biblioteki
+	call	dlclose		; zwalniamy ją z pamięci
+	add	esp, 1*4
+
+.koniec:
+	ret			; zakończenie funkcji main
+
+section .data
+
+bibl		db	"biblso.so.1", 0	; nazwa biblioteki
+funkcja		db	"info", 0		; nazwa szukanej funkcji
+uchwyt		dd	0
+adr_fun		dd	0</pre>
+
+<P><a name="bibl_tut_linux04" id="bibl_tut_linux04">Muszę wspomnieć</a> o dwóch dość ważnych rzeczach.<br>
+Pierwszą jest sposób kompilacji. Skoro łączymy nasz program z biblioteką C, to nasza
+ funkcja główna musi się teraz nazywać <span lang="en">main</span>, a <em class="wazne">NIE</em> _start
+ (gdyż funkcja _start już jest w bibliotece języka C). Kompilacja wygląda teraz tak, jak
+ napisałem w programie:</P>
+<pre>
+nasm -f elf -o shartest.o shartest.asm
+gcc -s -o shartest shartest.o -ldl</pre>
+<P>W tym przypadku kompilator GCC uruchamia za nas linker LD, który dołączy niezbędne biblioteki.
+</P>
+<P>
+Drugą rzeczą jest domyślna ścieżka poszukiwania bibliotek współdzielonych. Jeśli nie chcecie
+ zaśmiecać systemu (lub nie macie uprawnień), pakując swoje biblioteki do /lib czy /usr/lib,
+ ustawcie sobie zmienną środowiskową LD_LIBRARY_PATH tak, by zawierała ścieżki do Waszych
+ bibliotek. Ja u siebie mam ustawioną <code>LD_LIBRARY_PATH=$HOME:.</code>&nbsp;, co oznacza, że
+ poza domyślnymi katalogami, ma być przeszukany także mój katalog domowy oraz katalog bieżący
+ (ta kropka po dwukropku), jakikolwiek by nie był.</P>
+
+
+
+
+<br><br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

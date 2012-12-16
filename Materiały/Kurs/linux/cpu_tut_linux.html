@@ -1,0 +1,301 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Rozpoznawanie typu procesora </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Rozpoznawanie typu procesora pod Linuksem">
+<META NAME="Keywords" CONTENT="assembler, asm, asembler, CPU, procesor, CPUID, FPU">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Mon, Oct 29 2012 17:22:19 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Rozpoznawanie typu procesora</h1>
+
+	<BR><a href="#cpu_tut_linux01" tabindex="1" class="bezdruk">(przeskocz wykrywanie procesora)</a>
+
+<P>
+Jak zapewne wiecie, wiele programów (systemy operacyjne, gry, ...) potrafi jakoś
+ dowiedzieć się, na jakim procesorze zostały uruchomione. Rozpoznanie typu procesora
+ umożliwia na przykład uruchomienie dodatkowych optymalizacji w programie lub odmowę dalszego
+ działania, jeśli program musi korzystać z instrukcji niedostępnych na danym procesorze.<BR>
+ Wykrywanie rodzaju
+ <acronym lang="en" title="Central Processing Unit">CPU</acronym> i
+ <acronym lang="en" title="Floating-Point Unit">FPU</acronym> nie jest trudne i
+ pokażę teraz, jak po kolei sprawdzać
+ typ procesora (nie można przecież zacząć sprawdzania od najwyższych).<BR>
+ Informacje, które tutaj podam, są oczywiście słuszne dla wszystkich procesorów
+ rodziny x86 (<acronym title="Advanced Micro Devices" lang="en">AMD</acronym>, Cyrix, ...),
+ a nie tylko Intela.</P>
+<P>
+ Generalnie sposób wykrywania pod Linuksem jest jeden (nie wliczając żadnych dodatkowych funkcji jądra
+ czy też czytania z /proc/cpuinfo): poprzez rejestr E-FLAG.
+</P>
+<OL>
+ <LI><a name="p386" id="p386">80386</a>
+	<BR><a href="#p486" class="bezdruk">(przeskocz 80386)</a>
+ 	<P>
+ 	Na tym procesorze nie można zmienić bitu numer 18 we flagach (wiemy, że rejestr flag ma 32 bity).
+ 	Bit ten odpowiada za Alignment Check i spowoduje przerwanie m.in wtedy, gdy SP nie będzie podzielne przez 4.
+ 	Dlatego, zanim będziemy testować ten bit, musimy zachować SP i wyzerować jego najmłodsze 2 bity.</P>
+	<BR><a href="#p486" class="bezdruk">(przeskocz kod dla 80386)</a>
+ 	<PRE>
+		mov	dx, sp
+		and	sp, ~3		; aby uniknąć AC fault.
+					; FASM: and sp, not 3
+		pushfd			; flagi na stos
+		pop	eax		; EAX = E-flagi
+		mov	ecx, eax	; zachowanie EAX
+		xor	eax, 40000h	; zmiana bitu 18
+		push	eax		; EAX na stos
+		popfd			; E-flagi = EAX
+		pushfd			; flagi na stos
+		pop	eax		; EAX = flagi
+		xor	eax, ecx  ; czy takie same? jeśli tak, to 386
+		mov	sp, dx		; przywrócenie SP
+		jz	jest_386</PRE>
+	</LI>
+
+ <LI><a name="p486" id="p486">80486</a>
+	<BR><a href="#p586" class="bezdruk">(przeskocz 80486)</a>
+ 	<P>
+ 	Na tym procesorze nie można zmienić bitu 21 we flagach. Jeśli ten bit można zmienić, to
+ 	procesor obsługuje instrukcję <code lang="en">CPUID</code>, której będziemy używać do
+	dalszego rozpoznania. Kod:</P>
+	<BR><a href="#p586" class="bezdruk">(przeskocz kod dla 80486)</a>
+ 	<PRE>
+		pushfd			; flagi na stos
+		pop	eax		; EAX = E-flagi
+		mov	ecx, eax	; zachowanie EAX
+		xor	eax, 200000h	; zmiana bitu 21
+		push	eax		; EAX na stos
+		popfd			; E-flagi = EAX
+		pushfd			; flagi na stos
+		pop	eax		; EAX = flagi
+		xor	eax, ecx  ; czy takie same? jeśli tak, to 486
+		jz	jest_486
+		jmp	jest_586</PRE>
+	</LI>
+</OL>
+<P><a name="p586" id="p586">Zanim omówię sposób</a> korzystania z instrukcji <code lang="en">CPUID</code>,
+ zajmijmy się sposobem rozpoznania typu koprocesora.</P>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<h2 class="nag"><a name="cpu_tut_linux01" id="cpu_tut_linux01">Koprocesor</a></h2>
+
+	<BR><a href="#cpu_tut_linux02" class="bezdruk">(przeskocz wykrywanie koprocesora)</a>
+<P>
+ Tutaj możliwości są tylko 4: brak koprocesora, 8087, 80287, 80387. No to do roboty.</P>
+
+<OL>
+ <LI>czy w ogóle jest jakiś koprocesor?
+	<BR><a href="#p8087" class="bezdruk">(przeskocz test na istnienie FPU)</a>
+	<P>
+ 	To sprawdzamy bardzo łatwo. Jeśli nie ma koprocesora, to w chwili wykonania instrukcji FPU może wystąpić przerwanie INT6
+ 	(nieprawidłowa instrukcja), ale nie o tym sposobie chciałem powiedzieć. Koprocesor można wykryć,
+ 	jeśli słowo stanu zostanie zapisane prawidłowo. Oto kod:</P>
+	<BR><a href="#p8087" class="bezdruk">(przeskocz test na istnienie FPU)</a>
+ 	<PRE>
+		fninit			; inicjalizacja zeruje rejestry
+
+  		; wpisujemy jakąś niezerowa wartość:
+  		mov	word [_fpu_status], 5a5ah
+
+		; zapisz słowo statusowe do pamięci:
+		fnstsw	[_fpu_status]
+		mov	ax, [_fpu_status]
+		or	al, al	; jeśli zapisało dobrze (zera oznaczają
+				; puste rejestry), to jest FPU
+
+		jz	jest_FPU</PRE>
+	</LI>
+
+ <LI><a name="p8087" id="p8087">8087</a>
+	<BR><a href="#p287" class="bezdruk">(przeskocz 8087)</a>
+ 	<P>
+	Sztuczka polega na wykorzystaniu instrukcji FDISI (wyłączenie przerwań), która rzeczywiście
+	coś robi tylko na 8087. Po wyłączeniu przerwań w słowie kontrolnym zostaje włączony bit numer 7.</P>
+	<BR><a href="#p287" class="bezdruk">(przeskocz kod dla 8087)</a>
+	<PRE>
+		; zachowaj słowo kontrolne do pamięci:
+		fnstcw	[_fpu_status]
+
+		; wyłączamy wszystkie
+		; przerwania (poprzez słowo kontrolne):
+		and	word [_fpu_status], 0ff7fh
+
+		; załaduj słowo kontrolne z pamięci:
+		fldcw	[_fpu_status]
+
+		fdisi		; wyłączamy wszystkie przerwania
+				; (jako instrukcja)
+
+		; zachowaj słowo kontrolne do pamięci:
+		fstcw	[_fpu_status]
+		test	byte [_fpu_status], 80h	; bit 7 ustawiony?
+
+		jz	nie_8087	; jeśli nie, to nie jest to 8087</PRE>
+	</LI>
+
+ <LI><a name="p287" id="p287">80287</a>
+	<BR><a href="#cpu_tut_linux02" class="bezdruk">(przeskocz 80287)</a>
+ 	<P>
+ 	Koprocesor ten nie odróżnia minus nieskończoności od plus nieskończoności.
+	Kod na sprawdzenie tego wygląda tak:</P>
+	<BR><a href="#cpu_tut_linux02" class="bezdruk">(przeskocz kod dla 80287)</a>
+ 	 <PRE>
+		finit
+
+		fld1		; st(0)=1
+		fldz		; st(0)=0,st(1)=1
+		fdivp	st1	; tworzymy nieskończoność,
+				; dzieląc przez 0
+		fld	st0	; st(1):=st(0)=nieskończoność
+		fchs		; st(0)= minus nieskończoność
+
+				; porównanie st0 z st1 i
+				; zdjęcie obu ze stosu
+		fcompp		; 8087/287: -niesk. = +niesk.,
+				; 387: -niesk. != +niesk.
+
+		fstsw	[_fpu_status]	; zapisz status do pamięci
+		mov	ax, [_fpu_status]	; AX = status
+
+		sahf		; zapisz AH we flagach. tak sie składa,
+				; że tutaj również flaga ZF wskazuje na
+				; równość argumentów.
+		jz	jest_287
+		jmp	jest_387</PRE>
+	</LI>
+</OL>
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<h2 class="nag"><a name="cpu_tut_linux02" id="cpu_tut_linux02">Dalsze informacje o procesorze</a>
+ - instrukcja <span lang="en">CPUID</span></h2>
+<P>
+Od procesorów 586 (choć niektóre 486 też podobno ją obsługiwały), Intel i inni wprowadzili
+ instrukcję <code lang="en">CPUID</code>. Pozwala ona odczytać wiele różnych
+ informacji o procesorze (konkretny typ,
+ rozmiary pamięci podręcznych, dodatkowe rozszerzenia, ...).<BR>
+Korzystanie z tej instrukcji jest bardzo proste: do EAX wpisujemy numer (0-3)
+ i wywołujemy instrukcję, na przykład</P>
+<PRE>
+	mov	eax, 1
+	cpuid</PRE>
+
+<P>Teraz omówię, co można dostać przy różnych wartościach EAX.</P>
+<OL>
+ <LI>EAX=0
+	<BR><a href="#cpu_tut_linux03" class="bezdruk">(przeskocz EAX=0)</a>
+ 	<P>
+ 	EAX = maksymalny numer funkcji dla <code lang="en">CPUID</code>.<BR>
+ 	EBX:EDX:ECX = marka procesora (12 znaków ASCII).<BR>
+ 	Intel - <q lang="en">GenuineIntel</q><BR>
+ 	AMD - <q lang="en">AuthenticAMD</q><BR>
+ 	NexGen - <q lang="en">NexGenDriven</q><BR>
+ 	Cyrix, VIA - <q lang="en">CyrixInstead</q><BR>
+ 	RISE - <q lang="en">RiseRiseRise</q>,<BR>
+ 	Centaur Technology/IDT - <q lang="en">CentaurHauls</q> (programowalne, może być inne)<BR>
+ 	United Microelectronics Corporation - <q lang="en">UMC UMC UMC </q><BR>
+ 	Transmeta Corporation - <q lang="en">GenuineTMx86</q><BR>
+ 	SiS - <q lang="en">SiS SiS SiS </q><BR>
+ 	National Semiconductor - <q lang="en">Geode by NSC</q>.
+ 	</P></LI>
+
+ <LI><a name="cpu_tut_linux03" id="cpu_tut_linux03">EAX=1</a>
+	<BR><a href="#cpu_tut_linux04" class="bezdruk">(przeskocz EAX=1)</a>
+ 	<P>
+ 	EAX = informacje o wersji:</P>
+	<UL>
+	 <LI>bity 0-3: <span lang="en">stepping ID</span></LI>
+	 <LI>bity 4-7: model</LI>
+	 <LI>bity 8-11: rodzina. Wartości mogą być od 4 (80486) do 7 (Itanium) oraz 15
+	 	 (co znaczy <q>sprawdź rozszerzone informacje o rodzinie</q>)</LI>
+	 <LI>bity 12-13: typ procesora (0=<span lang="en">Original OEM Processor</span>,
+	 	 1=<span lang="en">Intel Overdrive</span>, 2=<span lang="en">Dual</span>)</LI>
+	 <LI>bity 16-19 (jeśli jest taka możliwość): rozszerzona informacja o modelu.</LI>
+	 <LI>bity 20-27 (jeśli jest taka możliwość): rozszerzona informacja o rodzinie.</LI>
+	</UL>
+	<P>EDX = cechy procesora (tutaj akurat z procesorów Intela; najpierw numery bitów):</P>
+	<UL>
+	 <LI>0: procesor zawiera FPU</LI>
+	 <LI>1: <span lang="en">Virtual 8086 Mode Enchancements</span></LI>
+	 <LI>2: <span lang="en">Debugging Extensions</span></LI>
+	 <LI>3: <span lang="en">Page Size Extension</span></LI>
+	 <LI>4: <span lang="en">Time Stamp Counter</span></LI>
+	 <LI>5: <span lang="en">Model Specific Registers</span></LI>
+	 <LI>6: <span lang="en">Physical Address Extensions</span></LI>
+	 <LI>7: <span lang="en">Machine Check Exception</span></LI>
+	 <LI>8: instrukcja <code>CMPXCHG8B</code></LI>
+	 <LI>9: procesor zawiera Zaawansowany Programowalny Kontroler Przerwań (APIC)</LI>
+	 <LI>11: instrukcje <code>SYSENTER</code> i <code>SYSEXIT</code></LI>
+	 <LI>12: <span lang="en">Memory Type Range Registers</span></LI>
+	 <LI>13: <span lang="en">Page Table Entries Global Bit</span></LI>
+	 <LI>14: <span lang="en">Machine Check Architecture</span></LI>
+	 <LI>15: instrukcje <code>CMOV*</code></LI>
+	 <LI>16: <span lang="en">Page Attribute Table</span></LI>
+	 <LI>17: <span lang="en">32-bit Page Size Extensions</span></LI>
+	 <LI>18: numer seryjny procesora</LI>
+	 <LI>19: instrukcja <code>CLFLUSH</code></LI>
+	 <LI>21: <span lang="en">Debug Store</span></LI>
+	 <LI>22: monitorowanie temperatury i możliwość modyfikacji wydajności procesora</LI>
+	 <LI>23: technologia MMX</LI>
+	 <LI>24: instrukcje <code>FXSAVE</code> i <code>FXRSTOR</code></LI>
+	 <LI>25: technologia SSE</LI>
+	 <LI>26: technologia SSE2</LI>
+	 <LI>27: <span lang="en">Self-Snoop</span></LI>
+	 <LI>28: technologia <span lang="en">Hyper-Threading</span></LI>
+	 <LI>29: monitorowanie temperatury, układy kontroli temperatury</LI>
+	 <LI>31: <span lang="en">Pending Break Enable</span></LI>
+	</UL>
+	<BR></LI>
+
+ <LI><a name="cpu_tut_linux04" id="cpu_tut_linux04">EAX=2</a>
+ 	<P>EBX, ECX, EDX = informacje o pamięci podręcznej cache i TLB</P></LI>
+</OL>
+<P>
+Nawet te informacje, które tu przedstawiłem są już bardzo szczegółowe i z pewnością nie będą
+ takie same na wszystkich procesorach. To jest tylko wstęp. Dalsze informacje można znaleźć
+  na stronach producentów procesorów, na przykład
+<A class="amd_link" href="http://developer.amd.com/Resources/documentation/guides/Pages/default.aspx" hreflang="en">AMD</A>,
+<A class="intel_link" href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html" hreflang="en">Intel</A>,
+ale także tutaj:
+<A HREF="http://www.sandpile.org/ia32/cpuid.htm" hreflang="en">Sandpile</A>,
+<A HREF="http://www.cs.cmu.edu/afs/cs.cmu.edu/user/ralf/pub/WWW/files.html" hreflang="en"
+	>Lista przerwań Ralfa <span lang="en">Brown</span>'a</A> (plik opcodes.lst).</P>
+
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+</BODY></HTML>

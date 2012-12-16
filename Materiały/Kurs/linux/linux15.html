@@ -1,0 +1,494 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 15 - Bloki kontrolne </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux14.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux16.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, if, else, switch, case, for, do,
+	 while, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:58 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 15 - Pętle i warunki -
+		czyli o tym, jak używać	bloków kontrolnych</h1></div>
+
+<P>
+Wszystkie języki wysokiego poziomu mają pewne bloki kontrolne i pętle, co może w oczach
+niektórych osób stanowić przewagę nad asemblerem. Dlatego teraz pokażę, jak przepisać
+te wszystkie struktury z wykorzystaniem asemblera, często uzyskując kod lepszy niż ten
+wytworzony przez kompilatory języków wyższego poziomu.<BR>
+Zanim zaczniemy, dodam, że nie każdy język wysokiego poziomu posiada opcje kompilacji
+warunkowej (coś w stylu #ifdef w języku C), ale za to KAŻDY dobry kompilator
+języka asembler ma taką opcję wbudowaną! Po szczegóły odsyłam do instrukcji posiadanego
+kompilatora.
+</P>
+
+
+
+
+
+
+<HR>
+
+<h2 class="nag">Bloki decyzyjne (warunkowe) <q lang="en">if/else if/else</q>.</h2>
+
+	<BR><a href="#petle" tabindex="1" class="bezdruk">(przeskocz bloki warunkowe)</a>
+<P>
+Przetłumaczenie czegoś takiego na asembler nie jest trudne i opiera się na instrukcjach
+<code>CMP</code> oraz odpowiednich skokach warunkowych. Pokażę to na przykładzie (będę używał składni
+języka C, gdyż posiada wszystkie struktury, które chciałbym omówić):</P>
+
+	<BR><a href="#linux1501" class="bezdruk">(przeskocz schemat bloku <span lang="en">if/else</span>)</a>
+<PRE title="przykład bloku if/else">
+	if (a == b)		/* czy a jest równe b? */
+	{
+		/* część 1 */
+	}
+	else if (a == c)
+	{
+		/* część 2 */
+	}
+	else
+	{
+		/* część 3 */
+	}</PRE>
+
+<P><a name="linux1501" id="linux1501">Powyższy kod można po prostu zastąpić</a> czymś takim
+(zakładam zmienne 32-bitowe):</P>
+
+	<BR><a href="#linux1502" class="bezdruk">(przeskocz asemblerowy schemat bloku <span lang="en">if/else</span>)</a>
+<PRE title="kod zamienny w asemblerze dla bloku if/else">
+		mov	eax, [a]
+		cmp	eax, [b]
+		jne	elseif1
+
+		; część 1
+
+		jmp	po_if1
+	elseif1:
+		cmp	eax, [c]	; pamiętajmy, że [a] już jest w EAX
+		jne	else1
+
+		; część 2
+
+		jmp	po_if1
+	else1:
+
+		; część 3
+
+	po_if1:</PRE>
+
+<P><a name="linux1502" id="linux1502">Na szczególną uwagę zasługuje przypadek</a>
+ porównywania zmiennej do zera, gdzie zamiast instrukcji
+&nbsp;<code>CMP EAX, 0</code> użyjemy instrukcji &nbsp;<code>TEST EAX, EAX</code>.<BR>
+Jeśli zaś trafi się Wam dość prosty kod w stylu:</P>
+
+	<BR><a href="#linux1503" class="bezdruk">(przeskocz przykład <span lang="en">if/else</span>)</a>
+<PRE title="drugi przykład bloku if/else">
+	if (a == b)		/* czy a jest równe b? */
+	{
+		d = a;		/* wstaw wartość a do d */
+	}
+	else if (a == c)
+	{
+		d = b;
+	}
+	else
+	{
+		d = 0;
+	}</PRE>
+
+<P><a name="linux1503" id="linux1503">lub wyrażenie warunkowe</a>, czyli coś postaci:</P>
+<PRE title="wyrażenie warunkowe">		d = (a == b)? a : 0;</PRE>
+
+<P>To możecie (a nawet powinniście) użyć instrukcji warunkowego kopiowania danych <code>CMOV*</code>.
+Instrukcje te powodują znacznie wydajniejszą pracę procesora (który już nie musi co dwie
+instrukcje skakać i czytać nowych instrukcji).
+Pierwszy fragment kodu po przetłumaczeniu mógłby wyglądać tak:</P>
+
+	<BR><a href="#linux1504" class="bezdruk">(przeskocz tłumaczenie przykładu <span lang="en">if/else</span>)</a>
+<PRE title="kod w asmie równoważny drugiemu przykładowi">
+	xor	edx, edx	; domyślna wartość, którą wstawimy
+				; do zmiennej D wynosi zero
+
+	mov	eax, [a]
+	cmp	eax, [b]
+	cmove	edx, eax	; gdy a == b, to do EDX wstaw
+				; wartość A, czyli EAX
+
+	cmp	eax, [c]
+	cmove	edx, [b]	; gdy a == c, to do EDX wstaw wartość B
+
+	mov	[d], edx	; do D wstaw wynik operacji
+				; (A, B lub domyślne 0)</PRE>
+
+<P><a name="linux1504" id="linux1504">A drugi</a>:</P>
+	<BR><a href="#linux1505" class="bezdruk">(przeskocz tłumaczenie wyrażenia warunkowego)</a>
+<PRE title="kod w asmie równoważny wyrażeniu warunkowemu">
+	xor	edx, edx	; domyślna wartość to 0
+
+	mov	eax, [a]
+	cmp	eax, [b]	; porównaj A z B
+
+	cmove	edx, eax	; gdy równe, to EDX=[a]
+
+	mov	[d], edx	; do D wstaw wynik operacji</PRE>
+
+<P><a name="linux1505" id="linux1505">Tylko nowoczesne kompilatory</a> języka C potrafią wyczyniać
+takie sztuczki.<BR> Podobne instrukcje istnieją także dla liczb i rejestrów zmiennoprzecinkowych:
+<code>FCMOV*</code>.</P>
+
+<HR>
+
+
+
+
+
+
+
+
+
+
+<h2 class="nag"><a name="petle" id="petle">Pętle.</a></h2>
+
+	<BR><a href="#switch" class="bezdruk">(przeskocz pętle)</a>
+
+<P>
+Z pętlami jest trochę gorzej, gdyż jest ich więcej rodzajów.<BR>
+Zacznijmy od pętli o znanej z góry ilości przejść (powtórzeń, iteracji), czy pętli typu</P>
+<PRE>	for (wyrażenia początkowe; warunek wykonywania; wyrażenie końcowe)</PRE>
+<P>Na przykład:</P>
+	<BR><a href="#linux1506" class="bezdruk">(przeskocz przykład pętli for)</a>
+<PRE title="przykład pętli for">
+	for (i=1; i&lt;10; i=i+1)
+	{
+		j=j+i;
+	}</PRE>
+<P><a name="linux1506" id="linux1506">zostałoby przetłumaczone na</a>:</P>
+	<BR><a href="#linux1507" class="bezdruk">(przeskocz tłumaczenie tego przykładu)</a>
+<PRE title="tłumaczenie pętli for na asembler">
+		mov	ecx, 1		; ECX to zmienna I. i=1
+	petla_for:
+		cmp	ecx, 10
+		jae	koniec_petli	; wychodzimy, gdy i &gt;= 10
+
+		add	eax, ecx	; EAX to zmienna J. j=j+i
+
+		add	ecx, 1		; i=i+1
+		jmp	short petla_for
+	koniec_petli:</PRE>
+
+<P><a name="linux1507" id="linux1507">Jeśli warunkiem zakończenia pętli</a> jest to, że pewna zmienna
+osiągnie zero, można stosować instrukcję <code><span lang="en">LOOP</span></code>. Przykład:
+	<BR><a href="#linux1508" class="bezdruk">(przeskocz drugą pętlę for)</a>
+<PRE title="drugi przykład pętli for">
+	for (i=10; i&gt;0; i--)
+	{
+		j=j+i;
+	}</PRE>
+
+<P><a name="linux1508" id="linux1508">może zostać przetłumaczony na 2 sposoby</a>:</P>
+	<BR><a href="#linux1509" class="bezdruk">(przeskocz sposoby tłumaczenia)</a>
+<PRE title="tłumaczenie drugiego przykładu na asm">
+	; sposób 1:
+		mov	ecx, 10		; ECX to zmienna I. i=1
+	petla_for:
+		cmp	ecx, 0		; lub: test ecx, ecx
+		jbe	koniec_petli	; wychodzimy, gdy i &lt;= 0
+
+		add	eax, ecx	; EAX to zmienna J. j=j+i
+
+		sub	ecx, 1		; i=i-1
+		jmp	short petla_for
+	koniec_petli:
+
+
+
+	; sposób 2:
+		mov	ecx, 10		; ECX to zmienna I. i=1
+	petla_for:
+		add	eax, ecx	; EAX to zmienna J. j=j+i
+		loop	petla_for	; zmniejsz ECX o 1 i jeśli różny od
+					;    zera, skocz do: petla_for</PRE>
+
+<P><a name="linux1509" id="linux1509">Pamiętajmy jednak, że instrukcja</a>
+ <code><span lang="en">LOOP</span></code> działa tylko na rejestrze (E)CX, więc jeśli chcemy mieć
+ kilka zagnieżdżonych pętli, to przed każdą z nich (rozpoczynającą się zmianą rejestru ECX)
+ musimy zachować ten rejestr (na przykład na stosie), a po zakończeniu pętli musimy przywrócić
+ jego poprzednią wartość.
+</P>
+<P>
+Sprawa z pętlami o nieznanej ilości powtórzeń nie jest o wiele trudniejsza. Pętla typu <q>for</q>
+jest całkowicie równoważna pętli <q lang="en">while</q>. Właśnie z tego skorzystamy,
+ a kod niewiele będzie się różnić budową od poprzedniego przykładu.<BR>
+Powiedzmy, że mamy taką pętlę:</P>
+	<BR><a href="#linux1510" class="bezdruk">(przeskocz ten przykład)</a>
+<PRE>
+	for (i=100; i+1&lt;=n; i=i+2)
+	{
+		j=j+i+4;
+	}</PRE>
+
+<P><a name="linux1510" id="linux1510">Możemy ją zastąpić równoważną konstrukcją</a>:</P>
+	<BR><a href="#linux1511" class="bezdruk">(przeskocz zamianę for na <span lang="en">while</span>)</a>
+<PRE title="pętla while równoważna pętli for">
+	i=100;
+	while (i+1 &lt;= n)
+	{
+		j=j+i+4;
+		i=i+2;
+	}</PRE>
+
+<P><a name="linux1511" id="linux1511">Otrzymujemy kod</a>:</P>
+	<BR><a href="#linux1512" class="bezdruk">(przeskocz tłumaczenie <span lang="en">while</span>)</a>
+<PRE title="tłumaczenie pętli while na asembler">
+		mov	ecx, 100	; ECX to zmienna I. i=100
+	nasza_petla:
+		mov	ebx, ecx
+		add	ebx, 1		; EBX = i+1
+		cmp	ebx, [n]	; sprawdzamy, czy i+1 &lt;= n
+		ja	koniec_while	; wychodzimy, gdy i+1 > n
+
+		add	eax, ecx	; EAX to zmienna J. j=j+i
+		add	eax, 4		; j=j+i+4
+
+		add	ecx, 2		; i=i+2
+		jmp	short nasza_petla
+	koniec_while:</PRE>
+
+<P><a name="linux1512" id="linux1512">Ostatni rodzaj pętli</a> to pętle typu
+ <q lang="en">do-while</q> (<span lang="en">repeat...until</span>).
+ Taka pętla różni się tym od poprzedniczek, że warunek jest sprawdzany po wykonaniu kodu pętli
+(czyli taka pętla zawsze będzie wykonana co najmniej raz). Daje to pewne
+możliwości optymalizacji kodu.<BR>
+Popatrzmy na taki przykład:</P>
+	<BR><a href="#linux1513" class="bezdruk">(przeskocz przykład <q lang="en">do-while</q>)</a>
+<PRE title="pętla do-while">
+	do
+	{
+		i=i+1;
+		j=j-1;
+	} while ((i &lt; n) &amp;&amp; (j &gt; 1));</PRE>
+
+<P><a name="linux1513" id="linux1513">Warunek wyjścia to: i większe bądź równe n LUB j mniejsze
+bądź równe 1.</a><BR>
+A teraz popatrzcie, co można z tym zrobić:</P>
+	<BR><a href="#linux1514" class="bezdruk">(przeskocz tłumaczenie <q lang="en">do-while</q>)</a>
+<PRE title="tłumazcenie do-while na asembler">
+	petla_do:
+		add	ecx, 1		; ECX to zmienna I. i=i+1
+		add	edx, 1		; EDX to zmienna J. j=j+1
+
+		cmp	ecx, [n]
+		jae	koniec		; i >= n jest jednym z warunków
+					; wyjścia. Drugiego nie musimy
+					; sprawdzać, bo wynik i tak
+					; będzie prawdą
+		cmp	edx, 1
+		jbe	koniec		; j &lt;= 1 to drugi warunek wyjścia
+
+		jmp	petla_do
+	koniec:</PRE>
+
+<P><a name="linux1514" id="linux1514">Można przepisać to w lepszy sposób</a>:</P>
+	<BR><a href="#linux1515" class="bezdruk">(przeskocz lepszy sposób)</a>
+<PRE title="lepsze tłumazcenie do-while na asembler">
+	petla_do:
+		add	ecx, 1		; ECX to zmienna I. i=i+1
+		add	edx, 1		; EDX to zmienna J. j=j+1
+
+		cmp	ecx, [n]
+		jae	koniec		; i &gt;= n jest jednym z warunków
+					; wyjścia. Drugiego nie musimy
+					; sprawdzać, bo wynik i tak
+					; będzie prawdą
+
+					; jeśli nadal tutaj jesteśmy,
+					; to z pewnością i &lt; n.
+		cmp	edx, 1
+		ja	petla_do	; j &lt;= 1 to drugi warunek
+					; wyjścia. Jeśli j &gt; 1,
+					; to kontynuuj wykonywanie pętli.
+					; Jeśli j &lt; 1, to po prostu
+					; opuszczamy pętlę:
+	koniec:</PRE>
+
+<P><a name="linux1515" id="linux1515">Jeśli warunek kontynuacji lub wyjścia</a> z pętli jest
+wyrażeniem złożonym, to:</P>
+<UL>
+ <LI>jeśli składa się z alternatyw (działań typu OR, ||), to na pierwszym miejscu
+	sprawdzajcie te warunki, które mają największą szansę być prawdziwe. Oszczędzicie
+	w ten sposób czasu na bezsensowne sprawdzanie reszty warunków (wynik i tak będzie
+	prawdą).</LI>
+ <LI>jeśli składa się z koniunkcji (działań typu <span lang="en">AND</span>, &amp;&amp;), to na pierwszym miejscu
+	sprawdzajcie te warunki, które mają największą szansę być fałszywe. Wynik całości i
+	tak będzie fałszem.</LI>
+</UL>
+<P>Przykłady:</P>
+<PRE>
+	1)   a == 0 || (b &gt; 1 &amp;&amp; c &lt; 2)
+	2)   (b &lt; d || a == 1) &amp;&amp; c > 0</PRE>
+
+<P>W przypadku 1 najpierw sprawdzamy, czy <q>a</q> jest równe zero. Jeśli jest, to cały warunek jest
+prawdziwy. Jeśli nie jest, sprawdzamy najpierw ten z dwóch pozostałych, który ma największą
+szansę bycia fałszywym (jeśli któryś jest fałszywy, to wynik jest fałszem).<BR>
+W przypadku 2 najpierw sprawdzamy, czy <q>c</q> jest większe od zera. Jeśli nie jest, to cały warunek
+jest fałszywy. Jeśli jest, to potem sprawdzamy ten z pozostałych warunków, który ma
+większą szansę bycia prawdziwym (jeśli któryś jest prawdziwy, to wynik jest prawdą).</P>
+
+<HR>
+
+
+
+
+
+
+
+
+<h2 class="nag"><a name="switch" id="switch">Decyzje wielowariantowe</a>
+	 (wyrażenia typu <span lang="en">switch/case</span>)</h2>
+
+	<BR><a href="#koniec" class="bezdruk">(przeskocz decyzje wielowariantowe)</a>
+<P>
+Fragment kodu:</P>
+	<BR><a href="#linux1516" class="bezdruk">(przeskocz schemat <span lang="en">switch/case</span>)</a>
+<PRE title="konstrukcja switch-case">
+	switch (a)
+	{
+		case 1: .....
+		case 2: .....
+		....
+		default: .....
+	}</PRE>
+
+<P><a name="linux1516" id="linux1516">w prosty sposób rozkłada się na</a>
+ serię wyrażeń <q lang="en">if</q> i <q lang="en">else if</q>
+ (oraz <q lang="en">else</q>, o ile podano
+sekcję <q lang="en">default</q>). Te zaś już umiemy przedstawiać w asemblerze. Jest jednak jedna ciekawa
+sprawa: jeśli wartości poszczególnych przypadków case <em class="wazne">są zbliżone</em>
+ (coś w stylu 1, 2, 3
+a nie 1, 20, 45), to możemy posłużyć się tablicą skoków (ang. <span lang="en">jump table</span>).
+ W tej tablicy przechowywane są adresy fragmentów kodu, który ma zostać wykonany, gdy zajdzie
+odpowiedni warunek. Brzmi to trochę pokrętnie, dlatego szybko pokażę przykład.</P>
+	<BR><a href="#linux1517" class="bezdruk">(przeskocz przykład <span lang="en">switch/case</span>)</a>
+<PRE title="przykład switch-case">
+	switch (a)
+	{
+		case 1:
+			j=j+1;
+			break;
+		case 2:
+			j=j+4;
+			break;
+		case 4:
+			j=j+23;
+			break;
+		default:
+			j=j-1;
+	}</PRE>
+
+<P><a name="linux1517" id="linux1517">A teraz tłumaczenie</a>:</P>
+	<BR><a href="#linux1518" class="bezdruk">(przeskocz tłumaczenie przykładu <span lang="en">switch/case</span>)</a>
+<PRE title="tłumaczenie switch-case na asembler">
+		mov	eax, [a]
+		cmp	eax, 1			; jeśli a &lt; 1 lub a &gt; 5,
+						; to na pewno default
+		jb	sekcja_default
+
+		cmp	eax, 5
+		ja	sekcja_default
+
+		jmp	[przypadki + eax*2 - 2]
+
+	przyp1:
+		add	dword ptr [j], 1	; NASM/FASM: bez słowa PTR
+		jmp	koniec
+
+	przyp2:
+		add	dword ptr [j], 4	; NASM/FASM: bez słowa PTR
+		jmp	koniec
+
+	przyp4:
+		add	dword ptr [j], 23	; NASM/FASM: bez słowa PTR
+		jmp	koniec
+
+	sekcja_default:
+		sub	dword ptr [j], 1
+
+	koniec:
+
+	....
+	przypadki:	dw przyp1, przyp2, sekcja_default, przyp4</PRE>
+
+<P><a name="linux1518" id="linux1518">Kod najpierw sprawdza</a>, czy <q>a</q> ma szansę być w
+ którymś z przypadków (jeśli nie jest, to
+oczywiście wykonujemy sekcję <q lang="en">default</q>). Potem, jeśli a=1, to skacze pod etykietę w<br>
+<code>zmienne [przypadki + 1*2 - 2 ] = [przypadki] = przyp1</code>.<br>
+ Podobnie, jeśli a=2, skoczymy
+do <q>przyp2</q>. Jeśli a=3, skoczymy do sekcji <q lang="en">default</q>, a jeśli a=4, skoczymy do
+sekcji <q>przyp4</q>.</P>
+<P>
+Od razu widać wielką zaletę takiego rozwiązania: w <em class="wazne">jednej jedynej instrukcji</em>
+ wiemy, gdzie
+musimy skoczyć. Jak liczba przypadków będzie wzrastać, zauważymy też wadę tego rozwiązania:
+rozmiar tablicy szybko rośnie (wynosi on różnicę między wartością najwyższą możliwą a
+najniższą możliwą pomnożoną przez 2 bajty). Dlatego to rozwiązanie jest nieprzydatne dla
+możliwych wartości: {1, 20, 45} (42 wartości z 45 byłyby nieużywane, czyli wskazujące na sekcję
+<q lang="en">default</q> - zdecydowane marnotrawienie pamięci). W takim przypadku lepiej użyć
+<q>tradycyjnej</q> metody <span lang="en">if/else if/else</span>.</P>
+
+
+<hr>
+<P>
+<a name="koniec" id="koniec">Mam nadzieję, że wiedza</a> zawarta w tej części
+ kursu umożliwi Wam pisanie lepszych i bardziej
+złożonych programów niż to było do tej pory. Teraz będziecie wiedzieć, co tak właściwie
+robię kompilatory, tłumacząc niektóre wyrażenia kontrolne. Ta wiedza pomoże Wam pisać lepsze
+programy w językach wyższego poziomu (gdyż już teraz wiecie, jak zapisywać wyrażenia
+logiczne tak, by dostać najbardziej wydajny kod).
+</P>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux14.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux16.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Zaimplementować zdanie:<BR>
+	Jeśli EAX jest równy EBX lub ECX nie jest równy EBP, to do EDX wstaw EAX,
+	inaczej do ECX wstaw 0.<BR><BR></LI>
+ <LI>Zaimplementować zdanie (użyć instrukcji warunkowego przesuwania):<BR>
+	Jeśli EAX jest równy EBX lub ECX nie jest równy EBP, to do EDX wstaw EAX,
+	inaczej do EDX wstaw 0.<BR><BR></LI>
+ <LI>Napisać program, który liczy sumę liczb od 10 do dowolnej liczby wpisanej w kodzie/czytanej
+	z linii poleceń.<BR><BR></LI>
+ <LI>Zaimplementować zdanie:<BR>
+	Dopóki ECX jest większe od 1, zmniejsz ECX o 2.<BR><BR></LI>
+ <LI>Zaimplementować zdanie:<BR>
+	Zwiększaj EAX o 3, dopóki EAX jest mniejsze od 100.</LI>
+</OL>
+
+</BODY></HTML>

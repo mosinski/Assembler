@@ -1,0 +1,259 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 7 - Porty </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux06.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux08.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="linux, linuks, kurs, asm, assembler, asembler, porty, CMOS">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Mon, Oct 29 2012 17:22:20 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 7 - Porty, czyli łączność między procesorem a innymi urządzeniami</h1>
+	</div>
+
+<P>
+Nie zastanawialiście się kiedyś, jak procesor komunikuje się z tymi wszystkimi urządzeniami,
+które znajdują się w komputerze?<BR>
+Teraz zajmiemy się właśnie sposobem, w jaki procesor uzyskuje dostęp do urządzeń zewnętrznych
+ (zewnętrznych dla procesora, niekoniecznie tych znajdujących się poza obudową komputera).
+</P>
+<P>
+Mimo że procesor może porozumiewać z urządzeniami przez wydzielone obszary
+<acronym title="Random Access Memory" lang="en">RAM</acronym>-u,
+to głównym sposobem komunikacji (gdy nie chcemy lub nie możemy używać sterowników)
+ciągle pozostają porty. Jeśli chcecie, możecie wykonać komendę
+ <q lang="en">cat /proc/ioports</q>, która powie, które urządzenie zajmuje które porty.
+</P>
+<P>
+Porty są to specjalne adresy, pod które procesor może wysyłać dane. Stanowią oddzielną
+<q>strefę</q> adresową (16-bitową, jak dalej zobaczymy, więc najwyższy teoretyczny numer portu
+wynosi 65535), choć czasami do niektórych portów można dostać się przez pamięć RAM. Są to
+porty mapowane do pamięci (<span lang="en">memory-mapped</span>), którymi nie będziemy się zajmować.
+</P>
+<P>
+Lista przerwań Ralfa <span lang="en">Brown</span>'a
+(<A HREF="http://www-2.cs.cmu.edu/afs/cs.cmu.edu/user/ralf/pub/WWW/files.html" hreflang="en" tabindex="1"
+ ><acronym title="Ralf Brown's Interrupt List" lang="en">RBIL</acronym></A>)
+ zawiera plik ports.lst (który czasami trzeba osobno
+utworzyć - szczegóły w dokumentacji). W pliku tym znajdują się szczegóły dotyczące
+całkiem sporej liczby portów odpowiadającym różnym urządzeniom. I tak, mamy na przykład</P>
+<UL>
+ <LI>Kontrolery <acronym title="Direct Memory Access" lang="en">DMA</acronym></LI>
+ <LI>Programowalny kontroler przerwań (<span lang="en">Programmable Interrupt Controller</span>, PIC)</LI>
+ <LI>Programowalny czasomierz (<span lang="en">Programmable Interval Timer</span>, PIT)</LI>
+ <LI>Kontroler klawiatury</LI>
+ <LI><acronym title="Complementary Metal-Oxide Semiconductor" lang="en">CMOS</acronym></LI>
+ <LI><span lang="en">SoundBlaster</span> i inne karty dźwiękowe</LI>
+ <LI>Karty graficzne i inne karty rozszerzeń (na przykład modem)</LI>
+ <LI>Porty COM, LPT</LI>
+ <LI>Kontrolery dysków twardych</LI>
+ <LI>i wiele, wiele innych...</LI>
+</UL>
+
+<P>
+No dobrze, wiemy co ma który port i tak dalej, ale jak z tego skorzystać?
+</P>
+<P>
+Procesor posiada dwie instrukcje przeznaczone specjalnie do tego celu.
+Są to <code>IN</code> i <code>OUT</code>.<BR>
+Ich podstawowa składnia wygląda tak:</P>
+<PRE title="składnia instrukcji IN oraz OUT">
+	in al/ax/eax, numer_portu
+	out numer_portu, al/ax/eax</PRE>
+
+<P>Uwagi:</P>
+<OL>
+ <LI>Jeśli numer_portu jest większy niż 255, to w jego miejsce musimy użyć rejestru DX</LI>
+ <LI>Do operacji na portach nie można używać innych rejestrów niż AL, AX lub EAX.
+ <LI>Wczytane ilości bajtów zależą od rejestru, a ich pochodzenie - od rodzaju portu:
+  <ul>
+   <li>jeśli port <CODE>num</code> jest 8-bitowy, to<br>
+    <CODE>IN AL, num</CODE>  wczyta 1 bajt z portu o numerze <CODE>num</code><br>
+    <CODE>IN AX, num</CODE>  wczyta 1 bajt z portu <CODE>num</code> (do AL) i
+      1 bajt z portu <CODE>num+1</code> (do AH)<br>
+    <CODE>IN EAX, num</CODE>  wczyta po 1 bajcie z portów <CODE>num</code>, <CODE>num+1</code>,
+      <CODE>num+2</code> i <CODE>num+3</code>
+      i umieści w odpowiednich częściach rejestru EAX (od najmłodszej)
+    </LI>
+   <li>jeśli port <CODE>num</code> jest 16-bitowy, to<br>
+    <CODE>IN AX, num</CODE> wczyta 2 bajty z portu o numerze <CODE>num</code><br>
+    <CODE>IN EAX, num</CODE> wczyta 2 bajty z portu o numerze <CODE>num</code> i 2 bajty z portu
+      o numerze <CODE>num+1</code>
+    </LI>
+   <li>jeśli port <CODE>num</code> jest 32-bitowy, to<br>
+    <CODE>IN EAX, num</CODE> wczyta 4 bajty z portu o numerze <CODE>num</code>
+    </LI>
+  </ul></li>
+ <LI>Podobne uwagi mają zastosowane dla instrukcji <CODE>OUT</CODE></LI>
+</OL>
+
+<P>Teraz byłaby dobra pora na jakiś przykład (mając na uwadze dobro swojego komputera,
+<em class="wazne">NIE URUCHAMIAJ PONIŻSZYCH KOMEND</em>):</P>
+<PRE title="przykłady użycia IN i OUT">
+	in	al, 0	; pobierz bajt z portu 0
+	out	60h, eax; wyślij 4 bajty na port 60h <!--wyślij po jednym bajcie na porty 60h, 61h, 62h, 63h-->
+
+	mov	dx, 300	; 300 &gt; 255, więc musimy użyć DX
+	in	al, dx	; wczytaj 1 bajt z portu 300
+	out	dx, ax	; wyślij 2 bajty na port 300 <!--po bajcie na port 300 i 301--></PRE>
+
+<P>Nie rozpisywałem się tutaj za bardzo, bo ciekawsze i bardziej użyteczne przykłady znajdują się
+w moich mini-kursach (<a href="diody_tut_linux.html" hreflang="pl">programowanie diód na klawiaturze</a>,
+<a href="spkr_tut_linux.html" hreflang="pl">programowanie głośniczka</a>).
+</P>
+<P>
+Jak już wspomniałem wcześniej, porty umożliwiają dostęp do wielu urządzeń. Jeśli więc chcesz
+poeksperymentować, nie wybieraj portów zajętych na przykład przez kontrolery dysków twardych, gdyż
+zabawa portami może prowadzić do utraty danych lub uszkodzenia sprzętu.<BR>
+Dlatego właśnie w nowszych systemach operacyjnych (tych pracujących w trybie chronionym, jak na przykład
+Linux) dostęp do portów jest zabroniony dla zwykłych aplikacji (o prawa
+dostępu do portów trzeba prosić system operacyjny - zaraz zobaczymy, jak to zrobić).<BR>
+Jak więc działają na przykład stare DOS-owe gry? Odpowiedź jest prosta: nie działają w trybie
+chronionym. Windows uruchamia je w trybie udającym tryb rzeczywisty (taki, w jakim pracuje
+DOS), co umożliwia im pełną kontrolę nad sprzętem.<BR>
+Wszystkie programy, które dotąd pisaliśmy też uruchamiają się w tym samym trybie, więc mają
+swobodę w dostępie na przykład do głośniczka czy karty dźwiękowej. Co innego programy pisane w nowszych
+kompilatorach na przykład języka C - tutaj może już być problem. Ale na szczęście my nie musimy się
+tym martwić...
+</P>
+<P>
+Jeszcze jeden ciekawy przykład - używanie CMOSu. CMOS ma 2 podstawowe porty: 70h, zwany portem
+adresu i 71h, zwany portem danych. Operacje są proste i składają się z 2 kroków:</P>
+<OL>
+ <LI>Na port 70h wyślij numer komórki (1 bajt), którą chcesz odczytać lub zmienić. Polecam
+	plik cmos.lst z RBIL, zawierający szczegółowy opis komórek CMOS-u</LI>
+ <LI>Na port 71h wyślij dane, jeśli chcesz zmienić komórkę lub z portu 71h odczytaj dane, jeśli
+	chcesz odczytać komórkę</LI>
+</OL>
+<P>Oto przykład. Odczytamy tutaj czas w komputerze, a konkretnie - sekundy:</P>
+<PRE title="odczytywanie sekund zegara z CMOS-u">
+	mov	eax, 101	; funkcja systemowa &quot;sys_ioperm&quot;:
+	mov	ebx, 70h	; poczynając od portu 70h
+	mov	ecx, 20		; tyle bajtów będziemy mogli wysłać/odebrać
+	mov	edx, 71h	; końcowy numer portu
+	int	80h		; niestety, musimy być rootem
+
+	cmp	eax, 0		; sprawdzamy, czy błąd. Nie wiem,
+				; co ta funkcja ma
+				; zwracać, ale ten sposób zdaje
+				; się działać
+
+	jl	koniec		; jeśli wystąpił błąd, to zapis do
+				; portów, do których nie mamy uprawnień,
+				; zakończy się &nbsp;&quot;Segmentation fault&quot;
+				; (&nbsp;&quot;Naruszenie ochrony pamięci&quot;&nbsp;)
+	mov	al, 0
+	out	70h, al
+
+				; ustaw przerwę na milion nanosekund, czyli
+				; jedną milisekundę
+	mov	dword [ts1+timespec.tv_sec], 0
+	mov	dword [ts1+timespec.tv_nsec], 1000000
+; w FASMie:
+;	mov	dword [ts1.tv_sec], 0
+;	mov	dword [ts1.tv_nsec], 1000000
+
+	mov	eax, 162	; sys_nanosleep
+	mov	ebx, ts1	; adres struktury timespec
+	mov	ecx, 0		; adres wynikowej struktury timespec
+	int	80h		; wykonaj przerwę w programie
+
+	in	al, 71h
+
+    koniec:
+    	; ...
+
+; w FASMie:
+;	segment readable writeable
+section .data
+
+; w FASMie:
+;struc timespec
+;{
+;	.tv_sec:		rd 1
+;	.tv_nsec:		rd 1
+;}
+;
+;ts1: timespec
+
+struc timespec
+                .tv_sec:	resd 1
+                .tv_nsec:	resd 1
+endstruc
+
+ts1 istruc timespec</PRE>
+
+<P>Wszystko jasne, oprócz bloku z wywołaniem <span class="b" lang="en">sys_nanosleep</span>.
+Po co to komu, pytacie?<BR>
+Przy współczesnych częstotliwościach procesorów, CMOS (jak z resztą i inne układy) może
+po prostu nie zdążyć z odpowiedzią na naszą prośbę, gdyż od chwili wysłania numeru komórki do
+chwili odczytania danych mija za mało czasu. Dlatego robimy sobie przerwę na kilkanaście taktów
+zegara procesora.<BR>
+ Kiedyś między operacjami na CMOSie zwykło się pisać <CODE>jmp short $+2</CODE>, co też
+oczywiście nie robiło nic, poza zajmowaniem czasu (to jest po prostu skok o 2 bajty do przodu
+od miejsca, gdzie zaczyna się ta dwubajtowa instrukcja, czyli skok do następnej instrukcji),
+ale ta operacja już nie trwa wystarczająco długo, aby ją dalej stosować.
+</P>
+<P>
+Komunikacja z urządzeniami nie zawsze jednak musi wymagać uprawnień administratora i
+korzystania z funkcji <span class="b" lang="en">sys_ioperm</span>. Sporo rzeczy
+(na przykład z klawiaturą) można zrobić, korzystając z funkcji <span class="b" lang="en">sys_ioctl</span>.
+</P>
+<P>
+W dzisiejszych czasach porty już nie są tak często używane, jak były kiedyś. Jest to spowodowane
+przede wszystkim wspomnianym trybem chronionym oraz tym, że wszystkie urządzenia mają już
+własne sterowniki (mające większe uprawnienia do manipulowania sprzętem), które zajmują się
+wszystkimi operacjami I/O. Programista musi jedynie uruchomić odpowiednią funkcję i niczym się
+nie przejmować.
+</P>
+<P>
+Dawniej, portów używało się do sterowania grafiką czy wysyłania dźwięków przez głośniczek lub
+karty dźwiękowe. Teraz tym wszystkim zajmuje się za nas system operacyjny. Dzięki temu możemy
+się uchronić przed zniszczeniem sprzętu.
+</P>
+<P>Mimo iż rola portów już nie jest taka duża, zdecydowałem się je omówić, gdyż po prostu czasami
+mogą się przydać. I nie będziecie zdziwieni, gdy ktoś pokaże wam kod z jakimiś dziwnymi
+instrukcjami IN i OUT...</P>
+<P>
+Szczegóły dotyczące instrukcji dostępu do portów także znajdziecie, jak zwykle, u
+<A class="amd_link" href="http://developer.amd.com/Resources/documentation/guides/Pages/default.aspx" hreflang="en"><acronym title="Advanced Micro Devices" lang="en">AMD</acronym></A>
+i  <A class="intel_link" href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html" hreflang="en">Intela</A>.</P>
+
+<P>
+Miłej zabawy.</P>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux06.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux08.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Zapoznaj się z opisem CMOSu i napisz program, który wyświetli bieżący czas w postaci
+	gg:mm:ss (z dwukropkami). Pamiętaj o umieszczeniu opóźnień w swoim programie i
+	o uprawnieniach.</LI>
+
+</OL>
+
+</BODY></HTML>

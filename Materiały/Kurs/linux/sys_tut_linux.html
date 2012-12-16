@@ -1,0 +1,1272 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Moduły jądra </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="sys_tut_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Pisanie modułów jądra Linuksa">
+<META NAME="Keywords" CONTENT="asm, assembler, asembler, linux, linuks, jądro, kernel, moduł, module, 2.4">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 18:00:00 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Pisanie modułów jądra Linuksa</h1>
+
+<P>
+Do jądra systemu Linux na stałe wkompilowane są tylko najważniejsze sterowniki podstawowych
+ urządzeń (na przykład dyski twarde), gdyż umieszczanie tam wszystkich to strata pamięci a przede
+ wszystkim czasu na uruchomienie i wyłączenie się sterowników do urządzeń nieistniejących w danym
+ komputerze. Dlatego sterowniki do urządzeń opcjonalnych umieszczono w modułach jądra,
+ ładowanych przez system na żądanie.</P>
+<P>
+Moduł jądra to najzwyklejszy skompilowany plik w standardowym formacie <acronym
+ title="Executable-Linkable Format" lang="en">ELF</acronym>. Musi
+ eksportować na zewnątrz dwie funkcje: <span lang="en" class="b">init_module</span>, służącą do
+ inicjalizacji modułu (i uruchamianą w czasie jego ładowania)
+ oraz <span lang="en" class="b">cleanup_module</span>, służącą do wykonania
+ czynności koniecznych do prawidłowego zakończenia pracy (uruchamianą w czasie usuwania modułu z jądra).</P>
+<P>Funkcja <span lang="en" class="b">init_module</span> musi być tak napisana, że w przypadku sukcesu
+ zwraca zero, a w przypadku porażki - najlepiej jedną ze znanych ujemnych wartości błędu, która
+ dobrze będzie opisywać problem.</P>
+<P>
+<span class="b">Sporo informacji dotyczących jądra 2.4 przenosi się na jądro 2.6, więc w
+ sekcji poświęconej jądru 2.6 powiem tylko, co się zmieniło w stosunku do 2.4.</span>
+</P>
+
+
+
+<Hr>
+<h2 class="nag">Najprostszy moduł jądra 2.4</h2>
+	<BR><a href="#chardev" class="bezdruk" tabindex="1">(przeskocz najprostszy moduł)</a>
+
+<P>
+Zgodnie z tym, co powiedziałem wyżej, najprostszy moduł wygląda tak:</P>
+
+	<BR><a href="#sys_tut_linux01" class="bezdruk">(przeskocz kod najprostszego modułu)</a>
+<pre title="najprostszy moduł jądra 2.4">
+	format ELF
+
+	section &quot;.text&quot; executable	; początek sekcji kodu
+
+	; eksportowanie dwóch wymaganych funkcji
+	public	init_module
+	public	cleanup_module
+
+	; deklaracja zewnętrznej funkcji, służącej do wyświetlania
+	extrn	printk
+
+	init_module:
+		push	dword napis1	; napis do wyświetlenia
+		call	printk
+		pop	eax		; zdejmujemy argumenty ze stosu
+
+		xor	eax, eax	; zero oznacza brak błędu
+		ret
+
+	cleanup_module:
+		push	dword napis2
+		call	printk
+		pop	eax
+
+		ret
+
+	section &quot;.data&quot; writeable
+	napis1		db	&quot;&lt;1&gt; Jestem w init_module.&quot;   , 10, 0
+	napis2		db	&quot;&lt;1&gt; Jestem w cleanup_module.&quot;, 10, 0
+
+	section &quot;.modinfo&quot;
+	__module_kernel_version db	&quot;kernel_version=2.4.26&quot;, 0
+	__module_license	db	&quot;license=GPL&quot;, 0
+	__module_author		db	&quot;author=Bogdan D.&quot;, 0
+	__module_description	db &quot;description=Pierwszy modul jadra.&quot;, 0</pre>
+
+<a name="sys_tut_linux01" id="sys_tut_linux01">Zauważcie kilka spraw</a>:
+<ol>
+ <li>Wyświetlanie napisów odbywa się wewnętrzną funkcją jądra - <span class="b">printk</span>.
+ 	Działa ona podobnie do funkcji <span class="b">printf</span> z języka C,
+ 	która na etapie ładowania jądra jest oczywiście niedostępna.
+
+ 	<P>W skrócie: adres napisu podajemy na stosie, poprzedzając dodatkowymi danymi w odwrotnej
+ 	kolejności, jeśli funkcja w ogóle ma wyświetlić jakieś zmienne w napisie, na przykład %d (liczba całkowita).
+ 	Będzie to dokładniej pokazane na przykładowym module.</P>
+ 	<P>Napis powinien się zaczynać wyrażeniem &lt;N&gt;, gdzie N to pewna liczba. Ma to
+ 	pozwolić jądru rozróżnić powagę wiadomości. Nam wystarczy za N wstawiać 1.</P>
+
+ 	<P><span class="b">Jeśli wyświetlanych napisów nie widać na ekranie, to na pewno pojawią się po
+ 	komendzie <code>dmesg</code> (zwykle na końcu)</span> oraz w pliku /var/log/messages.
+ 	</P></li>
+
+ <li>Składnia jest dla kompilatora FASM.
+ 	<P>Moduły kompilowane NASMem z niewiadomych przyczyn nie chciały mi wchodzić do jądra.</P></li>
+
+ <li><P>Każda funkcja jądra uruchamiana jest w konwencji C, czyli my sprzątamy argumenty ze stosu.</P></li>
+
+ <li>Nowa sekcja - modinfo.
+ 	<P>Zawiera informacje, dla której wersji jądra moduł jest przeznaczony, kto jest jego
+ 	autorem, na jakiej jest licencji, argumenty. Nazwy zmiennych muszą pozostać bez zmian, treść
+ 	po znakach równości powinniście pozmieniać według potrzeb.</P></li>
+</ol>
+
+<P>Moduł ten, po kompilacji (<code>fasm modul_hello.asm</code>) instaluje się jako
+ <em class="wazne" lang="en">root</em> komendą</P>
+ <pre>	insmod ./modul_hello.o</pre>
+ <P>a usuwa z jądra - komendą</P>
+ <pre>	rmmod modul_hello</pre>
+ <P>(zauważcie brak rozszerzenia .o).</P>
+<P>Listę modułów obecnych w jądrze można otrzymać komendą <code>lsmod</code>.</P>
+<P>
+Pokażę teraz, jak zarejestrować urządzenie znakowe, zająć dla niego zasoby
+ <acronym title="Interrupt ReQuest" lang="en">IRQ</acronym> oraz zakres portów i pamięci.</P>
+
+
+
+
+
+
+<Hr>
+<h2 class="nag"><a name="chardev" id="chardev">Rejestracja urządzenia znakowego</a></h2>
+	<BR><a href="#iop" class="bezdruk">(przeskocz rejestrację urządzenia znakowego)</a>
+
+<P>
+Do rejestracji urządzenia znakowego (czyli takiego, z którego można odczytywać po bajcie,
+ w przeciwieństwie do na przykład dysku twardego) służy eksportowana przez jądro funkcja
+ <code lang="en">register_chrdev</code>. Przyjmuje ona 3 argumenty. Od lewej (ostatni
+ wkładany na stos) są to:</P>
+<ol>
+ <li>Numer główny urządzenia, który sobie wybraliśmy.
+	<P>Można podać zero, wtedy jądro
+ 	przydzieli nam jakiś wolny. Numer główny to pierwszy z dwóch numerów (drugi
+ 	to poboczny), widoczny w szczegółowym widoku plików z katalogu /dev, na przykład</P>
+ 	<pre>	crw-rw-rw-  1 root root 1, 5 sie 16 15:28 /dev/zero</pre>
+ 	<P>Urządzenie /dev/zero ma numer główny 1 i poboczny 5, litera C na początku oznacza
+ 	właśnie urządzenie znakowe. Inne oznaczenia to D (katalog), S (gniazdo),
+ 	B (urządzenie blokowe), P (<acronym lang="en" title="First In, First Out">FIFO</acronym>),
+ 	L (dowiązanie symboliczne).
+ 	</P></li>
+ <li><P>Adres nazwy urządzenia w postaci ciągu znaków zakończonego bajtem zerowym.</P></li>
+ <li>Adres struktury <span lang="en">file_operations</span>, do której wpiszemy adresy
+ 	odpowiednich funkcji do operacji na pliku.
+	<P>Najważniejsze są: otwieranie, zamykanie,
+ 	zapis i czytanie z urządzenia. Sama struktura wygląda tak dla jądra 2.4:</P>
+	<BR><a href="#sys_tut_linux02" class="bezdruk">(przeskocz strukturę <span lang="en">file_operations</span>)</a>
+ 	<pre title="struktura file_operations" lang="en">
+	struct file_operations {
+		struct module *owner;
+		loff_t (*llseek) (struct file *, loff_t, int);
+		ssize_t (*read) (struct file*, char*, size_t, loff_t *);
+		ssize_t (*write) (struct file *, const char *, size_t,
+			loff_t *);
+		int (*readdir) (struct file *, void *, filldir_t);
+		unsigned int (*poll) (struct file *,
+			struct poll_table_struct *);
+		int (*ioctl) (struct inode*, struct file*, unsigned int,
+			unsigned long);
+		int (*mmap) (struct file *, struct vm_area_struct *);
+		int (*open) (struct inode *, struct file *);
+		int (*flush) (struct file *);
+		int (*release) (struct inode *, struct file *);
+		int (*fsync) (struct file*,struct dentry*, int datasync);
+		int (*fasync) (int, struct file *, int);
+		int (*lock) (struct file *, int, struct file_lock *);
+		ssize_t (*readv) (struct file *, const struct iovec *,
+			unsigned long, loff_t *);
+		ssize_t (*writev) (struct file *, const struct iovec *,
+			unsigned long, loff_t *);
+	}; </pre>
+	<P><a name="sys_tut_linux02" id="sys_tut_linux02">Każde pole tej struktury</a> to DWORD.
+	Do podstawowej funkcjonalności wystarczy wypełnić
+	pola: trzecie, czwarte, dziewiąte i jedenaste (zamykanie pliku). Jeśli jakiejś funkcji
+	nie planujemy pisać, należy na odpowiadające jej miejsce w tej strukturze wpisać zero.</P></LI>
+</ol>
+<P>Jeśli podaliśmy tej funkcji nasz własny numer główny urządzenia, to jeśli rejestracja się
+ udała, <code lang="en">register_chrdev</code> zwróci zero w EAX. Jeśli poprosiliśmy o przydzielenie
+ nam numeru głównego, to jeśli rejestracja się powiedzie, <code lang="en">register_chrdev</code>
+ zwróci liczbę większą od zera, która to liczba będzie przeznaczonym dla naszego urządzenia
+ numerem głównym.</P>
+<P>
+<em class="wazne">UWAGA:</em> Funkcja <code lang="en">register_chrdev</code> nie tworzy
+ pliku urządzenia w katalogu /dev. O to musimy zadbać sami, po załadowaniu modułu.</P>
+<P>
+Wyrejestrowanie urządzenia znakowego następuje poprzez wywołanie funkcji
+ <code lang="en">unregister_chrdev</code>. Pierwszy argument od lewej (ostatni na stos)
+ to przydzielony urządzeniu numer główny, a drugi - adres nazwy urządzenia.</P>
+
+
+
+
+
+<Hr>
+<h2 class="nag"><a name="iop" id="iop">Rejestracja portów wejścia-wyjścia</a> oraz obszaru pamięci</h2>
+	<BR><a href="#irq" class="bezdruk">(przeskocz rejestrację portów i pamięci)</a>
+
+<P>
+Zarezerwowanie tych zasobów jest dość łatwe. Należy tylko uruchomić funkcję
+ <code lang="en">__request_region</code>. Przyjmuje ona 4 argumenty. Od lewej (ostatni
+ wkładany na stos) są to:</P>
+<ol>
+ <Li>Typ zasobu. Jeśli chcemy zarezerwować porty, podajemy tu adres zmiennej
+ 	<code lang="en">ioport_resource</code>, jeśli pamięć - <code lang="en">iomem_resource</code>.
+ 	Obie zmienne są eksportowane przez jądro, więc można je zadeklarować
+ 	jako zewnętrzne dla modułu.</li>
+ <li>Początkowy numer portu lub początkowy adres pamięci.</li>
+ <li>Długość zakresu portów lub pamięci</li>
+ <li>Adres nazwy urządzenia.</li>
+</ol>
+<P>W przypadku niepowodzenia, funkcja zwraca zero (w EAX).</P>
+<P>
+Oba te rodzaje zasobów zwalnia się funkcją <code lang="en">__release_region</code>. Jako
+ swoje argumenty przyjmuje ona 3 pierwsze z powyższych (typ oraz początek i długość zakresu).</P>
+
+
+
+
+
+<Hr>
+<h2 class="nag"><a name="irq" id="irq">Rejestracja zasobu
+	<acronym lang="en" title="Interrupt ReQuest">IRQ</acronym></a></h2>
+	<BR><a href="#przyk" class="bezdruk">(przeskocz rejestrację IRQ)</a>
+
+<P>
+Zasoby żądania przerwania (IRQ)
+rejestruje się funkcją <code lang="en">request_irq</code>.
+Przyjmuje ona aż 5 argumentów typu DWORD. Od lewej (ostatni wkładany na stos) są to:</P>
+<ol>
+ <li>Numer przerwania IRQ, które chcemy zająć.</li>
+ <li>Adres naszej funkcji, która będzie obsługiwać przerwania. Prototyp takiej funkcji wygląda tak:
+ 	<pre lang="en">	void handler (int irq, void *dev_id, struct pt_regs *regs);</pre>
+ 	Jak widać, będzie można ze stosu otrzymać informacje, które przerwanie zostało wywołane
+ 	oraz przez jakie urządzenie. Ostatni argument podobno jest już rzadko używany.</li>
+ <li>Wartość SA_INTERRUPT = 0x20000000</li>
+ <li>Adres nazwy urządzenia.</li>
+ <li>Adres struktury <span lang="en">file_operations</span>, uzupełnionej adresami funkcji</li>
+</ol>
+<P>Jeśli zajęcie przerwania się nie powiedzie, funkcja zwróci wartość ujemną.</P>
+<P>
+Zwolnienie przerwania odbywa się poprzez wywołanie funkcji <code lang="en">free_irq</code>.
+ Jej pierwszy argument od lewej (ostatni na stos) to nasz numer IRQ, a drugi - adres
+ naszej struktury <span lang="en">file_operations</span>.</P>
+
+
+
+
+
+
+
+
+<Hr>
+<h2 class="nag"><a name="przyk" id="przyk">Przykład modułu jądra 2.4</a></h2>
+	<BR><a href="#j26" class="bezdruk">(przeskocz do jądra 2.6)</a>
+
+<P>
+Pokazany niżej program zarejestruje programowe urządzenie znakowe (czyli takie, dla którego
+ nie ma odpowiednika w sprzęcie, jak na przykład /dev/null) z IRQ 4, zakresem portów 600h-6FFh,
+ zakresem pamięci 80000000h - 8000FFFFh oraz z podstawowymi operacjami: otwieranie, zamykanie,
+ czytanie, zapis, zmiana pozycji. Dla uproszczenia kodu nie sprawdzam, czy dane zakresy są
+ wolne. Jeśli okażą się zajęte, jądro zwróci błąd i moduł się nie załaduje.</P>
+
+	<BR><a href="#sys_tut_linux03" class="bezdruk">(przeskocz kod modułu)</a>
+<pre title="przykładowy moduł jądra 2.4">
+; Przykładowy moduł jądra 2.4
+;
+; Autor: Bogdan D., bogdandr (na) op . pl
+;
+; kompilacja:
+;   fasm modul_dev_fasm.asm
+
+format ELF
+section	&quot;.text&quot; executable
+
+; eksportowanie wymaganych funkcji
+public	init_module
+public	cleanup_module
+
+; importowanie używanych funkcji i symboli
+extrn	printk
+extrn	register_chrdev
+extrn	unregister_chrdev
+extrn	request_irq
+extrn	free_irq
+
+extrn	__check_region
+extrn	__request_region
+extrn	__release_region
+extrn	ioport_resource
+extrn	iomem_resource
+
+; zakresy zasobów, o które poprosimy jądro
+PORTY_START	= 0x600
+PORTY_ILE	= 0x100
+
+RAM_START	= 0x80000000
+RAM_ILE		= 0x00010000
+
+; stałe potrzebne do rezerwacji przerwania IRQ.
+SA_INTERRUPT	= 0x20000000
+NUMER_IRQ	= 4
+
+; funkcja inicjalizacji modułu
+init_module:
+	pushfd
+
+	; rejestrowanie urządzenia znakowego:
+	push	dword file_oper
+	push	dword nazwa
+	push	dword 0			; numer przydziel dynamicznie
+	call	register_chrdev
+	add	esp, 3*4		; usuwamy argumenty ze stosu
+
+	cmp	eax, 0			; sprawdzamy, czy błąd
+	jg	.dev_ok
+
+	; tu wiemy, że jest błąd. wyświetlmy to.
+	push	eax			; argument do informacji o błędzie
+	push	dword dev_blad		; adres informacji o błędzie
+	call	printk			; wyświetl informację o błędzie
+	add	esp, 1*4		; specjalnie usuwam tylko 1*4
+
+	pop	eax			; wychodzimy z oryginalnym błędem
+	jmp	.koniec
+
+.dev_ok:
+
+	mov	[major], eax
+
+	; rezerwacja portów wejścia-wyjścia
+	push	dword nazwa
+	push	dword PORTY_ILE
+	push	dword PORTY_START
+	push	dword ioport_resource
+	call	__request_region
+	add	esp, 4*4
+
+	test	eax, eax		; sprawdzamy, czy błąd
+	jnz	.iop_ok
+
+	push	eax			; argument do informacji o błędzie
+	push	dword porty_blad		; adres informacji o błędzie
+	call	printk			; wyświetl informację o błędzie
+	add	esp, 1*4		; potem pop eax
+
+	; wyrejestrowanie urządzenia
+	push	dword nazwa
+	push	dword [major]
+	call	unregister_chrdev
+	add	esp, 2*4
+
+	pop	eax			; wychodzimy z oryginalnym błędem
+	jmp	.koniec
+
+.iop_ok:
+
+	; rezerwacja pamięci
+	push	dword nazwa
+	push	dword RAM_ILE
+	push	dword RAM_START
+	push	dword iomem_resource
+	call	__request_region
+	add	esp, 4*4
+
+	test	eax, eax		; sprawdzamy, czy błąd
+	jnz	.iomem_ok
+
+	push	eax
+	push	dword ram_blad
+	call	printk			; wyświetl informację o błędzie
+	add	esp, 1*4		; potem pop eax
+
+	; wyrejestrowanie urządzenia
+	push	dword nazwa
+	push	dword [major]
+	call	unregister_chrdev
+	add	esp, 2*4
+
+	; zwolnienie zajętych przez nas portów
+	push	dword PORTY_ILE
+	push	dword PORTY_START
+	push	dword ioport_resource
+	call	__release_region
+	add	esp, 3*4
+
+	pop	eax			; wychodzimy z oryginalnym błędem
+	jmp	.koniec
+
+.iomem_ok:
+	; przydzielanie przerwania IRQ:
+	push	dword file_oper
+	push	dword nazwa
+	push	dword SA_INTERRUPT
+	push	dword obsluga_irq
+	push	dword NUMER_IRQ
+	call	request_irq
+	add	esp, 5*4
+
+	cmp	eax, 0
+	jge	.irq_ok
+
+	push	eax
+	push	dword irq_blad
+	call	printk			; wyświetl informację o błędzie
+	add	esp, 1*4		; potem pop eax
+
+	; wyrejestrowanie urządzenia
+	push	dword nazwa
+	push	dword [major]
+	call	unregister_chrdev
+	add	esp, 2*4
+
+	; zwolnienie zajętych przez nas portów
+	push	dword PORTY_ILE
+	push	dword PORTY_START
+	push	dword ioport_resource
+	call	__release_region
+	add	esp, 3*4
+
+	; zwolnienie zajętej przez nas pamięci
+	push	dword RAM_ILE
+	push	dword RAM_START
+	push	dword iomem_resource
+	call	__release_region
+	add	esp, 3*4
+
+	pop	eax			; wychodzimy z oryginalnym błędem
+	jmp	.koniec
+
+.irq_ok:
+
+	; wyświetlenie informacji o poprawnym uruchomieniu modułu
+	push	dword NUMER_IRQ
+	push	dword [major]
+	push	dword uruch
+	call	printk
+	add	esp, 3*4
+
+	xor	eax, eax		; zero - brak błędu
+
+.koniec:
+
+	popfd
+	ret
+
+; funkcja uruchamiana przy usuwaniu modułu
+cleanup_module:
+	pushfd
+	push	eax
+
+	; zwolnienie numeru IRQ:
+	push	dword file_oper
+	push	dword NUMER_IRQ
+	call	free_irq
+	add	esp, 2*4
+
+	; wyrejestrowanie urządzenia:
+	push	dword nazwa
+	push	dword [major]
+	call	unregister_chrdev
+	add	esp, 2*4
+
+	; zwolnienie zajętych przez nas portów
+	push	dword PORTY_ILE
+	push	dword PORTY_START
+	push	dword ioport_resource
+	call	__release_region
+	add	esp, 3*4
+
+	; zwolnienie zajętej przez nas pamięci
+	push	dword RAM_ILE
+	push	dword RAM_START
+	push	dword iomem_resource
+	call	__release_region
+	add	esp, 3*4
+
+	; wyświetlenie informacji o usunięciu modułu
+	push	dword usun
+	call	printk
+	add	esp, 1*4
+
+	pop	eax
+	popfd
+	ret
+
+; nasza funkcja obsługi przerwania. Ta tutaj nie robi nic, ale
+;	pokazuje rozmieszczenie argumentów na stosie
+obsluga_irq:
+	push	ebp
+	mov	ebp, esp
+
+; [ebp] = stary EBP
+; [ebp+4] = adres powrotny
+; [ebp+8] = arg1
+; ...
+
+		irq	equ	ebp+8
+		dev_id	equ	ebp+12
+		regs	equ	ebp+16
+
+	leave
+	ret
+
+
+; Zdefiniowane operacje na urządzeniu
+
+; Czytanie z urządzenia - zwracamy żądanej długości ciąg bajtów 1Eh.
+; To urządzenie staje się nieskończonym źródłem, podobnie jak /dev/zero
+czytanie:
+	push	ebp
+	mov	ebp, esp
+
+	; rozmieszczenie argumentów na stosie:
+	s_file	equ	ebp+8	; wskaźnik na strukturę file
+	bufor	equ	ebp+12	; adres bufora na dane
+	l_jedn	equ	ebp+16	; żądana liczba bajtów
+	loff	equ	ebp+20	; żądany offset czytania
+
+	pushfd
+	push	edi
+	push	ecx
+
+	mov	ecx, [l_jedn]
+	mov	al, 0x1e
+	cld
+	mov	edi, [bufor]
+	rep	stosb		; zapychamy bufor bajtami 1Eh
+
+	pop	ecx
+	pop	edi
+	popfd
+
+	mov	eax, [l_jedn]	; zwracamy tyle, ile chciano
+
+	leave
+	ret
+
+zapis:
+	push	ebp
+	mov	ebp, esp
+
+	; nic fizycznie nie zapisujemy, zwracamy tylko liczbę bajtów,
+	;	którą mieliśmy zapisać
+	mov	eax, [l_jedn]
+
+	leave
+	ret
+
+przejscie:
+zamykanie:
+otwieranie:
+	xor	eax, eax
+	ret
+
+
+
+section &quot;.data&quot; writeable
+
+major	dd	0	; numer główny urządzenia przydzielany przez jądro
+
+; adresy funkcji operacji na tym urządzeniu
+file_oper:	dd 0, przejscie, czytanie, zapis, 0, 0, 0, 0, otwieranie, 0
+		dd zamykanie, 0, 0, 0, 0, 0
+
+dev_blad	db	&quot;&lt;1&gt;Blad rejestracji urzadzenia: %d.&quot;, 10, 0
+irq_blad	db	&quot;&lt;1&gt;Blad przydzielania IRQ: %d.&quot;, 10, 0
+porty_blad	db	&quot;&lt;1&gt;Blad przydzielania portow:  EAX=%d&quot;, 10, 0
+ram_blad	db	&quot;&lt;1&gt;Blad przydzielania pamieci: EAX=%d&quot;, 10, 0
+
+
+uruch		db	&quot;&lt;1&gt;Modul zaladowany. Maj=%d, IRQ=%d&quot;, 10, 0
+usun		db	&quot;&lt;1&gt;Modul usuniety.&quot;, 10, 0
+
+nazwa		db	&quot;test00&quot;, 0
+sciezka		db	&quot;/dev/test00&quot;, 0
+
+section &quot;.modinfo&quot;
+__module_kernel_version	db	&quot;kernel_version=2.4.26&quot;, 0
+__module_license	db	&quot;license=GPL&quot;, 0
+__module_author		db	&quot;author=Bogdan D.&quot;, 0
+__module_description	db	&quot;description=Pierwszy modul jadra&quot;, 0
+__module_device		db	&quot;device=test00&quot;, 0</pre>
+
+
+
+
+
+<P><a name="sys_tut_linux03" id="sys_tut_linux03">Powyższy moduł</a> po kompilacji najprościej
+ zainstalować w jądrze stosując taki oto skrypt:</P>
+	<BR><a href="#sys_tut_linux04" class="bezdruk">(przeskocz skrypt instalacji)</a>
+
+<pre title="skrypt instalacji i testowania modułu">
+#!/bin/bash
+
+PLIK=&quot;modul_dev_fasm.o&quot;		# Tu wstawiacie swoją nazwę
+NAZWA=&quot;test00&quot;
+
+# umieszczenie modułu w jądrze.
+/sbin/insmod $PLIK $* || { echo &quot;Problem insmod!&quot; ; exit -1; }
+
+# wyszukanie naszej nazwy modułu wśród wszystkich
+/sbin/lsmod | grep `echo $PLIK | sed 's/[^a-z]/ /g' | awk '{print $1}' `
+# wyświetlenie informacji o zajmowanych zasobach
+grep $NAZWA /proc/devices
+grep $NAZWA /proc/ioports
+grep $NAZWA /proc/iomem
+grep $NAZWA /proc/interrupts
+
+# znalezienie i wyświetlenie numeru głównego urządzenia
+NR=`grep $NAZWA /proc/devices | awk '{print $1}'`
+echo &quot;Major = $NR&quot;
+
+# ewentualne usunięcie starego pliku urządzenia
+rm -f /dev/$NAZWA
+
+# fizyczne utworzenie pliku urządzenia w katalogu /dev
+# wykonanie funkcji sys_mknod z modułu NIE działa
+mknod /dev/$NAZWA c $NR 0
+ls -l /dev/$NAZWA
+
+# krótki test: czytanie 512 bajtów i sprawdzenie ich zawartości
+dd count=1 if=/dev/$NAZWA of=/x &amp;&amp; hexdump /x &amp;&amp; rm -f /x</pre>
+
+
+
+
+<P><a name="sys_tut_linux04" id="sys_tut_linux04">Wystarczy ten skrypt</a> zachować na przykład pod nazwą
+<code>instal.sh</code>, nadać prawo wykonywania komendą <code>chmod u+x instal.sh</code> i uruchamiać poprzez
+ <code>./instal.sh</code>, oczywiście jako <em class="wazne">root</em>. Jeśli załadowanie
+ modułu się uda, skrypt wyświetli przydzielone modułowi zasoby - porty, IRQ, pamięć - poprzez
+ zajrzenie do odpowiednich plików katalogu /proc. Skrypt utworzy też plik urządzenia w katalogu
+ /dev z odpowiednim numerem głównym oraz wykona prosty test.</P>
+<P>
+Odinstalować moduł można łatwo takim oto skryptem:</P>
+
+<pre title="skrypt usuwający moduł">
+#!/bin/bash
+
+PLIK=&quot;modul_dev_fasm&quot;	# Tu wstawiacie swoją nazwę, bez rozszerzenia .o
+NAZWA=&quot;test00&quot;
+
+/sbin/rmmod $PLIK &amp;&amp; rm -f /dev/$NAZWA</pre>
+
+
+
+
+
+
+
+
+
+
+<Hr>
+<h2 class="nag"><a name="j26" id="j26">Najprostszy moduł jądra 2.6</a></h2>
+	<BR><a href="#j26_res" class="bezdruk" tabindex="1">(przeskocz najprostszy moduł jądra 2.6)</a>
+
+<P>
+Najprostszy moduł jądra 2.6 wygląda tak:</P>
+
+	<BR><a href="#sys_tut_linux05" class="bezdruk">(przeskocz kod najprostszego modułu jądra 2.6)</a>
+<pre title="najprostszy moduł jądra 2.6">
+format ELF
+section &quot;.init.text&quot; executable	align 1
+section &quot;.text&quot; executable align 4
+
+public init_module
+public cleanup_module
+
+extrn printk
+
+init_module:
+	push	dword str1
+	call	printk
+	pop	eax
+	xor	eax, eax
+	ret
+
+cleanup_module:
+	push	dword str2
+	call	printk
+	pop	eax
+	ret
+
+section &quot;.modinfo&quot; align 32
+__kernel_version	db	&quot;kernel_version=2.6.16&quot;, 0
+__mod_vermagic db &quot;vermagic=2.6.16 686 REGPARM 4KSTACKS gcc-4.0&quot;, 0
+__module_license	db	&quot;license=GPL&quot;, 0
+__module_author		db	&quot;author=Bogdan D.&quot;, 0
+__module_description	db	&quot;description=Pierwszy modul jadra 2.6&quot;, 0
+
+section &quot;__versions&quot; align 32
+	dd	0xfa02c634
+  n1:	db	&quot;struct_module&quot;
+	times	64-4-($-n1) db 0
+
+	dd	0x1b7d4074
+  n2:	db	&quot;printk&quot;
+	times	64-4-($-n2) db 0
+
+section &quot;.data&quot; writeable align 4
+
+str1		db	&quot;&lt;1&gt; Jestem w init_module(). &quot;, 10, 0
+str2		db	&quot;&lt;1&gt; Jestem w cleanup_module(). &quot;, 10, 0
+
+section &quot;.gnu.linkonce.this_module&quot; writeable align 128
+
+align 128
+__this_module:		; łączna długość: 512 bajtów
+			dd 0, 0, 0
+
+		.nazwa:	db &quot;modul&quot;, 0
+			times 64-4-($-.nazwa) db 0
+
+			times 100 db 0
+			dd init_module
+			times 220 db 0
+			dd cleanup_module
+			times 112 db 0</pre>
+
+<P><a name="sys_tut_linux05" id="sys_tut_linux05">Od razu widać sporo różnic</a>, prawda?
+Omówmy je po jednej sekcji na raz:</P>
+<ol>
+ <li><code>.init.text</code>
+ 	<P>W zasadzie powinny być co najmniej dwie: <code>.init.text</code>, zawierająca procedurę
+ 	inicjalizacji oraz <code>.exit.text</code>, zawierająca procedurę wyjścia.<br><Br>
+ 	Dodatkowo, może być oczywiście sekcja danych <code>.data</code> i kodu <code>.text</code>.</P>
+
+ 	<P>Jeśli podczas próby zainstalowania modułu dostajecie komunikat <q lang="en">Accessing
+ 	a corrupted shared library</q> (<q>Dostęp do uszkodzonej biblioteki współdzielonej</q>),
+ 	to pogrzebcie w sekcjach - doróbcie <code>.text</code>, usuńcie <code>.init.text</code>,
+ 	zamieńcie kolejność itp.
+ 	</P></li>
+
+ <li><code>.gnu.linkonce.this_module</code>
+ 	<P>Ta jest najważniejsza. Bez niej próba
+ 	instalacji modułu w jadrze zakończy się komunikatem <q lang="en">No module found in
+ 	object</q> (<q>w pliku obiektowym nie znaleziono modułu</q>). Zawartość tej sekcji to struktura
+ 	typu <q>module</q> o nazwie <q>__this_module</q>. Najlepiej zrobicie, przepisując tę powyżej
+ 	do swoich modułów, zmieniając tylko nazwę modułu oraz funkcje wejścia i wyjścia.<br><br>
+ 	Możecie też skorzystać z następującego makra:</P>
+ 	<pre>	macro	gen_this_module		name*, entry, exit
+	{
+		section '.gnu.linkonce.this_module' writeable align 128
+
+		align 128
+		__this_module:
+				dd 0, 0, 0
+	   	.mod_nazwa:	db name, 0
+				times 64-4-($-.mod_nazwa) db 0
+				times 100 db 0
+				if entry eq
+					dd init_module
+				else
+					dd entry
+				end if
+				times 220 db 0
+				if exit eq
+					dd cleanup_module
+				else
+					dd exit
+				end if
+				times 112 db 0
+
+	}</pre>
+	<P>Korzysta się z niego dość łatwo: wystarczy podać nazwę modułu, która ma być wyświetlana
+	po komendzie <code>lsmod</code> oraz nazwy procedur wejścia i wyjścia z modułu, na przykład</P>
+	<pre>	gen_this_module	"nasz_modul", init_module, cleanup_module</pre>
+	<P>To wywołanie makra należy umieścić tam, gdzie normalnie ta sekcja by się znalazła, czyli
+	na przykład po ostatniej deklaracji czegokolwiek w sekcji danych.
+	W każdym razie <em class="wazne">NIE</em> tak, żeby było to w środku jakiejkolwiek sekcji.
+
+ 	</P></li>
+
+ <li><code>modinfo</code>
+ 	<P>Sekcja ta wzbogaciła się w stosunku do tej z jądra 2.4 o tylko jeden, ale
+ 	za to bardzo ważny wpis - <q lang="en">vermagic</q>. U większości z Was ten napis
+ 	będzie się różnił od mojego tylko wersją jądra. W oryginale wygląda on tak:</P>
+		<BR><a href="#sys_tut_linux06" class="bezdruk">(przeskocz definicję vermagic)</a>
+ 	<pre lang="en">	#define VERMAGIC_STRING 				\
+	  UTS_RELEASE &quot; &quot;					\
+	  MODULE_VERMAGIC_SMP MODULE_VERMAGIC_PREEMPT 		\
+	  MODULE_ARCH_VERMAGIC 					\
+	  &quot;gcc-&quot; __stringify(__GNUC__) &quot;.&quot; __stringify(__GNUC_MINOR__)
+	#define MODULE_ARCH_VERMAGIC MODULE_PROC_FAMILY \
+ 		 MODULE_REGPARM MODULE_STACKSIZE</pre>
+
+ 	<P><a name="sys_tut_linux06" id="sys_tut_linux06">a można go znaleźć</a> w podkatalogach asm*
+	katalogu INCLUDE w źródłach jądra oraz w pliku VERMAGIC.H.
+ 	</P></li>
+
+ <li><code>__versions</code>
+ 	<P>Ta sekcja zawiera informacje o wersjach procedur, z których
+ 	nasz moduł korzysta. Struktura jest dość prosta: najpierw jako DWORD wpisujemy numerek
+ 	odpowiadający danej funkcji jądra, a znaleziony w pliku <span class="b">MODULE.SYMVERS</span>
+ 	w katalogu głównym źródeł jadra. Zaraz za numerkiem wpisujemy nazwę naszej funkcji,
+ 	dopełnioną zerami do 64 bajtów.</P>
+
+ 	<P>Ta sekcja nie jest wymagana do prawidłowej pracy modułu, ale powinna się w każdym znaleźć,
+ 	żeby nie pojawiały się komunikaty o <q>zanieczyszczeniu</q> jądra (<q lang="en">kernel tainted</q>).
+ 	</P>
+ 	<P>Całą tę sekcję możecie wygenerować, korzystając z mojego skryptu <a href="../inne/symvers-fasm.txt"
+ 	>symvers-fasm.txt</a>. Wystarczy uruchomić <code>perl symvers-fasm.pl wasz_modul.asm</code>.
+ 	</P></li>
+</ol>
+
+
+
+
+
+
+
+
+
+<Hr>
+<h2 class="nag"><a name="j26_res" id="j26_res">Rezerwacja zasobów w jądrze 2.6</a></h2>
+	<BR><a href="#j26_ex" class="bezdruk" tabindex="1">(przeskocz rezerwację zasobów w jądrze 2.6)</a>
+
+<P>
+Rezerwacja zasobów w jądrze 2.6 z zewnątrz (czyli z perspektywy języka C) nie różni się od tej
+ z jądra 2.4. Ale tak naprawdę zaszły dwie istotne zmiany:</P>
+<ol>
+ <li>Struktura <span lang="en">file_operations</span>
+	<P>W jądrze 2.6 wygląda tak:</P>
+	<BR><a href="#sys_tut_linux07" class="bezdruk">(przeskocz strukturę <span lang="en">file_operations</span> w jądrze 2.6)</a>
+ 	<pre title="struktura file_operations jądra 2.6" lang="en">
+	struct file_operations {
+		struct module *owner;
+		loff_t (*llseek) (struct file *, loff_t, int);
+		ssize_t (*read) (struct file*,char __user*,size_t,
+			loff_t*);
+		ssize_t (*aio_read) (struct kiocb *, char __user *,
+			size_t, loff_t);
+		ssize_t (*write) (struct file *, const char __user *,
+			size_t, loff_t *);
+		ssize_t (*aio_write) (struct kiocb *, const char __user*,
+			size_t, loff_t);
+		int (*readdir) (struct file *, void *, filldir_t);
+		unsigned int (*poll) (struct file *,
+			struct poll_table_struct *);
+		int (*ioctl) (struct inode *, struct file *,
+			unsigned int, unsigned long);
+		long (*unlocked_ioctl) (struct file *, unsigned int,
+			unsigned long);
+		long (*compat_ioctl) (struct file *, unsigned int,
+			unsigned long);
+		int (*mmap) (struct file *, struct vm_area_struct *);
+		int (*open) (struct inode *, struct file *);
+		int (*flush) (struct file *);
+		int (*release) (struct inode *, struct file *);
+		int (*fsync) (struct file *, struct dentry *,
+			int datasync);
+		int (*aio_fsync) (struct kiocb *, int datasync);
+		int (*fasync) (int, struct file *, int);
+		int (*lock) (struct file *, int, struct file_lock *);
+		ssize_t (*readv) (struct file *, const struct iovec *,
+			unsigned long, loff_t *);
+		ssize_t (*writev) (struct file *, const struct iovec *,
+			unsigned long, loff_t *);
+		ssize_t (*sendfile) (struct file *, loff_t *, size_t,
+			read_actor_t, void *);
+		ssize_t (*sendpage) (struct file *, struct page *, int,
+			size_t, loff_t *, int);
+		unsigned long (*get_unmapped_area)(struct file *,
+			unsigned long, unsigned long, unsigned long,
+			unsigned long);
+		int (*check_flags)(int);
+		int (*dir_notify)(struct file *filp, unsigned long arg);
+		int (*flock) (struct file *, int, struct file_lock *);
+	};</pre>
+ 	</li>
+
+ <li><a name="sys_tut_linux07" id="sys_tut_linux07">Sposób przekazywania parametrów</a>
+ 	<P>Moje jądro dystrybucyjne zostało skompilowane tak, żeby trzy pierwsze parametry do każdej
+ 	procedury <span class="b">z wyjątkiem printk</span> przekazywało w rejestrach:
+ 	EAX, EDX, ECX, a resztę na stosie. Aby sprawdzić, czy u Was też tak jest, wykonajcie komendy:</P>
+ 	<pre>	grep -R regpar /lib/modules/`uname -r`/build/|grep Makefile
+ 	grep -R REGPAR /lib/modules/`uname -r`/build/|grep config</pre>
+ 	<P>Jeśli ich wyniki zawierają takie coś:</P>
+ 	<pre> 	CONFIG_REGPARM=y
+ 	#define CONFIG_REGPARM 1</pre>
+ 	<P>to prawdopodobnie też tak macie. Możecie wtedy bez przeszkód używać makra URUCHOM, które
+ 	umieszczę w module poniżej. Jeśli nie, możecie je zmodyfikować. Potrzeba modyfikacji
+ 	może wynikać z zawieszania się całego systemu podczas próby zainstalowania modułu.
+ 	</P></li>
+</ol>
+
+
+
+
+
+
+
+
+<Hr>
+<h2 class="nag"><a name="j26_ex" id="j26_ex">Przykład modułu jądra 2.6</a></h2>
+	<BR><a href="#j26_wytlum" class="bezdruk" tabindex="1">(przeskocz przykład modułu jądra 2.6)</a>
+
+<P>
+Podobnie, jak w jądrze 2.4, pokazany niżej program zarejestruje programowe
+ urządzenie znakowe (czyli takie, dla którego
+ nie ma odpowiednika w sprzęcie, jak na przykład /dev/null) z IRQ 4, zakresem portów 600h-6FFh,
+ zakresem pamięci 80000000h - 8000FFFFh oraz z podstawowymi operacjami: otwieranie, zamykanie,
+ czytanie, zapis, zmiana pozycji. Dla uproszczenia kodu nie sprawdzam, czy dane zakresy są
+ wolne. Jeśli okażą się zajęte, jądro zwróci błąd i moduł się nie załaduje.</P>
+
+
+<pre title="przykładowy moduł jądra 2.6">
+format ELF
+section &quot;.text&quot; executable align 4
+
+public	init_module
+public	cleanup_module
+
+extrn	printk
+extrn	register_chrdev
+extrn	unregister_chrdev
+extrn	request_irq
+extrn	free_irq
+
+extrn	__request_region
+extrn	__release_region
+extrn	ioport_resource
+extrn	iomem_resource
+
+PORTY_START	= 0x600
+PORTY_ILE	= 0x100
+
+RAM_START	= 0x80000000
+RAM_ILE		= 0x00010000
+
+SA_INTERRUPT	= 0x20000000
+NUMER_IRQ	= 4
+
+macro	uruchom		funkcja, par1, par2, par3, par4, par5
+{
+	if ~ par5 eq
+		push	dword par5
+	end if
+	if ~ par4 eq
+		push	dword par4
+	end if
+	if ~ par3 eq
+		mov	ecx, par3
+	end if
+	if ~ par2 eq
+		mov	edx, par2
+	end if
+	if ~ par1 eq
+		mov	eax, par1
+	end if
+	call	funkcja
+	if ~ par5 eq
+		add	esp, 4
+	end if
+	if ~ par4 eq
+		add	esp, 4
+	end if
+}
+
+init_module:
+	pushfd
+
+	; rejestrowanie urządzenia znakowego:
+	uruchom	register_chrdev, 0, nazwa, file_oper
+
+	cmp	eax, 0
+	jg	.dev_ok
+
+	; wyświetlenie informacji o błędzie
+	push	eax
+	push	dword dev_blad
+	call	printk
+	add	esp, 1*4		; specjalnie tylko 1*4
+
+	pop	eax			; wychodzimy z oryginalnym błędem
+	jmp	.koniec
+
+.dev_ok:
+
+	mov	[major], eax
+
+	; rejestrowanie zakresu portów
+ uruchom __request_region, ioport_resource, PORTY_START, PORTY_ILE, nazwa
+
+	test	eax, eax
+	jnz	.iop_ok
+
+	push	eax
+	push	dword porty_blad
+	call	printk
+	add	esp, 1*4		; potem pop eax
+
+	; wyrejestrowanie urządzenia
+	uruchom	unregister_chrdev, [major], nazwa
+
+	pop	eax			; wychodzimy z oryginalnym błędem
+	jmp	.koniec
+
+.iop_ok:
+
+	; rejestrowanie zakresu pamięci
+	uruchom	__request_region, iomem_resource, RAM_START, RAM_ILE, nazwa
+
+	test	eax, eax
+	jnz	.iomem_ok
+
+	push	eax
+	push	dword ram_blad
+	call	printk
+	add	esp, 1*4		; potem pop eax
+
+	; wyrejestrowanie urządzenia
+	uruchom	unregister_chrdev, [major], nazwa
+
+	; wyrejestrowanie zakresu portów
+	uruchom	__release_region, ioport_resource, PORTY_START, PORTY_ILE
+
+	pop	eax			; wychodzimy z oryginalnym błędem
+	jmp	.koniec
+
+.iomem_ok:
+
+	; przydzielanie przerwania IRQ:
+ uruchom request_irq, NUMER_IRQ, obsluga_irq, SA_INTERRUPT, nazwa, file_oper
+
+	cmp	eax, 0
+	jge	.irq_ok
+
+	push	eax
+	push	dword irq_blad
+	call	printk
+	add	esp, 1*4		; potem pop eax
+
+	; wyrejestrowanie urządzenia
+	uruchom	unregister_chrdev, [major], nazwa
+
+	; wyrejestrowanie zakresu portów
+	uruchom	__release_region, ioport_resource, PORTY_START, PORTY_ILE
+
+	; wyrejestrowanie zakresu pamięci
+	uruchom	__release_region, iomem_resource, RAM_START, RAM_ILE
+
+	pop	eax			; wychodzimy z oryginalnym błędem
+	jmp	.koniec
+
+.irq_ok:
+
+	; wyświetlenie informacji o załadowaniu modułu
+	push	dword NUMER_IRQ
+	push	dword [major]
+	push	dword uruch
+	call	printk
+	add	esp, 3*4
+
+	xor	eax, eax
+
+.koniec:
+
+	popfd
+	ret
+
+; funkcja uruchamiana przy usuwaniu modułu
+cleanup_module:
+	pushfd
+	push	eax
+
+	; zwolnienie numeru IRQ:
+	uruchom	free_irq, NUMER_IRQ, file_oper
+
+	; wyrejestrowanie urządzenia:
+	uruchom	unregister_chrdev, [major], nazwa
+
+	; wyrejestrowanie zakresu portów
+	uruchom	__release_region, ioport_resource, PORTY_START, PORTY_ILE
+
+	; wyrejestrowanie zakresu pamięci
+	uruchom	__release_region, iomem_resource, RAM_START, RAM_ILE
+
+	push	dword usun
+	call	printk
+	add	esp, 1*4
+
+	pop	eax
+	popfd
+	ret
+
+; deklaracja wygląda tak:
+; void handler (int irq, void *dev_id, struct pt_regs *regs);
+; ostatni argument zwykle nieużywany
+
+section &quot;.text&quot; executable align 4
+
+obsluga_irq:
+	push	ebp
+	mov	ebp, esp
+
+	; tu Wasz kod
+
+	leave
+	ret
+
+; Zdefiniowane operacje:
+
+czytanie:
+;	ssize_t (*read) (struct file *, char *, size_t, loff_t *);
+	push	ebp
+	mov	ebp, esp
+
+	loff	equ	ebp+8
+
+	pushfd
+	push	edi
+	push	ecx
+
+	mov	al, 0x1e
+	cld
+	mov	edi, edx
+	rep	stosb
+
+	pop	ecx
+	pop	edi
+	popfd
+
+	; mówimy, że przeczytano tyle bajtów, ile żądano
+	mov	eax, ecx
+
+	leave
+	ret
+
+zapis:
+;	ssize_t (*write) (struct file *, const char *, size_t, loff_t *);
+	push	ebp
+	mov	ebp, esp
+
+	; nic fizycznie nie zapisujemy, zwracamy tylko liczbę bajtów,
+	;	którą mieliśmy zapisać (trzeci parametr)
+	mov	eax, ecx
+
+	leave
+	ret
+
+przejscie:
+zamykanie:
+otwieranie:
+	xor	eax, eax
+	ret
+
+
+
+section &quot;.data&quot; writeable align 4
+
+major	dd	0	; numer główny urządzenia przydzielany przez jądro
+
+; adresy funkcji operacji na tym urządzeniu
+file_oper:	dd 0, przejscie, czytanie, 0, zapis, 0, 0, 0, 0, 0, 0, 0
+		dd otwieranie, 0, zamykanie, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		dd 0, 0, 0
+		dd 0, 0, 0
+
+dev_blad	db	&quot;&lt;1&gt;Blad rejestracji urzadzenia: %d.&quot;, 10, 0
+irq_blad	db	&quot;&lt;1&gt;Blad przydzielania IRQ: %d.&quot;, 10, 0
+porty_blad	db	&quot;&lt;1&gt;Blad przydzielania portow:  EAX=%d&quot;, 10, 0
+ram_blad	db	&quot;&lt;1&gt;Blad przydzielania pamieci: EAX=%d&quot;, 10, 0
+
+
+uruch		db	&quot;&lt;1&gt;Modul zaladowany. Maj=%d, IRQ=%d&quot;, 10, 0
+usun		db	&quot;&lt;1&gt;Modul usuniety.&quot;, 10, 0
+
+nazwa		db	&quot;test00&quot;, 0, 0
+sciezka		db	&quot;/dev/test00&quot;, 0
+
+section &quot;.modinfo&quot; align 32
+__kernel_version	db	&quot;kernel_version=2.6.16&quot;, 0
+__mod_vermagic db &quot;vermagic=2.6.16 686 REGPARM 4KSTACKS gcc-4.0&quot;,0
+__module_license	db	&quot;license=GPL&quot;, 0
+__module_author		db	&quot;author=Bogdan D.&quot;, 0
+__module_description	db	&quot;description=Pierwszy modul jadra 2.6&quot;, 0
+__module_device		db	&quot;device=test00&quot;, 0
+__module_depends	db	&quot;depends=&quot;, 0
+
+; nieistotne, wzięte ze skompilowanego modułu C:
+__mod_srcversion	db	&quot;srcversion=F5CE0CFFE0191EDB2F816D4&quot;, 0
+
+section &quot;__versions&quot; align 32
+
+____versions:
+	dd	0xfa02c634		; Z MODULE.SYMVERS
+  n1:	db	&quot;struct_module&quot;, 0
+	times	64-4-($-n1) db 0
+
+	dd	0x1b7d4074
+  n2:	db	&quot;printk&quot;, 0
+	times	64-4-($-n2) db 0
+
+	dd	0xb5145e00
+  n3:	db	&quot;register_chrdev&quot;, 0
+	times	64-4-($-n3) db 0
+
+	dd	0xc192d491
+  n4:	db	&quot;unregister_chrdev&quot;, 0
+	times	64-4-($-n4) db 0
+
+	dd	0x26e96637
+  n5:	db	&quot;request_irq&quot;, 0
+	times	64-4-($-n5) db 0
+
+	dd	0xf20dabd8
+  n6:	db	&quot;free_irq&quot;, 0
+	times	64-4-($-n6) db 0
+
+	dd	0x1a1a4f09
+  n7:	db	&quot;__request_region&quot;, 0
+	times	64-4-($-n7) db 0
+
+	dd	0xd49501d4
+  n8:	db	&quot;__release_region&quot;, 0
+	times	64-4-($-n8) db 0
+
+	dd	0x865ebccd
+  n9:	db	&quot;ioport_resource&quot;, 0
+	times	64-4-($-n9) db 0
+
+	dd	0x9efed5af
+  n10:	db	&quot;iomem_resource&quot;, 0
+	times	64-4-($-n10) db 0
+
+
+section &quot;.gnu.linkonce.this_module&quot; writeable align 128
+
+align 128
+__this_module:		; łączna długość: 512 bajtów
+			dd 0, 0, 0
+	.mod_nazwa:	db &quot;modul_dev_fasm&quot;, 0
+			times 64-4-($-.mod_nazwa) db 0
+			times 100 db 0
+			dd init_module
+			times 220 db 0
+			dd cleanup_module
+			times 112 db 0</pre>
+
+
+<P><a name="j26_wytlum" id="j26_wytlum">Do instalacji i usuwania modułu z jądra</a> można użyć
+ tych samych <a href="#sys_tut_linux03" hreflang="pl">skryptów</a>, które były dla jądra 2.4, zmieniając
+ ewentualnie nazwę pliku modułu.</P>
+
+
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

@@ -1,0 +1,353 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 3 - Instrukcje </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux02.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux04.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, instrukcje, skoki, warunki,
+	arytmetyka, logika, bity, porty, łańcuchy znaków, flagi, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="Kwrite">
+<meta http-equiv="Last-Modified" content="Mon, Oct 29 2012 17:22:19 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 3 - Podstawowe instrukcje, czyli poznajemy dialekt procesora</h1></div>
+
+<P>
+Poznaliśmy już rejestry, omówiliśmy pamięć. Pora zacząć na nich operować.<Br>
+ Zanim jednak zaczniemy,
+proszę Was o to, abyście tej listy też <em class="wazne">NIE uczyli się na pamięć</em>.
+Instrukcji jest dużo, a próba zrozumienia ich wszystkich na raz może spowodować niezły chaos. Co najwyżej
+przejrzyjcie tę listę kilka razy, aby wiedzieć mniej-więcej, co każda instrukcja robi.
+</P>
+<P>
+Instrukcje procesora można podzielić na kilka grup:</P>
+<UL>
+ <LI>instrukcje przemieszczania danych</LI>
+ <LI>instrukcje arytmetyki binarnej</LI>
+ <LI>instrukcje arytmetyki dziesiętnej</LI>
+ <LI>instrukcje logiczne</LI>
+ <LI>operacje na bitach i bajtach</LI>
+ <LI>instrukcje przekazujące kontrolę innej części programu (sterujące wykonywaniem programu)</LI>
+ <LI>instrukcje operujące na łańcuchach znaków</LI>
+ <LI>instrukcje kontroli flag</LI>
+ <LI>instrukcje rejestrów segmentowych</LI>
+ <LI>inne</LI>
+</UL>
+<P>Zacznijmy je po kolei omawiać (nie omówię wszystkich).</P>
+<OL>
+ <LI>instrukcje przemieszczania danych.<BR>
+	<P>Tutaj zaliczymy już wielokrotnie używane <CODE>MOV</CODE> oraz kilka innych:
+	<CODE>XCHG</CODE> &nbsp;, <CODE lang="en">PUSH</CODE> i <CODE>POP</CODE>.</P></LI>
+ <LI>arytmetyka binarna.<BR>
+	<CODE>add do_czego,co</CODE>&nbsp; - dodaj<BR>
+	<CODE><span lang="en">sub</span> od_czego,co</CODE> &nbsp;- odejmij<BR>
+	<CODE><span lang="en">inc</span> coś / dec coś</CODE> &nbsp;- zwiększ/zmniejsz coś o 1<BR>
+	<CODE>cmp co, z_czym</CODE> &nbsp;- porównaj. Wykonuje działanie odejmowania <q>co minus z_czym</q>,
+		ale nie zachowuje wyniku, tylko ustawia flagi.<BR>
+	<P>Wynikiem może być ustawienie lub wyzerowanie jednej lub więcej flag - zaznaczenie
+		wystąpienia jednego z warunków. Główne warunki to:</P>
+  <UL>
+   <LI>A - <span lang="en">above</span> - <q>ponad</q> (dla liczb traktowanych jako liczby bez
+   	 znaku): <q>co &gt; z_czym</q>
+	<BR><a href="#linux0301" tabindex="1" class="bezdruk">(przeskocz przykład użycia warunku A)</a>
+	<PRE title="przykład użycia warunku A">
+		cmp al,bl
+		ja al_wieksze_od_bl	; ja - &nbsp;jump if above</PRE>
+	</LI>
+   <LI><a name="linux0301" id="linux0301">B - <span lang="en">below</span> - <q>poniżej</q> (bez znaku)</a>: co &lt; z_czym</LI>
+   <LI>G - <span lang="en">greater</span> - <q>więcej niż</q> (ze znakiem): co &gt; z_czym</LI>
+   <LI>L - <span lang="en">lower</span> - <q>mniej niż</q> (ze znakiem): co &lt; z_czym</LI>
+   <LI>O - <span lang="en">overflow</span> - przepełnienie (ze znakiem, na przykład przebicie 32767 w górę)
+   	 ostatniej operacji. Niekoniecznie używane przy cmp.</LI>
+   <LI>C - <span lang="en">carry</span> - przepełnienie (bez znaku, czyli przebicie na przykład 65535 w górę)
+	<BR><a href="#linux0302" class="bezdruk">(przeskocz przykład użycia warunku C)</a>
+	<PRE title="przykład warunków">
+		add al,bl
+		jc blad_przepelnienia	; jc - &nbsp;jump if carry</PRE>
+	</LI>
+   <LI><a name="linux0302" id="linux0302">E lub Z - <span lang="en">equal</span> (równy) lub zero</a>.
+   	 Te dwa warunki są równoważne.
+	<BR><a href="#linux0303" class="bezdruk">(przeskocz przykłady użycia warunków równości)</a>
+	<PRE title="inny przykład warunków">
+		cmp ax,cx
+		je ax_rowne_cx
+		...
+		sub bx,dx
+		jz bx_rowne_dx	</PRE>
+	</LI>
+   <LI><a name="linux0303" id="linux0303">NE/NZ - przeciwieństwo poprzedniego</a>: <span lang="en">not equal/not zero</span>.</LI>
+   <LI>NA - <span lang="en">not above</span>, czyli <q>nie ponad</q> - mniejsze lub równe (ale dla liczb bez znaku)</LI>
+   <LI>NB - <span lang="en">not below</span>, czyli <q>nie poniżej</q> - większe lub równe (dla liczb bez znaku)</LI>
+   <LI>NG - <span lang="en">not greater</span>, czyli <q>nie więcej</q> - mniejsze lub równe (ale dla liczb ze znakiem)</LI>
+   <LI>NL - <span lang="en">not lower</span>, czyli <q>nie mniej</q> - większe lub równe (dla liczb ze znakiem)</LI>
+   <LI>NC - <span lang="en">no carry</span></LI>
+   <LI>AE/BE - <span lang="en">above or equal</span> (<q>ponad lub równe</q>),
+   		<span lang="en">below or equal</span> (<q>poniżej lub równe</q>)</LI>
+   <LI>NO - <span lang="en">no overflow</span></LI>
+  </UL><BR><BR></LI>
+ <LI>arytmetyka dziesiętna
+  <UL>
+   <LI><code>NEG</code> - zmienia znak.</LI>
+   <LI><code>MUL</code>, <code>IMUL</code> - mnożenie, mnożenie ze znakiem (które uwzględnia liczby ujemne)
+	<BR><a href="#linux0304" class="bezdruk">(przeskocz przykłady instrukcji mnożenia)</a>
+	<PRE title="przykłady instrukcji mnożenia">
+		mul cl		; AX = AL*CL
+		mul bx		; DX:AX = AX*BX
+		mul esi		; EDX:EAX = EAX*ESI
+		mul rdi		; RDX:RAX = RAX*RDI
+
+		imul eax	; EDX:EAX = EAX*EAX
+		imul ebx,ecx,2	; EBX = ECX*2
+		imul ebx,ecx	; EBX = EBX*ECX
+		imul si,5	; SI = SI*5	</PRE>
+	<P>Zapis <q>rej1 : rej2</q> oznacza, że starsza część wyniku znajdzie się w pierwszym rejestrze
+	podanej pary (DX, EDX, RDX), a młodsza - w drugim (AX, EAX, RAX), gdyż wynik mnożenia dwóch
+	liczb o długości n bitów każda wymaga 2n bitów.
+	</P></LI>
+   <LI><a name="linux0304" id="linux0304"><code>DIV</code>, <code>IDIV</code> - dzielenie</a>,
+	dzielenie ze znakiem (i jednoczesne obliczanie reszty z dzielenia).
+	<BR><a href="#linux0305" class="bezdruk">(przeskocz przykłady instrukcji dzielenia)</a>
+	<PRE title="przykłady instrukcji dzielenia">
+		div cl	; AL = (AX div CL), AH = (AX mod CL)
+		div bx	; AX = (DX:AX div BX),
+			; DX = (DX:AX mod BX)
+		div edi	; EAX = (EDX:EAX div EDI),
+			; EDX = (EDX:EAX mod EDI)
+		div rsi	; RAX = (RDX:RAX div RSI),
+			; RDX = (RDX:RAX mod RSI)</PRE>
+	<P>Zapis <q>rej1 : rej2</q> oznacza, że starsza część dzielnej jest oczekiwana w pierwszym
+	rejestrze podanej pary (DX, EDX, RDX), a młodsza - w drugim (AX, EAX, RAX). Jeśli liczba
+	mieści się w rejestrze dla młodszej części, rejestr starszy należy wyzerować. Słowo "div"
+	w powyższych zapisach oznacza iloraz, a mod - resztę z dzielenia (modulo).
+	</P></LI>
+  </UL></LI>
+ <LI><a name="linux0305" id="linux0305">Instrukcje bitowe (logiczne)</a>.
+	<UL>
+	 <LI><code><span lang="en">AND</span></code></LI>
+	 <LI><code>OR</code></LI>
+	 <LI><code>XOR</code></LI>
+	 <LI><code>NOT</code></LI>
+	 <LI><code>TEST</code></LI>
+	</UL>
+ 	<P>Instrukcja <code>TEST</code> działa tak samo jak <code><span lang="en">AND</span></code> z tym,
+	że nie zachowuje nigdzie wyniku, tylko ustawia flagi. Pokrótce wytłumaczę te instrukcje:</P>
+	<BR><a href="#linux0306" class="bezdruk">(przeskocz działanie instrukcji logicznych)</a>
+	<PRE title="działanie instrukcji bitowych (logicznych)">
+		0 AND 0 = 0	0 OR 0 = 0	0 XOR 0 = 0
+		0 AND 1 = 0	0 OR 1 = 1	0 XOR 1 = 1
+		1 AND 0 = 0	1 OR 0 = 1	1 XOR 0 = 1
+		1 AND 1 = 1	1 OR 1 = 1	1 XOR 1 = 0
+		NOT 0 = 1
+		NOT 1 = 0</PRE>
+
+	<P><a name="linux0306" id="linux0306">Przykłady zastosowania</a>:</P>
+	<BR><a href="#linux0307" class="bezdruk">(przeskocz przykłady instrukcji logicznych)</a>
+	<PRE title="przykłady użycia instrukcji bitowych">
+		and ax,1	; wyzeruje wszystkie bity z
+				; wyjątkiem bitu numer 0.
+		or ebx,1111b	; ustawia (włącza) 4 dolne bity.
+				; Reszta bez zmian.
+		xor cx,cx	; CX = 0
+		not dh		; DH ma 0 tam, gdzie miał 1
+				; i na odwrót	</PRE>
+	</LI>
+ <LI><a name="linux0307" id="linux0307">Instrukcje przesunięcia bitów.</a>
+  <OL>
+   <LI><code>SAL</code>, <code>SHL</code> - <span lang="en">shift left</span>.<BR>
+	bit7 = bit6, bit6 = bit5, ... , bit1 = bit0, bit0 = 0.<BR><BR></LI>
+   <LI><code>SHR</code> - <span lang="en">shift logical right</span><BR>
+	bit0 = bit1, bit1 = bit2, ... , bit6 = bit7, bit7 = 0<BR><BR></LI>
+   <LI><code>SAR</code> - <span lang="en">shift arithmetic right</span><BR>
+	bit0 = bit1, bit1 = bit2, ... , bit6 = bit7, <em class="wazne">bit7 = bit7</em>
+		 (bit znaku zachowany!)<BR> Najstarszy bit w rejestrze nazywa się czasem
+		 właśnie bitem znaku.
+	<BR><BR></LI>
+   <LI><code>ROL</code> - <span lang="en">rotate left</span><BR>
+	bit7 = bit6, ... , bit1 = bit0, bit0 = stary bit7<BR><BR></LI>
+   <LI><code>RCL</code> - <span lang="en">rotate through carry left</span><BR>
+	<span lang="en">carry flag</span> CF = bit7, bit7 = bit6, ... , bit1 = bit0, bit0 = stara CF<BR><BR></LI>
+   <LI><code>ROR</code> - <span lang="en">rotate right</span><BR>
+	bit0 = bit1, ... , bit6 = bit7, bit7 = stary bit0<BR><BR></LI>
+   <LI><code>RCR</code> - <span lang="en">rotate through carry right</span><BR>
+	CF = bit0, bit0 = bit1, ... , bit6 = bit7, bit7 = stara CF<BR><BR></LI>
+  </OL>
+	<P>Przy pomocy <code>SHL</code> można przeprowadzać szybkie mnożenie, a dzięki <code>SHR</code>
+	- szybkie dzielenie. Na przykład, <code>SHL AX,1</code> jest równoważne przemnożeniu AX przez 2,
+	<code>SHL AX,5</code> - przez 2^5, czyli 32. <code>SHR BX,4</code> dzieli BX przez 16.</P></LI>
+
+ <LI>Instrukcje sterujące wykonywaniem programu.<BR>
+  <UL>
+   <LI>Skoki warunkowe (patrz: warunki powyżej): <code>JA</code>=<code>JNBE</code>,
+	<code>JAE</code>=<code>JNB</code>, <code>JNA</code>=<code>JBE</code>,
+	<code>JNAE</code>=<code>JB</code>, <code>JG</code>=<code>JNLE</code>
+   	 (<span lang="en">jump if greater</span> - dla liczb
+	ze znakiem) = <span lang="en">jump if not lower or equal</span>, <code>JNG</code>=<code>JLE</code>,
+	<code>JGE</code>=<code>JNL</code>, <code>JNGE</code>=<code>JL</code>, <code>JO</code>,
+	<code>JNO</code>, <code>JC</code>, <code>JNC</code>, <code>JS</code>
+	(<span lang="en">jump if sign</span> czyli bit7 wyniku jest równy 1), <code>JNS</code>,
+	<code>JP</code>=<code>JPE</code> (<span lang="en">jump if parity equal</span> =
+	liczba bitów równych jeden jest parzysta), <code>JNP</code>=<code>JPO</code>.</LI>
+
+   <LI>Skoki bezwarunkowe: <code>JMP</code>, <code>JMP SHORT</code>, <code>JMP FAR</code></LI>
+   <LI>Uruchomienia procedur: <code><span lang="en">CALL [NEAR/FAR]</span></code> </LI>
+   <LI>Powrót z procedury: <code>RET</code>, <code>RETF</code>.
+   <LI>Przerwania: <code>INT</code>, <code>INTO</code> (wywołuje przerwanie INT4 w razie przepełnienia),
+   	 <code><span lang="en">BOUND</span></code> (int 5)</LI>
+   <LI>Instrukcje pętli: <code><span lang="en">LOOP</span></code>. Składnia:
+	<q><code><span lang="en">LOOP</span> gdzieś</code></q>.
+   	 Jeśli CX jest różny od 0, to skacz <q>gdzieś</q>.</LI>
+  </UL><BR>
+ <LI>Operacje na łańcuchach znaków.
+  <OL>
+   <LI><code>LODS[B/W/D/Q]</code> - <span lang="en">Load Byte/Word/Dword/Qword</span><BR>
+	MOV AL/AX/EAX/RAX , DS:[SI/ESI/RSI]<BR>
+	ADD SI,1/2/4/8		; <code>ADD</code>, gdy flaga kierunku DF = 0,
+				<code><span lang="en">SUB</span></code> gdy DF = 1<BR><BR></LI>
+
+   <LI><code>STOS[B/W/D/Q]</code> - <span lang="en">Store Byte/Word/Dword/Qword</span><BR>
+	MOV ES:[DI/EDI/RDI], AL/AX/EAX/RAX<BR>
+	ADD DI,1/2/4/8		; <code>ADD</code>/<code><span lang="en">SUB</span></code> jak wyżej<BR><BR></LI>
+
+   <LI><code>MOVS[B/W/D/Q]</code> - <span lang="en">Move Byte/Word/Dword/Qword</span><BR>
+	MOV ES:[DI/EDI/RDI], DS:[SI/ESI/RSI]	; to nie jest instrukcja!<BR>
+	ADD DI,1/2/4/8		; <code>ADD</code>/<code><span lang="en">SUB</span></code> jak wyżej<BR>
+	ADD SI,1/2/4/8		<BR><BR></LI>
+
+   <LI><code>CMPS[B/W/D/Q]</code> - <span lang="en">Compare Byte/Word/Dword/Qword</span><BR>
+	CMP DS:[SI/ESI/RSI], ES:[DI/EDI/RDI]	; to nie jest instrukcja!<BR>
+	ADD SI,1/2/4/8		; <code>ADD</code>/<code><span lang="en">SUB</span></code> jak wyżej<BR>
+	ADD DI,1/2/4/8		<BR><BR></LI>
+
+   <LI><code>SCAS[B/W/D/Q]</code> - <span lang="en">Scan Byte/Word/Dword/Qword</span><BR>
+	skanuje łańcuch bajtów/słów/podwójnych słów/poczwórnych słów
+	pod ES:[DI/EDI/RDI] w poszukiwaniu, czy jest tam
+	wartość wskazana przez AL/AX/EAX/RAX.<BR><BR></LI>
+  </OL>
+   <P>Do każdej z powyższych instrukcji można z przodu dodać przedrostek <code>REP</code>
+   (<span lang="en">repeat</span>), co spowoduje, że będzie ona wykonywana, aż CX stanie się zerem,
+   albo <code>REPE/REPZ</code> albo <code>REPNE/REPNZ</code> co spowoduje,
+   że będzie ona wykonywana, dopóty CX nie jest zerem i jednocześnie flaga ZF (flaga zera) będzie równa
+   odpowiednio 1 lub 0.</P></LI>
+
+ <LI>Instrukcje wejścia/wyjścia do portów.<BR>
+  Są one bardziej szczegółowo opisane w <a href="linux07.html" hreflang="pl">części
+   poświęconej portom</a>, ale podam tu skrót:
+  <UL>
+   <LI><code>IN</code><BR>
+	<code>IN AL/AX/EAX, port/DX</code><BR>
+	<P>Pobierz z portu 1/2/4 bajty i włóż do AL/AX/EAX (od najmłodszego). Jeśli numer portu jest
+		mniejszy lub równy 255, można go
+		podać bezpośrednio. Jeśli większy - trzeba użyć DX.</P>
+   <!--
+   	<BR><BR>
+	IN AL, port/DX.<BR>
+	Pobierz z portu bajt i włóż do AL. Jeśli numer portu jest mniejszy lub równy 255, można go
+		podać bezpośrednio. Jeśli większy - trzeba użyć DX.<BR><BR>
+
+	IN AX, port/DX<BR>
+	Jest równoważne:<BR>
+	IN AL, port/DX<BR>
+	IN AH, port+1/DX+1<BR><BR>
+
+	IN EAX, port/DX - pobierz 4 bajty - pierwszy z <q>port</q> do AL, drugi - z <q>port+1</q> do AH,
+	 trzeci - z <q>port+2</q> do bitów 23-16 EAX, czwarty - z <q>port+3</q> do bitów 31-24 EAX.
+	 -->
+	</LI>
+
+   <LI><code>OUT</code><BR>
+	<code>OUT port/DX, AL/AX/EAX</code><BR>
+	Uwagi jak przy instrukcji <code>IN</code>.</LI>
+  </UL><BR><BR></LI>
+ <LI>Instrukcje flag<BR>
+  <UL>
+   <LI><code>STC</code>/<code>CLC</code> - <span lang="en">set carry / clear carry</span>.
+	Do flagi CF wstaw 1 lub 0, odpowiednio.<BR><BR></LI>
+   <LI><code>STD</code>/<code>CLD</code>. Ustaw DF = 1, DF = 0, odpowiednio.<BR><BR></LI>
+   <LI><code>STI</code>/<code>CLI</code>. <span lang="en">Interrupt Flag</span> IF := 1, IF := 0, odpowiednio.
+   	 Gdy IF=0, przerwania sprzętowe są blokowane.<BR><BR></LI>
+   <LI>Przenoszenie flag<BR>
+	<code><span lang="en">PUSH</span>F</code> / <code><span lang="en">PUSH</span>FD</code>
+	/ <code><span lang="en">PUSH</span>FQ</code>
+	- umieść flagi na stosie (16, 32 i 64 bity flag, odpowiednio)<BR>
+	<code>POPF</code> / <code>POPFD</code> / <code>POPFQ</code> - zdejmij flagi ze stosu
+	(16/32/64 bity flag)<BR>
+	<code>SAHF</code> / <code>LAHF</code> - zapisz AH w pierwszych 8 bitach flag / zapisz
+	pierwsze 8 bitów flag w AH.<BR>
+	<BR><BR></LI>
+  </UL></LI>
+
+ <LI>Instrukcja <code>LEA</code> - <span lang="en">Load Effective Address</span>.<BR>
+	Wykonanie:
+	<PRE title="składnia LEA">		lea	rej, [pamięć]</PRE>
+	jest równoważne:
+	<BR><a href="#linux0308" class="bezdruk">(przeskocz pseudo-kod LEA)</a>
+	<PRE title="kod równowazne LEA">
+		mov	rej, pamięć		; NASM/FASM</PRE>
+
+	<a name="linux0308" id="linux0308">Po co więc osobna instrukcja?</a> Otóż, <code>LEA</code>
+	przydaje sie w wielu sytuacjach do obliczania złożonych adresów. Kilka przykładów:
+	<OL>
+	 <LI>Jak w 1 instrukcji sprawić, że EAX = EBP-12 ?<BR>
+		Odpowiedź: <CODE>lea  eax, [ebp-12]</CODE>
+	 </LI>
+	 <LI> Niech EBX wskazuje na tablicę o 20 elementach o rozmiarze 8 każdy. Jak do ECX
+		zapisać adres jedenastego elementu, a do EDX elementu o numerze EDI?<BR>
+		Odpowiedź:  <CODE>lea  ecx, [ebx + 11*8]</CODE> oraz <CODE>lea edx,[ebx+edi*8]</CODE>
+	  </LI>
+	 <LI>Jak w 1 instrukcji sprawić, że ESI = EAX*9?<BR>
+		Odpowiedź: <CODE>lea esi, [eax + eax*8]</CODE>
+	  </LI>
+	</OL>
+ </LI>
+</OL>
+<P>Pominąłem mniej ważne instrukcje operujące na rejestrach segmentowych i klika innych instrukcji.
+Te, które tu podałem, wystarczają absolutnie na napisanie większości programów, które można
+zrobić.<BR><BR>
+Wszystkie informacje przedstawione w tej części pochodzą z tego samego źródła:
+<A class="intel_link" href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html" hreflang="en">Intel</A>
+i  <A class="amd_link" href="http://developer.amd.com/Resources/documentation/guides/Pages/default.aspx" hreflang="en"><acronym title="Advanced Micro Devices" lang="en">AMD</acronym></A>
+
+</P>
+<blockquote>Byle głupiec potrafi napisać kod, który zrozumie komputer. Dobry programista pisze taki kod,
+który zrozumie człowiek.</blockquote>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux02.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux04.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Zapisz instrukcje: do rejestru AX dodaj 5, od rejestru SI odejmij 178.<BR><BR></LI>
+ <LI>Nie używając cyfry jeden napisz jedną instrukcję, która zmniejszy rejestr DX o jeden.<BR><BR></LI>
+ <LI>Przemnóż wartość rejestru EDI przez 2 na przynajmniej dwa różne sposoby po jednej instrukcji.
+	Postaraj się nie używać instrukcji (I)MUL.<BR><BR></LI>
+ <LI>W jednej instrukcji podziel wartość rejestru BP przez 8.<BR><BR></LI>
+ <LI>Nie używając instrukcji MOV spraw, by DX miał wartość 0 (na przynajmniej 3 sposoby, każdy
+	po jednej instrukcji).<BR><BR></LI>
+ <LI>Nie używając instrukcji przesuwania bitów SH* ani mnożenia *MUL przemnóż EBX przez 8. Możesz
+	użyć więcej niż 1 instrukcji.<BR><BR></LI>
+ <LI>W dwóch instrukcjach spraw, by EDI równał się 7*ECX. Postaraj się nie używać instrukcji (I)MUL.</LI>
+
+</OL>
+
+</BODY></HTML>

@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Uruchamianie innych programów </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="uruch_tut_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Uruchamianie innych programów pod Linuksem">
+<META NAME="Keywords" CONTENT="asm, assembler, asembler, Linux, Linuks, uruchamianie, sys_execve">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 18:00:01 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Uruchamianie innych programów pod Linuksem</h1>
+
+<P>
+Czasem zdarza się, że z poziomu naszego własnego programu musimy uruchomić
+ jakiś inny program lub polecenie systemowe. Służy do tego funkcja systemowa
+ <a href="przer80h_1.html#f0011">sys_execve</a> (numer 11). Jej argumenty to kolejno:</P>
+<UL>
+ <LI>w EBX - adres nazwy programu do uruchomienia (ze ścieżką). Nazwa powinna być zakończona
+     bajtem zerowym. Można uruchomić skrypt.</LI>
+ <LI>w ECX - adres listy adresów argumentów dla uruchamianego programu. Lista powinna kończyć
+     się DWORDem zerowym.</LI>
+ <LI>w EDX - adres listy adresów zmiennych środowiskowych dla uruchamianego programu.
+ 	Lista powinna kończyć się DWORDem zerowym.</LI>
+</UL>
+<P>Spróbujmy więc napisać jakiś prosty przykład - wyświetlenie napisu za pomocą programu echo.</P>
+
+	<BR><a href="#uruch_tut_linux01" class="bezdruk" tabindex="1">(przeskocz program)</a>
+<PRE>
+; Uruchamianie innych programów w asemblerze pod Linuksem
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+;
+; nasm -f elf -o exec_linux.o exec_linux.asm
+; ld  -o exec_linux exec_linux.o
+
+
+section .text
+global	_start
+
+_start:
+
+	mov	eax, 11			; numer funkcji sys_execve
+	mov	ebx, komenda		; plik do uruchomienia
+	mov	ecx, argumenty		; adres tablicy argumentów
+	mov	edx, srodowisko		; adres tablicy środowiska
+	int	80h
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, info
+	mov	edx, info_dl
+	int	80h			; wyświetlenie napisu
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h			; wyjście z programu
+
+
+section .data
+
+komenda		db	&quot;/bin/echo&quot;, 0	; program do uruchomienia
+info		db	&quot;Wykonalem program.&quot;, 10 ; napis do wyświetlenia
+info_dl		equ	$ - info
+
+argumenty	dd	komenda		; argv[0] to nazwa programu
+		dd	arg1		; argv[1]
+		dd	0		; koniec argumentów
+
+arg1		db	&quot;Czesc!&quot;, 0	; argument pierwszy
+
+srodowisko	dd	home		; jedna zmienna środowiskowa
+		dd	0		; koniec zmiennych środowiskowych
+
+home		db	&quot;HOME=/home/bogdan&quot;, 0 ; przykładowa zmienna
+						; środowiskowa $HOME</PRE>
+
+<P><a name="uruch_tut_linux01" id="uruch_tut_linux01">Jedna rzecz od razu powinna rzucić</a> się
+ w oczy: napis <q>Wykonałem program</q> <em class="wazne">nie jest wyświetlany</em>.
+ Dzieje się tak dlatego, że jeśli funkcja
+ <span class="b">sys_execve</span> wykonała się bez błędów, to ... nie powróci do naszego programu
+ (tak, jak jest to napisane na stronie podręcznika: man execve). Duża wada, ale można
+ to łatwo przeskoczyć, stosując wątki lub funkcje typu <span class="b">sys_fork</span>
+ lub <span class="b">sys_clone</span>, w celu uruchomienia
+ osobnego wątku lub procesu, który potem wykona <span class="b">sys_execve</span>.</P>
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

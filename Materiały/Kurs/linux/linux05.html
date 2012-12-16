@@ -1,0 +1,662 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 5 - Koprocesor </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux04.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux06.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, FPU, NPX, NPU, ONP, RPN, float,
+	koprocesor, st(0), finit, BCD, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Mon, Oct 29 2012 17:22:19 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 5 - Koprocesor, czyli jak liczyć na ułamkach.
+	 Odwrotna Notacja Polska</h1></div>
+
+<P>
+Jak zapewne większość wie, koprocesor (FPU = <span lang="en">Floating Point Unit</span>,
+ NPX = <span lang="en">Numerical Processor eXtension</span>)
+  służy do wykonywania działań matematycznych. Podstawowy procesor też oczywiście
+wykonuje działania matematyczne (dodawanie, mnożenie, ...) ale tylko na liczbach całkowitych.
+Z czasem jednak przyszła potrzeba wykonywania obliczeń na liczbach niecałkowitych, czyli ułamkach
+(liczbach zmiennoprzecinkowych). Dlatego firmy produkujące procesory zaczęły je wyposażać
+właśnie w układy wspomagające pracę na ułamkach. Do procesorów 8086, 80286, 80386 były dołączane
+jako osobne układy koprocesory: 8087, 80287, 80387 (80187 nie wprowadził żadnych istotnych
+nowości. Była to przeróbka 8087, a może nawet był to po prostu ten sam układ). Procesory
+486SX miały jeszcze oddzielny koprocesor (80387) a od 486DX (w każdym razie u Intela)
+koprocesor był już na jednym chipie z procesorem. I tak jest do dziś.
+</P>
+<P>
+Ale dość wstępu. Pora na szczegóły.</P>
+
+
+
+
+<HR>
+<h2 class="nag">Typy danych</h2>
+<br>
+
+<P>Zanim zaczniemy cokolwiek robić, trzeba wiedzieć, na czym
+ten cały koprocesor operuje.<BR>
+Oprócz liczb całkowitych, FPU operuje na liczbach ułamkowych różnej precyzji:</P>
+<UL>
+ <LI>Pojedyncza precyzja. Liczby takie zajmują po 32 bity (4 bajty) i ich wartość maksymalna
+	wynosi ok. 10<SUP>39</SUP> (10^39). Znane są programistom języka C jako <q lang="en">float</q>.</LI>
+ <LI>Podwójna precyzja. 64 bity (8 bajtów), max = ok. 10<SUP>409</SUP> (10^409). W języku C są znane
+	jako <q lang="en">double</q></LI>
+ <LI>Rozszerzona precyzja. 80 bitów (10 bajtów), max = ok. 10<SUP>4930</SUP> (10^4930). W języku C są to
+	<q lang="en">long double</q></LI>
+</UL>
+<P>Jak widać, ilości bitów są oczywiście skończone. Więc nie każdą liczbę rzeczywistą da się
+dokładnie zapisać w postaci binarnej. Na przykład, jedna dziesiąta (0.1) zapisana dwójkowo jest
+ułamkiem nieskończonym okresowym! Poza tym, to, czego nas uczyli na matematyce, na przykład oczywista
+równość: a+(b-a)=b nie musi być prawdą w świecie ułamków w procesorze ze względu na brak
+precyzji!
+</P>
+<P>
+Poza ułamkami, FPU umie operować na BCD (<span lang="en">binary coded decimal</span>).
+ W takich liczbach 1 bajt dzieli się
+na 2 części po 4 bity, z których każda może mieć wartość 0-9. Cały bajt reprezentuje więc liczby
+od 0 do 99, w których cyfra jedności jest w młodszych 4 bitach a cyfra dziesiątek - w starszych
+4 bitach.</P>
+<P>
+Szczegółami zapisu liczb ułamkowych nie będziemy się tutaj zajmować. Polecam, tak jak poprzednio,
+<A class="intel_link" href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html" tabindex="1" hreflang="en">strony Intela</A>
+i <A class="amd_link" href="http://developer.amd.com/Resources/documentation/guides/Pages/default.aspx" hreflang="en">strony <acronym title="Advanced Micro Devices" lang="en">AMD</acronym></A>,
+gdzie znajduje się też kompletny opis wszystkich instrukcji procesora i koprocesora.</P>
+
+
+
+
+
+<BR>
+<HR>
+<h2 class="nag">Rejestry koprocesora</h2>
+
+<P>Po zapoznaniu się z typami (a przede wszystkim z rozmiarami) liczb ułamkowych, powstaje pytanie:
+gdzie koprocesor przechowuje takie ilości danych?</P>
+<P>
+FPU ma specjalnie do tego celu przeznaczonych 8 rejestrów, po 80 bitów każdy. W operacjach
+wewnętrznych (czyli bez pobierania lub zapisywania danych do pamięci) FPU zawsze używa
+rozszerzonej precyzji.</P>
+<P> Rejestry danych nazwano st(0), st(1), ... , st(7) (NASM: st0 ... st7). Nie działają jednak
+one tak, jak zwykłe rejestry, lecz jak ... stos! To znaczy, że dowolnie dostępna jest tylko
+wartość ostatnio położona na stosie czyli wierzchołek stosu, w tym przypadku: st(0). Znaczy to,
+że do pamięci (FPU operuje tylko na własnych rejestrach lub pamięci - nie może używać rejestrów
+ogólnego przeznaczenia na przykład EAX itp.) może być zapisana tylko wartość z st(0), a każda wartość
+pobierana z pamięci idzie do st(0) a stare st(0) przesuwa się do st(1) itd. każdy rejestr
+przesuwa się o 1 dalej. Jeżeli brakuje na to miejsca, to FPU może wygenerować przerwanie
+(wyjątek) a rejestry danych będą prawdopodobnie zawierać śmieci.</P>
+<P>Operowanie na rejestrach FPU będzie wymagało nieco więcej uwagi niż na zwykłych, ale i do tego
+można się przyzwyczaić.</P>
+
+
+
+
+
+<BR><HR>
+<h2 class="nag">Instrukcje koprocesora</h2>
+
+<P>
+Zacznijmy więc od omówienia kilku podstawowych instrukcji. Przez [mem] będę nazywał dane będące
+w pamięci (32-, 64- lub 80-bitowe, <q>int</q> oznacza liczbę całkowitą), <q>st</q> jest częstym skrótem
+od <q>st(0)</q>. Jeżeli komenda kończy się na P to oznacza, że zdejmuje dane raz ze stosu, PP
+oznacza, że zdejmuje 2 razy, czyli st(0) i st(1).</P>
+<OL>
+ <LI>Instrukcje przemieszczenia danych:
+  <UL>
+   <LI><code>FLD/FILD [mem]</code> - załaduj liczbę rzeczywistą/całkowitą z pamięci. Dla liczby rzeczywistej
+	jest to 32, 64 lub 80 bitów. Dla całkowitej - 16, 32 lub 64 bity.</LI>
+   <LI><code>FST [mem32/64/80]</code> - do pamięci idzie liczba ze st(0).</LI>
+   <LI><code>FSTP [mem32/64/80]</code> - zapisz st(0) w pamięci i zdejmij je ze stosu. Znaczy
+	 to tyle, że st(1) o ile istnieje, staje się st(0) itd. każdy rejestr cofa się o 1.</LI>
+   <LI><code>FIST [mem16/32]</code> - ewentualnie obciętą do całkowitej liczbę z st(0) zapisz do pamięci.</LI>
+   <LI><code>FISTP [mem16/32/64]</code> - jak wyżej, tylko ze zdjęciem ze stosu.</LI>
+   <LI><code>FXCH st(i)</code> - zamień st(0) z st(i).</LI>
+  </UL><BR><BR></LI>
+ <LI>Instrukcje ładowania stałych
+  <UL>
+   <LI><code>FLDZ</code> - załaduj zero. st(0) = 0.0</LI>
+   <LI><code>FLD1</code> - załaduj 1. st(0) = 1.0</LI>
+   <LI><code>FLDPI</code> - załaduj pi.</LI>
+   <LI><code>FLDL2T</code> - załaduj log2(10)</LI>
+   <LI><code>FLDL2E</code> - załaduj log2(e)</LI>
+   <LI><code>FLDLG2</code> - załaduj log(2)=log10(2)</LI>
+   <LI><code>FLDLN2</code> - załaduj ln(2)</LI>
+  </UL><BR><BR></LI>
+ <LI>Działania matematyczne:
+  <UL>
+   <LI>dodawanie: <code>FADD</code>, składnia identyczna jak w odejmowaniu prostym<BR><BR>
+   <LI>odejmowanie:
+	<UL>
+	 <LI><code>FSUB [mem32/64]</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st := st-[mem]</LI>
+	 <LI><code>FSUB st(0),st(i)</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st := st-st(i)</LI>
+	 <LI><code>FSUB st(i),st(0)</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(i) := st(i)-st(0)</LI>
+	 <LI><code>FSUBP st(i), st(0)</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(i) := st(i)-st(0) i zdejmij</LI>
+	 <LI><code>FSUBP</code> (bez argumentów) = <code>FSUBP st(1),st(0)</code></LI>
+	 <LI><code>FISUB [mem16/32int]</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st := st-[mem]</LI>
+	</UL><BR></LI>
+
+   <LI>odejmowanie odwrotne:
+	<UL>
+	 <LI><code>FSUBR [mem32/64]</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st := [mem]-st(0)</LI>
+	 <LI><code>FSUBR st(0),st(i)</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st := st(i)-st(0)</LI>
+	 <LI><code>FSUBR st(i),st(0)</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(i) := st(0)-st(i)</LI>
+	 <LI><code>FSUBRP st(i),st(0)</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(i) := st(0)-st(i) i zdejmij</LI>
+	 <LI><code>FSUBRP</code> (bez argumentów) = <code>FSUBRP st(1),st(0)</code></LI>
+	 <LI><code>FISUBR [mem16/32int]</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st := [mem]-st</LI>
+	</UL><BR></LI>
+   <LI>mnożenie: <code>FMUL</code>, składnia identyczna jak w odejmowaniu prostym.<BR><BR></LI>
+   <LI>dzielenie: <code>FDIV</code>, składnia identyczna jak w odejmowaniu prostym.</LI>
+   <LI>dzielenie odwrotne: <code>FDIVR</code>, składnia identyczna jak w odejmowaniu odwrotnym.<BR><BR></LI>
+   <LI>wartość bezwzględna: <code>FABS</code> (bez argumentów) zastępuje st(0) jego wartością bezwzględną.</LI>
+   <LI>zmiana znaku: <code>FCHS</code>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(0) := -st(0).</LI>
+   <LI>pierwiastek kwadratowy: <code>FSQRT</code>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(0) := SQRT[ st(0) ]</LI>
+   <LI>reszty z dzielenia: <code>FPREM</code>, <code>FPREM1</code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(0) := st(0) mod st(1).</LI>
+   <LI>zaokrąglanie do liczby całkowitej: <code>FRNDINT</code>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;st(0) := (int)st(0).</LI>
+  </UL><BR><BR></LI>
+ <LI>Komendy porównania:<BR>
+     - <code>FCOM/FCOMP/FCOMPP</code>, <code>FUCOM/FUCOMP/FUCOMPP</code>, <code>FICOM/FICOMP</code>,
+	<code>FCOMI/FCOMIP</code>, <code>FUCOMI/FUCOMIP</code>, <code>FTST</code>, <code>FXAM</code>.
+	<P>Tutaj trzeba trochę omówić sytuację. FPU oprócz rejestrów danych zawiera także rejestr
+	kontrolny (16 bitów) i rejestr stanu (16 bitów).<BR> W rejestrze stanu są 4 bity nazwane
+	C0, C1, C2 i C3. To one wskazują wynik ostatniego porównania, a układ ich jest taki sam,
+	jak flag procesora, co pozwala na ich szybkie przeniesienie do flag procesora.
+ 	Aby odczytać wynik porównania, należy zrobić takie coś:</P>
+	<PRE>
+	fcom
+	fstsw	ax	; tylko od 386. Inaczej:
+			; fstsw word ptr [zmienna] / mov ax,[zmienna]
+	sahf		; AH zapisane do flag</PRE>
+
+	<P>i używać normalnych komend JE, JB itp.</P>
+	<UL>
+	 <LI><code>FCOM st(n)/[mem]</code> - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; porównaj st(0) z st(n)
+		(lub zmienną w pamięci) bez zdejmowania st(0) ze stosu FPU</LI>
+	 <LI><code>FCOMP st(n)/[mem]</code> - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; porównaj st(0) z st(n)
+		(lub zmienną w pamięci) i zdejmij st(0)</LI>
+	 <LI><code>FCOMPP</code> - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; porównaj st(0) z st(1) i zdejmij oba ze stosu</LI>
+	 <LI><code>FICOM [mem]</code> - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; porównaj st(0) ze zmienną
+		całkowitą 16- lub 32-bitową w pamięci</LI>
+	 <LI><code>FICOMP [mem]</code> - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; porównaj st(0) ze zmienną
+		całkowitą 16- lub 32-bitową w pamięci, zdejmij st(0)</LI>
+	 <LI><code>FCOMI st(0), st(n)</code> - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; porównaj st(0) z st(n)
+		i ustaw flagi <em class="wazne">procesora</em>, nie tylko FPU</LI>
+	 <LI><code>FCOMIP st(0), st(n)</code> - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; porównaj st(0) z st(n)
+		i ustaw flagi <em class="wazne">procesora</em>, nie tylko FPU, zdejmij st(0)</LI>
+	</UL>
+	<P>Komendy kończące się na I lub IP zapisują swój wynik bezpośrednio do flag procesora.
+	Można tych flag od razu używać (<code>JZ</code>, <code>JA</code>, ...). Te komendy są
+	dostępne tylko od 386.</P>
+
+	<P><code>FTST</code> porównuje st(0) z zerem.</P>
+	<P><code>FXAM</code> bada, co jest w st(0) - prawidłowa liczba, błąd
+	(NaN = <span lang="en">Not a Number</span>), czy 0.</P>
+	</LI>
+  <LI>Instrukcje trygonometryczne:<BR>
+     <UL>
+	<LI><code>FSIN</code> - st(0) := sinus [st(0)]</LI>
+	<LI><code>FCOS</code> - st(0) := kosinus [st(0)]</LI>
+	<LI><code>FSINCOS</code> - st(0) := kosinus [st(0)], st(1) := sinus [st(0)]</LI>
+	<LI><code>FPTAN</code> - <span lang="en">partial tangent</span> = tangens st(0) := tg [st(0)]</LI>
+	<LI><code>FPATAN</code> - <span lang="en">arcus</span> tangens st(0) := arctg [st(0)]</LI>
+     </UL>
+    <BR></LI>
+  <LI>Logarytmiczne, wykładnicze:<BR>
+   <UL>
+    <LI><code>FYL2X</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(1) := st(1)*log2[st(0)] i zdejmij</LI>
+    <LI><code>FYL2XPI</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(1) := st(1)*log2[ st(0) + 1.0 ] i zdejmij </LI>
+    <LI><code>F2XM1</code> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; st(0) := 2^[st(0)] - 1</LI>
+   </UL><BR><BR></LI>
+  <LI>Instrukcje kontrolne:
+   <UL>
+    <LI><code><span class="b">FINIT/FNINIT</span></code> - inicjalizacja FPU. Litera N po F oznacza,
+    	 aby nie brać po uwagę potencjalnych niezałatwionych wyjątków.</LI>
+    <LI><code>FLDCW</code>, <code>FSTCW/FNSTCW</code> - <span lang="en">Load/Store control word</span>
+    	 - zapisuje 16 kontrolnych bitów do pamięci,
+	gdzie można je zmieniać na przykład aby zmienić sposób zaokrąglania liczb.</LI>
+    <LI><code>FSTSW/FNSTSW</code> - zapisz do pamięci (lub rejestru AX) słowo statusu, czyli stan FPU</LI>
+    <LI><code>FCLEX/FNCLEX</code> - wyczyść wyjątki</LI>
+    <LI><code>FLDENV</code>, <code>FSTENV/FNSTENV</code> - wczytaj/zapisz środowisko (rejestry stanu,
+	kontrolny i kilka innych, bez rejestrów danych). Wymaga 14 albo 28 bajtów pamięci, w zależności
+	 od trybu pracy procesora (rzeczywisty - DOS lub chroniony - <span lang="en">Windows</span>/Linux).</LI>
+    <LI><code>FRSTOR</code>, <code>FSAVE/FNSAVE</code> - jak wyżej, tylko że z rejestrami danych. Wymaga 94
+	lub 108 bajtów w pamięci, zależnie od trybu procesora.</LI>
+    <LI><code>FINCSTP</code>, <code>FDECSTP</code> - zwiększ/zmniejsz wskaźnik stosu - przesuń st(0)
+	na st(7), st(1) na st(0) itd. oraz w drugą stronę, odpowiednio.</LI>
+    <LI><code>FFREE</code> - zwolnij podany rejestr danych</LI>
+    <LI><code>FNOP</code> - no operation. Nic nie robi, ale zabiera czas.</LI>
+    <LI><code>WAIT/FWAIT</code> - czekaj, aż FPU skończy pracę. Używane do synchronizacji z CPU.</LI>
+   </UL><BR><BR></LI>
+</OL>
+
+
+
+
+
+
+<HR>
+<h2 class="nag">Przykłady</h2>
+
+<P>Dość już teorii, pora na przykłady. Programiki te wymyśliłem pisząc ten kurs.
+</P>
+<P>
+Przykład 1 (NASM):</P>
+<BR><a href="#linux0501" class="bezdruk">(przeskocz program wyświetlający częstotliwość zegara)</a>
+<PRE>
+; z wyświetlaniem:
+;   nasm -O999 -f elf -o fpu1.o fpu1.asm
+;   ld -s -o fpu1 fpu1.o bibl/lib/libasmio.a
+; bez wyświetlania:
+;   nasm -O999 -f elf -o fpu1.o fpu1.asm
+;   ld -s -o fpu1 fpu1.o
+
+section .text
+
+; jeśli nie chcesz wyświetlania, usuń tę linijkę niżej:
+%include &quot;bibl/incl/linuxbsd/nasm/std_bibl.inc&quot;
+
+global _start
+
+_start:
+	finit			; zawsze o tym pamiętaj !
+
+	fild	dword [dzielna]	; ładujemy dzielną. st(0) = 1234DD
+	fild	dword [dzielnik]; ładujemy dzielnik. st(0) = 10000h,
+				; st(1) = 1234DD
+	fdivp	st1		; dzielimy. st(1) := st(1)/st(0) i pop.
+				; st(0) ~= 18.2
+				; FASM: fdivp st(1)
+
+	fstp	tword [iloraz]	; zapisujemy st(0) do pamięci i
+				; zdejmujemy ze stosu
+
+; jeśli nie chcesz wyświetlania, usuń te 3 linijki niżej:
+	mov	edi, iloraz
+	piszd80			; wyświetl wynik
+	nwln			; przejdź do nowego wiersza
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h
+
+section .data
+
+align 8				; NASM w tym miejscu dorobi kilka
+				; NOPów (instrukcji nic nie
+				; robiących, ale zabierających czas),
+				; aby adres dzielił się
+				; przez 8 (patrz dalej).
+
+dzielna		dd 1234ddh	; 4013 91a6 e800 0000 0000
+dzielnik	dd 10000h
+
+section .bss			; dane w sekcji nazwanej .BSS nie
+				; będą fizycznie umieszczone
+				; w programie, a dopiero w pamięci.
+				; Zaoszczędzi to
+				; miejsce = długość pliku.
+				; Można tu umieszczać tylko
+				; niezainicjalizowane dane.
+
+iloraz		rest 1		; rezerwacja 10 bajtów.</PRE>
+
+<hr>
+<P><a name="linux0501" id="linux0501">Teraz wersja dla FASMa</a>:</P>
+
+	<BR><a href="#linux0502" class="bezdruk">(przeskocz ten program w wersji FASMa)</a>
+<PRE>
+; z wyświetlaniem:
+;   fasm fpu1.asm
+;   ld -s -o fpu1 fpu1.o bibl/lib/libasmio.a
+; bez wyświetlania:
+;   fasm fpu1.asm
+;   ld -s -o fpu1 fpu1.o
+
+format ELF
+
+public _start
+
+section &quot;.text&quot; executable
+; jeśli nie chcesz wyświetlania, usuń tę linijkę niżej:
+include &quot;bibl/incl/linuxbsd/fasm/std_bibl.inc&quot;
+
+_start:
+	finit			; zawsze o tym pamiętaj !
+
+	fild	dword [dzielna]	; ładujemy dzielną. st(0) = 1234DD
+	fild	dword [dzielnik]; ładujemy dzielnik. st(0) = 10000h,
+				; st(1) = 1234DD
+	fdivp	st1, st0	; dzielimy. st(1) := st(1)/st(0) i
+				; pop. st(0) ~= 18.2
+				; FASM: fdivp st(1)
+
+	fstp	tword [iloraz]	; zapisujemy st(0) do pamięci i
+				; zdejmujemy ze stosu
+
+; jeśli nie chcesz wyświetlania, usuń te 3 linijki niżej:
+	mov	edi, iloraz
+	piszd80			; wyświetl wynik
+	nwln			; przejdź do nowego wiersza
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h
+
+section &quot;.data&quot; writeable align 8
+
+dzielna		dd 1234ddh	; 4013 91a6 e800 0000 0000
+dzielnik	dd 10000h
+
+section &quot;.bss&quot; writeable
+iloraz		dt 0.0</PRE>
+
+
+
+<P><a name="linux0502" id="linux0502">Ten przykład do zmiennej <q>iloraz</q></a>
+ wstawia częstotliwość zegara komputerowego (ok. 18,2 Hz) i wyświetla
+ ją przy użyciu jednej z procedur z mojej biblioteki (można to usunąć).<BR>
+Należy zwrócić uwagę na zaznaczanie rozmiarów zmiennych (dword/tword).</P>
+<P>Dyrektywa <q lang="en">align 8</q>
+ustawia kolejną zmienną/etykietę tak, że jej adres dzieli się przez 8 (qword = 8 bajtów). Dzięki
+temu, operacje na pamięci są szybsze (na przykład pobranie 8 bajtów: zamiast 3 razy pobierać po 4 bajty,
+ bo akurat tak się
+zdarzyło, że miała jakiś nieparzysty adres, pobiera się 2x4 bajty). Rzecz jasna, skoro zmienna
+<q>dzielna</q> (i <q>dzielnik</q>) ma 4 bajty, to adresy zmiennych <q>dzielnik</q> i <q>iloraz</q>
+też będą podzielne przez 4. Ciąg cyfr po średniku to ułamkowa reprezentacja dzielnej. Skomplikowane,
+prawda? Dlatego nie chciałem tego omawiać.</P>
+
+<hr>
+<P>Przykład 2: czy sinus liczby pi rzeczywiście jest równy 0 (w komputerze)?</P>
+	<BR><a href="#linux0503" class="bezdruk">(przeskocz program z sinusem)</a>
+<PRE>
+; format ELF executable		; tylko dla FASMa
+; entry _start
+
+; FASM: segment readable executable
+section .text
+
+global _start			; FASM: usunąć
+
+_start:
+	finit			; zawsze o tym pamiętaj !
+
+	fldpi			; wczytujemy PI
+	fsin			; obliczamy sinus z PI
+	ftst			; porównujemy st(0) z zerem.
+	fstsw	ax		; zapisujemy rejestr stanu
+				; bezpośrednio w AX.
+
+
+	sahf			; AH idzie do flag
+	mov	ah,9		; AH=9, flagi niezmienione
+	je	jest_zero	; st(0) = 0?
+				; Jeśli tak, to wypisz, że jest
+
+	mov	ecx, nie_zero
+	mov	edx, dlugosc_nie_zero
+
+	jmp 	pisz
+
+jest_zero:
+	mov	ecx, zero
+	mov	edx, dlugosc_zero
+
+pisz:
+	mov	eax, 4
+	mov	ebx, 1
+	int	80h		; wypisz jedną z wiadomości.
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h
+
+; FASM: segment readable writeable
+section .data
+
+nie_zero	db	&quot;Sin(PI) != 0&quot;,0ah
+dlugosc_nie_zero	equ	$ - nie_zero
+		; FASM: &quot;=&quot; zamiast &quot;equ&quot;
+
+zero		db	&quot;Sin(PI) = 0&quot;,0ah
+dlugosc_zero		equ	$ - zero
+		; FASM: &quot;=&quot; zamiast &quot;equ&quot;</PRE>
+
+
+<hr>
+<P><a name="linux0503" id="linux0503">Przykład 3</a>:
+ czy pierwiastek z 256 rzeczywiście jest równy 16, czy 200 jest kwadratem liczby całkowitej?</P>
+<BR><a href="#linux0504" class="bezdruk">(przeskocz ten program)</a>
+<PRE>
+; format ELF executable		; tylko dla FASMa
+; entry _start
+
+; FASM: segment readable executable
+section .text
+
+global _start			; FASM: usunąć
+
+_start:
+	finit			; zawsze o tym pamiętaj !
+
+	fild word  [dwa_pie_sze]; st(0) = 256
+	fsqrt			; st(0) = sqrt(256)
+	fild word [szesnascie]	; st(0) = 16, st(1) = sqrt(256)
+	fcompp			; porównaj st(0) i st(1) i
+				; zdejmij oba. st: [pusty]
+
+	fstsw	ax
+	sahf
+
+	mov	ah,9
+	je	tak256
+	mov	ecx, nie_256
+	mov	edx, dlugosc_nie_256
+
+	jmp	short pisz_256
+
+tak256:
+	mov	ecx, tak_256
+	mov	edx, dlugosc_tak_256
+
+pisz_256:
+
+	mov	eax, 4
+	mov	ebx, 1
+	int 	80h		; wypisz stosowną wiadomość
+
+				; do zapisu stanu stosu, czyli
+				; rejestrów danych FPU można
+				; używać takiego schematu zapisu,
+				; który jest krótszy:
+				; st:  (0),  (1),  (2),  ... , (7)
+
+	fild word [dwiescie]	; st: 200
+	fsqrt			; st: sqrt(200)
+	fld	st0		; do st(0) wczytaj st(0).
+				; st: sqrt(200), sqrt(200)
+	frndint			; zaokrąglij do liczby całkowitej.
+				; st:  (int)sqrt(200), sqrt(200)
+	fcompp			; porównaj i zdejmij oba.
+	fstsw ax
+	sahf
+
+	mov ah,9
+	je tak200
+
+	mov	ecx, nie_200
+	mov	edx, dlugosc_nie_200
+
+	jmp short pisz_200
+
+tak200:
+	mov	ecx, tak_200
+	mov	edx, dlugosc_tak_200
+
+pisz_200:
+
+	mov	eax, 4
+	mov	ebx, 1
+	int 	80h		; wypisz stosowną wiadomość
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h
+
+; FASM: segment readable writeable
+section .data
+
+dwa_pie_sze	dw	256
+dwiescie	dw	200
+szesnascie	dw	16
+
+nie_256		db	&quot;SQRT(256) != 16&quot;, 0ah
+dlugosc_nie_256		equ	$ - nie_256
+		; FASM: &quot;=&quot; zamiast &quot;equ&quot;
+
+tak_256		db	&quot;SQRT(256) = 16&quot;, 0ah
+dlugosc_tak_256		equ	$ - tak_256
+		; FASM: &quot;=&quot; zamiast &quot;equ&quot;
+
+nie_200	db &quot;Liczba 200 nie jest kwadratem liczby calkowitej&quot;, 0ah
+dlugosc_nie_200		equ	$ - nie_200
+		; FASM: &quot;=&quot; zamiast &quot;equ&quot;
+
+tak_200	db &quot;Liczba 200 jest kwadratem liczby calkowitej&quot;, 0ah
+dlugosc_tak_200		equ	$ - tak_200
+		; FASM: &quot;=&quot; zamiast &quot;equ&quot;</PRE>
+
+<P><a name="linux0504" id="linux0504">Dwa ostatnie programiki zbiłem</a> u siebie
+ w jeden i przetestowałem. Wyszło, że sinus PI jest różny od zera,
+reszta była prawidłowa.</P>
+
+<P>
+Oczywiście, w tych przykładach nie użyłem wszystkich instrukcji koprocesora (nawet spośród tych,
+które wymieniłem). Mam jednak nadzieję, że te proste programy rozjaśnią nieco sposób
+posługiwania się koprocesorem.
+</P>
+
+
+
+
+
+
+
+<HR>
+<h2 class="nag">Odwrotna Notacja Polska (Reverse Polish Notation, RPN)</h2>
+
+
+<P>Ładnie brzmi, prawda? Ale co to takiego?</P>
+<P>Otóż, bardzo dawno temu pewien polski matematyk, Jan Łukasiewicz,
+wymyślił taki sposób zapisywania działań, że nie trzeba w nim używać nawiasów. Była to notacja polska.
+Sposób ten został potem dopracowany przez Charlesa Hamblina na potrzeby informatyki - w ten sposób
+powstała <a href="http://pl.wikipedia.org/wiki/Odwrotna_notacja_polska" hreflang="pl">Odwrotna Notacja
+ Polska</a>.</P>
+<P>W zapisie tym argumenty działania zapisuje przed symbolem
+tego działania. Dla jasności podam teraz kilka przykładów:</P>
+
+	<BR><a href="#linux0508" class="bezdruk">(przeskocz przykłady na ONP)</a>
+<PRE title="zamiana zapisu działania na postać ONP">
+   Zapis tradycyjny		     ONP
+	a+b			a b +
+	a+b+c			a b + c + ; ab+ stanowi pierwszy argument
+						; drugiego dodawania
+	c+b+a			c b + a +
+	(a+b)*c			a b + c *
+	c*(a+b)			c a b + *
+	(a+b)*c+d		a b + c * d +
+	(a+b)*c+d*a		a b + c * d a * +
+	(a+b)*c+d*(a+c)		a b + c * d a c + * +
+	(a+b)*c+(a+c)*d		a b + c * a c + d * +
+	(2+5)/7+3/5		2 5 + 7 / 3 5 / +</PRE>
+
+<P><a name="linux0508" id="linux0508">Ale po co to komu i dlaczego</a> mówię o tym akurat w tej części?<BR>
+Powód jest prosty: jak się dobrze przyjrzeć zapisowi działania w ONP, to można zobaczyć, że mówi
+on o kolejności działań, jakie należy wykonać na koprocesorze. Omówimy to na przykładzie:</P>
+
+	<BR><a href="#linux0509" class="bezdruk">(przeskocz ilustrację relacji między ONP a koprocesorem)</a>
+<PRE title="ilustracja relacji między ONP a koprocesorem">
+	Zapis tradycyjny (jeden z powyższych przykładów):
+	(a+b)*c+(a+c)*d
+
+	Zapis w ONP:
+	a b + c * a c + d * +
+
+	Uproszczony kod programu:
+
+	fld	[a]
+	fld	[b]
+	faddp	st1, st0
+	fld	[c]
+	fmulp	st1, st0
+	fld	[a]
+	fld	[c]
+	faddp	st1, st0
+	fld	[d]
+	fmulp	st1, st0
+	faddp	st1, st0
+
+	Teraz st0 jest równe wartości całego wyrażenia.</PRE>
+
+<P><a name="linux0509" id="linux0509">Jak widać, ONP znacznie upraszcza</a>
+ przetłumaczenie wyrażenia na kod programu. Jednak,
+kod nie jest optymalny. Można byłoby na przykład zachować wartości zmiennych a i c na stosie
+i wtedy nie musielibyśmy ciągle pobierać ich z pamięci. Dlatego w krytycznych sekcjach kodu
+stosowanie zasad ONP nie jest zalecane. Ale w większości przypadków Odwrotna Notacja Polska
+sprawuje się dobrze i uwalnia programistów od obowiązku zgadywania kiedy i jakie działanie
+wykonać.</P>
+<P>
+Pamiętajcie tylko, że <em class="wazne">stos koprocesora może pomieścić tylko 8 zmiennych</em>!</P>
+
+<P>
+Następnym razem o SIMD.</P>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux04.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux06.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Napisz program, który sprawdzi (wyświetli stosowną informację), czy liczba PI dzielona
+	przez samą siebie daje dokładne 1.0<BR><BR></LI>
+ <LI>Napisz program obliczający (nie wyświetlający) wartość 10*PI.
+	Potem sprawdź, czy sinus tej liczby jest zerem.<BR><BR></LI>
+ <LI>Napisz program mówiący, która z tych liczb jest większa: PI czy log2(10).<BR><BR></LI>
+ <LI>Napisz program sprawdzający, czy 10*PI - PI - PI - PI - PI - PI = 5*PI.<BR><BR></LI>
+ <LI>Zamień na ONP:<BR>
+	a/c/d + b/c/d<BR>
+	a/(c*d) + b/(c*d)<BR>
+	(a+b)/c/d<BR>
+	(a+b)/(c*d)<BR>
+	<BR><BR></LI>
+ <LI>Zamień z ONP na zapis tradycyjny (daszek ^ oznacza potęgowanie):<BR>
+	ab*cd*e/-<BR>
+	a5/c7/ed-9/*+<BR>
+	a3+b/de+6^-<BR>
+	dc-7b*2^/
+	</LI>
+</OL>
+
+</BODY></HTML>

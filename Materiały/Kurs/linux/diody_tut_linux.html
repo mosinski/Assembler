@@ -1,0 +1,197 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Manipulacja diodami klawiatury </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="diody_tut_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Manipulacja diodami klawiatury pod Linuksem">
+<META NAME="Keywords" CONTENT="klawiatura, diody, LED, asm, assembler, asembler">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="Kwrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:57 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Zabawa diodami na klawiaturze pod Linuksem</h1>
+
+
+<P>Aby uczynić swój program bardziej atrakcyjnym wzrokowo i pochwalić się swoimi umiejętnościami,
+można sprawić, aby diody na klawiaturze wskazujące stan
+<span lang="en">Num Lock, Caps Lock, Scroll Lock</span> zaczęły migotać w jakimś rytmie.<BR>
+Teraz pokażę, jak to zrobić.</P>
+
+<P>Do manipulowania urządzeniem znakowym (klawiaturą) posłużymy się funkcją systemową
+<span class="b">sys_ioctl</span> (numer 54).
+ Najpierw jednak trzeba się dowiedzieć, jakich komend możemy używać.
+W tym celu udajemy się do pliku <span class="b">/usr/include/linux/kd.h</span> lub do manuala, jeśli mamy
+w nim stronę ioctl_list, a w nim mamy (po angielsku):</P>
+	<BR><a href="#diody_tut_linux01" tabindex="1" class="bezdruk">(przeskocz komendy)</a>
+<PRE>
+	#define KDGETLED 0x4B31  /*zwróć bieżący stan diód */
+	#define KDSETLED 0x4B32  /*ustaw stan diód (światełek, nie flag)*/
+	#define LED_SCR  0x01    /*dioda scroll lock */
+	#define LED_NUM  0x02    /*dioda num lock */
+	#define LED_CAP  0x04    /*dioda caps lock */</PRE>
+
+<P><a name="diody_tut_linux01" id="diody_tut_linux01">Jedną z tych dwóch pierwszych wartości</a>
+wpiszemy do ECX.<BR>
+ Tymczasem w EBX musimy mieć deskryptor otwartego
+pliku <span class="b">/dev/console</span> (do zapisu) lub wartość 1, która oznacza standardowe urządzenie
+wyjścia - STDOUT.<BR>
+W EDX podajemy ostatni parametr: wartość 0-7 jeśli ustawiamy stan diód lub wskaźnik (adres)
+na zmienną typu DWORD, która otrzyma bieżąca wartość stanu diód (także 0-7).
+</P>
+<P>
+Widać więc, co musi zrobić nasz program: zachować bieżący stan diód, dowolnie je pozmieniać
+(i zadbać by efekt był widoczny - robić pauzy), po czym przywrócić poprzedni stan.<BR>
+Oto, jak taki program mógłby wyglądać (używanie załączników z mojej biblioteki nie jest
+konieczne - w kodzie mówię, jak i co zamienić).</P>
+	<BR><a href="#diody_tut_linux02" class="bezdruk">(przeskocz przykładowy program)</a>
+<PRE>
+; Program manipuluje diodami klawiatury
+;
+; Autor: Bogdan D.
+; Kontakt: bogdandr (at) op (dot) pl
+;
+; nasm -f elf klaw.asm
+; ld -s -o klaw klaw.o
+
+
+section .text
+
+		; nie musicie z tego korzystać:
+%include &quot;bibl/incl/linuxbsd/nasm/n_system.inc&quot;
+%include &quot;bibl/incl/linuxbsd/nasm/n_const.inc&quot;
+
+%define	KDGETLED	0x4b31
+%define	KDSETLED	0x4b32
+
+global _start
+
+_start:
+
+; 1. otwieramy /dev/console, w trybie tylko do zapisu lub
+; korzystamy ze STDOUT
+
+	mov	eax, sys_open	; sys_open = 5 (otwieramy plik)
+	mov	ebx, konsola	; adres nazwy pliku
+	mov	ecx, O_WRONLY	; O_WRONLY = 01
+	mov	edx, 777q	; RWX dla wszystkich
+	int	80h
+
+	cmp	eax, 0
+	jge	.ok		; jak nie ma błędu, to jedziemy dalej
+
+				; w przypadku błędu korzystamy ze STDOUT
+	mov	eax, stdout	; stdout = 1
+
+; 2. pobieramy aktualny stan diód
+
+.ok:
+	mov	ebx, eax	; EBX = deskryptor pliku
+
+	mov	eax, sys_ioctl	; sys_ioctl = 54 - manipulacja urządzeniem
+	mov	ecx, KDGETLED	; pobierz stan diód
+	mov	edx, stare_diody	; adres DWORDa, który otrzyma
+					; aktualny stan diód
+	int	80h
+
+	mov	eax, sys_ioctl	; sys_ioctl = 54
+	mov	ecx, KDSETLED	; ustawiamy stan diód
+	mov	edx, 7		; wszystkie włączone
+	int	80h
+
+        mov	cx, 7
+        mov	dx, 0a120h	; opóźnienie pół sekundy
+	call	pauza
+
+; przywracamy poprzedni stan diód
+
+	mov	eax, sys_ioctl
+	mov	ecx, KDSETLED		; ustawiamy stan diód
+	mov	edx, [stare_diody]	; EDX = poprzedni stan diód
+	int	80h
+
+	cmp	ebx, stdout	; czy otworzyliśmy konsolę, czy STDOUT?
+	jle	.koniec		; nie zamykamy STDOUT
+
+	mov	eax, sys_close	; zamykamy otwarty plik konsoli
+	int	80h
+
+.koniec:
+	wyjscie			; czyli
+				;	mov	eax, 1
+				;	xor	ebx, ebx
+				;	int	80h
+
+
+pauza:			; procedura pauzująca przez CX:DX milisekund
+	push    ebx
+	push    ecx
+	push    edx
+
+	mov     ax, cx
+	shl     eax, 16
+	mov     ebx, 1000000
+	mov     ax, dx 		; EAX = CX:DX
+	xor     edx, edx
+	div     ebx		; CX:DX dzielimy przez milion
+	mov     [t1 + timespec.tv_sec], eax 	; EAX = liczba sekund
+
+	mov     ebx, 1000
+	mov     eax, edx	; EAX = pozostała liczba mikrosekund
+	mul     ebx
+	mov     [t1 + timespec.tv_nsec], eax 	; EAX = liczba nanosekund
+
+	mov     eax, sys_nanosleep	; funkcja numer 162
+	mov     ebx, t1
+	mov     ecx, t2
+	int     80h
+
+	pop     edx
+	pop     ecx
+	pop     ebx
+
+	ret
+
+section .data
+
+stare_diody	dd	0
+konsola		db	&quot;/dev/console&quot;,0
+
+; Struktura timespec jest zdefiniowana w pliku n_system.inc
+;struc timespec
+;	        .tv_sec:		resd 1
+;	        .tv_nsec:		resd 1
+;endstruc
+
+t1 istruc timespec
+t2 istruc timespec</PRE>
+
+<P>
+<a name="diody_tut_linux02" id="diody_tut_linux02">Dalsze eksperymenty pozostawiam</a> czytelnikom.
+ Pamiętajcie, że istnieje aż 8 różnych kombinacji
+stanów diód i można przecież robić różne odstępy czasowe między zmianą stanu.
+</P>
+
+<P>Miłej zabawy.</P>
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

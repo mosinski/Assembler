@@ -1,0 +1,460 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Programowanie myszy </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Programowanie myszy pod Linuksem">
+<META NAME="Keywords" CONTENT="asm, assembler, asembler, linux, mysz, gpm">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:58 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Programowanie myszy pod Linuksem</h1>
+
+<P>
+Wbudowanie obsługi myszy do swoich programów wcale nie musi być trudne. Nie musimy bawić się
+ w pisanie sterowników do każdej możliwej myszki ani bezpośrednio <q>rozmawiać</q> ze sprzętem.
+ Cała ta robota została już za nas zrobiona. Komunikacją z myszą zajmie się serwer myszy GPM,
+ a my zajmiemy się tylko uruchamianiem odpowiednich funkcji, jakie ten serwer oferuje.</P>
+<P>
+Podane tu przeze mnie informacje pochodzą z moich własnych interpretacji pliku /usr/include/gpm.h
+ oraz ze świetnego artykułu <A HREF="http://linuxjournal.com/article/4600" hreflang="en" tabindex="1"
+ >linuxjournal.com/article/4600</A> i wymagają zainstalowanego pakietu gpm-devel.</P>
+
+<P>Teraz po kolei przedstawię i omówię czynności, jakie należy wykonać.
+ Rzecz jasna, serwer myszy musi być uruchomiony.</P>
+<OL>
+ <LI>Otwarcie połączenia.
+ 	<P>Aby otworzyć połączenie z serwerem, należy najpierw odpowiednio
+ 	 wypełnić strukturę Gpm_<span lang="en">Connect</span> postaci:</P>
+	<a href="#mysz_tut_linux01" class="bezdruk">(przeskocz strukturę Gpm_<span lang="en">Connect</span>)</a>
+	<PRE title="struktura Gpm_Connect" lang="en">
+	struc Gpm_Connect
+		.eventMask	resw	1
+		.defaultMask	resw	1
+		.minMod		resw	1
+		.maxMod		resw	1
+		.pid		resd	1
+		.vc		resd	1
+	endstruc</PRE>
+	<P><a name="mysz_tut_linux01" id="mysz_tut_linux01">Nas interesują tylko</a> 4 pierwsze pola.<BR>
+	Do <q lang="en">eventMask</q> wstawimy <code>NOT 0</code> (czyli -1), a do
+	 <q lang="en">defaultMask</q> zero, co oznacza,
+	 że interesują nas wszystkie typy zdarzeń.<BR>
+	Do <q>minMod</q> wstawimy 0, a do <q>maxMod</q> - <code>NOT 0</code>, co oznacza, że interesują
+	 nas wszystkie klawisze modyfikujące (Ctrl, Alt, ...).</P>
+
+	<P>Po wypełnieniu struktury uruchamiamy funkcję <span class="b">Gpm_<span lang="en">Open</span></span>
+	 z dwoma parametrami: adres naszej struktury oraz wartość 0. Jeśli
+	 wystąpi błąd, Gpm_<span lang="en">Open</span> zwróci wartość -1.
+	 Typową przyczyną jest brak uprawnień do pliku gniazda serwera. Jako
+	 root należy wtedy wpisać <q>chmod o+rwx /dev/gpmctl</q>.<BR>
+	Jeśli chcemy, aby kursor myszy był widoczny, należy do zmiennej
+	 globalnej serwera gpm_<span lang="en">visiblepointer</span> wstawić wartość 1.
+	</P></LI>
+ <LI>Ustalenie własnej funkcji obsługi zdarzeń (komunikatów odbieranych przez serwer od myszy).
+	<P>Nic prostszego. Do zmiennej globalnej gpm_handler wpisujemy adres naszej procedury.
+ 	Dzięki temu serwer będzie wiedział,
+ 	gdzie jest funkcja, którą należy uruchomić, gdy nastąpi zdarzenie.
+	</P></LI>
+ <LI>Oczekiwanie na zdarzenia.
+ 	<P>Aby odbierać zdarzenia, należy skorzystać z funkcji <span class="b">Gpm_Getc</span>. Przyjmuje ona
+ 	 jeden argument: adres struktury FILE opisującej plik, z którego odbierane mają
+ 	 być zdarzenia. Wpisujemy tam standardowe wejście (jako zmienną z
+ 	 biblioteki języka C). Jeśli nastąpi jakieś zdarzenie, nasza procedura
+ 	 obsługi zdarzeń zostanie automatycznie uruchomiona z właściwymi parametrami.
+	</P></LI>
+ <LI>Zamykanie połączenia.
+ 	<P>Robimy to zwykle wtedy, gdy Gpm_Getc otrzymała znak końca pliku (DWORD -1).
+ 	Samo zamknięcie polega na uruchomieniu funkcji
+ 	<span class="b">Gpm_<span lang="en">Close</span></span> (bez argumentów).
+	</P></LI>
+</OL>
+
+
+
+
+
+
+
+<BR><BR><HR>
+<h2 class="nag">Procedura obsługi zdarzeń</h2>
+
+<P>
+Jest to kluczowa funkcja obsługi myszy. Dostaje ona na stosie dwa argumenty:</P>
+<OL>
+ <LI>pierwszy od lewej (ostatni wkładany na stos) - wskaźnik do struktury
+  Gpm_<span lang="en">Event</span>, opisującej dane zdarzenie.</LI>
+ <LI>drugi od lewej - wskaźnik do dodatkowych danych</LI>
+</OL>
+<P>Jeśli w swojej procedurze chcecie tylko coś wyświetlić, to te argumenty
+ nie są wam potrzebne. Ale struktura Gpm_<span lang="en">Event</span> niesie ze
+ sobą wiele przydatnych informacji, które teraz objaśnię.</P>
+<P>Sama struktura wygląda tak:</P>
+	<BR><a href="#mysz_tut_linux02" class="bezdruk">(przeskocz strukturę Gpm_<span lang="en">Event</span>)</a>
+<PRE title="Struktura Gpm_Event" lang="en">
+	struc Gpm_Event
+		.buttons	resb	1
+		.modifiers	resb	1
+		.vc		resw	1
+		.dx		resw	1
+		.dy		resw	1
+		.x		resw	1
+		.y		resw	1
+		.type		resd	1
+		.clicks		resd	1
+		.margin		resd	1
+		.wdx		resw	1
+		.wdy		resw	1
+	endstruc</PRE>
+
+<P><a name="mysz_tut_linux02" id="mysz_tut_linux02">Pole <q lang="en">buttons</q> mówi o tym</a>,
+które przyciski zostały naciśnięte.
+ Wystarczy użyć instrukcji <code>TEST</code> z jedną z wartości GPM_B_* (podanych w programie).<BR>
+Pole <q lang="en">modifiers</q> mówi o tym, które z klawiszy modyfikujących były
+ aktywne w chwili zdarzenia. Można użyć instrukcji <code>TEST</code> z jedną z wartości (1 &lt;&lt; KG_*).<BR>
+Pola X oraz Y to oczywiście współrzędne zdarzenia (w czasie ruchu zmieniają się).<BR>
+I najważniejsze chyba pole: <q lang="en">type</q>, opisujące rodzaj zdarzenia.
+ Użyjcie instrukcji <code>TEST</code> z jedną z wartości GPM_*, aby określić typ zdarzenia.
+ Dla kliknięcia najczęściej będzie to wartość 20 (czyli 16+4) - kliknięcie jednym przyciskiem.</P>
+
+
+
+
+
+
+
+<BR><HR>
+<h2 class="nag">Przykładowy program</h2>
+
+<P>
+Aby poskładać całą tę wiedzę i pozwolić Wam uchronić się od części błędów,
+ przedstawiam poniżej przykładowy program. Jego
+ zadaniem jest wypisanie stosownego napisu w punkcie kliknięcia
+ (najlepiej testować na konsoli tekstowej).
+ Wykorzystane w programie sekwencje kontrolne terminala są omówione w artykule
+ <A HREF="tryb_txt_linux.html" hreflang="pl">Bezpośredni dostęp do ekranu</A>.</P>
+ <P>
+Program zakończy działanie po odebraniu znaku końca pliku (na konsoli należy nacisnąć Ctrl+D).</P>
+	<BR><a href="#mysz_tut_linux03" class="bezdruk">(przeskocz program reagujący na mysz)</a>
+<PRE>
+; Programowanie myszy w asemblerze z wykorzystaniem GPM
+;
+; autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+; nasm -O999 -f elf -o mysz.o mysz.asm
+; gcc -o mysz mysz.o -lgpm
+
+section	.text
+global	main
+
+; struktura służąca połączeniu się z serwerem (/usr/linux/gpm.h)
+struc Gpm_Connect
+	.eventMask	resw	1
+	.defaultMask	resw	1
+	.minMod		resw	1
+	.maxMod		resw	1
+	.pid		resd	1
+	.vc		resd	1
+endstruc
+
+; struktura opisująca zdarzenie myszy: ruch, kliknięcie itp.
+struc Gpm_Event
+	.buttons	resb	1
+	.modifiers	resb	1
+	.vc		resw	1
+	.dx		resw	1
+	.dy		resw	1
+	.x		resw	1
+	.y		resw	1
+	.type		resd	1
+	.clicks		resd	1
+	.margin		resd	1
+	.wdx		resw	1
+	.wdy		resw	1
+endstruc
+
+; przyciski (pole &quot;buttons&quot; w Gpm_Event)
+
+; FASM: GPM_B_* = x
+%define GPM_B_DOWN      32		; naciśnięcie przycisku
+%define GPM_B_UP        16		; zwolnienie przycisku
+%define GPM_B_FOURTH    8
+%define GPM_B_LEFT      4
+%define GPM_B_MIDDLE    2
+%define GPM_B_RIGHT     1
+%define	GPM_B_NONE      0
+
+; typy zdarzeń (pole &quot;type&quot; w Gpm_Event)
+
+; FASM: GPM_* = x
+%define   GPM_MOVE	1
+%define   GPM_DRAG	2
+%define   GPM_DOWN	4
+%define   GPM_UP	8
+%define   GPM_SINGLE	16
+%define   GPM_DOUBLE	32
+%define   GPM_TRIPLE	64
+%define   GPM_MFLAG	128
+%define   GPM_HARD	256
+%define   GPM_ENTER	512
+%define   GPM_LEAVE	1024
+
+; numery bitów klawiszy (pole &quot;modifiers&quot; w Gpm_Event)
+; z /usr/include/linux/keyboard.h
+
+; FASM: KG_* = x
+%define KG_SHIFT	0
+%define KG_CTRL		2
+%define KG_ALT		3
+%define KG_ALTGR	1
+%define KG_SHIFTL	4
+%define KG_SHIFTR	5
+%define KG_CTRLL	6
+%define KG_CTRLR	7
+%define KG_CAPSSHIFT	8
+
+
+; FASM: extrn zamiast extern
+extern	Gpm_Open	; funkcja otwierająca połączenie z serwerem
+extern	Gpm_Close	; funkcja zamykająca połączenie z serwerem
+extern	Gpm_Getc	; funkcja pobierająca znak i uruchamiająca
+			; obsługę zdarzeń
+extern	gpm_handler	; tu wpiszemy adres naszej funkcji
+			; obsługi zdarzeń myszy
+extern	stdin		; standardowe wejście, skąd będziemy czytać znaki
+extern	gpm_visiblepointer	; zmienna mówiąca o tym,
+				; czy kursor jest widoczny
+
+main:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, czysc
+	mov	edx, czysc_dl
+	int	80h			; czyścimy ekran
+
+	mov	dword [gpm_visiblepointer], 1	; kursor ma być widoczny
+
+			; akceptujemy wszystkie zdarzenia myszy
+	mov	word [conn + Gpm_Connect.eventMask], ~ 0
+			; FASM: not 0
+	mov	word [conn + Gpm_Connect.defaultMask], 0
+
+			; akceptujemy wszystkie klawisze modyfikujące
+	mov	word [conn + Gpm_Connect.minMod], 0
+	mov	word [conn + Gpm_Connect.maxMod], ~ 0
+			; FASM: not 0
+
+	push	dword 0
+	push	dword conn
+	call	Gpm_Open		; otwieramy połączenie z serwerem
+	add	esp, 8			; usuwamy argumenty ze stosu
+
+	cmp	eax, -1			; EAX = -1 oznacza błąd
+	jne	.jest_ok
+
+	mov	ebx, eax
+	mov	eax, 1
+	int	80h			; zwracamy kod -1
+
+.jest_ok:
+			; wpisujemy adres naszej funkcji:
+	mov	dword [gpm_handler], obsluga
+
+.czytaj:
+			; wczytujemy znak z klawiatury lub zdarzenie myszy
+	push	dword [stdin]
+	call	Gpm_Getc		; pobieramy znak/zdarzenie.
+		; Funkcja obsługi zostanie uruchomiona automatycznie.
+	add	esp, 4
+
+	cmp	eax, -1			; -1 oznacza EOF, koniec pliku
+	jne	.czytaj
+
+	call	Gpm_Close		; zamykamy połączenie z serwerem
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, czysc
+	mov	edx, czysc_dl
+	int	80h			; czyścimy ekran
+
+	mov	bx, 1
+	mov	cx, 1
+	call	zmiana_poz		; zmiana pozycji kursora tekstowego
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h			; wyjście z programu
+
+
+
+
+; procedura obsługi zdarzenia myszy. otrzymuje 2 argumenty:
+; wskaźnik na zdarzenie i wskaźnik na dane
+; prototyp w C wygląda tak:
+; int obsluga( Gpm_Event *ev, void *dane );
+
+obsluga:
+	push	ebp
+	mov	ebp, esp
+			; [ebp] = stary EBP
+			; [ebp+4] = adres powrotny
+			; [ebp+8] = pierwszy parametr (wsk. na zdarzenie)
+			; [ebp+12] = drugi parametr (wsk. na dane)
+
+%define		ev	ebp+8
+%define		dane	ebp+12
+
+				; interesują nas tylko kliknięcia:
+	mov	eax, [ev]	; [ev], a nie ev, jest wskaźnikiem
+				; na strukturę
+	test	dword [eax + Gpm_Event.type], GPM_DOWN
+	jz	.koniec
+
+	push	ebx
+	push	ecx
+	push	edx
+
+					; wyświetlimy typ zdarzenia
+	mov	ecx, [ev]
+	mov	eax, [ecx + Gpm_Event.type]
+				; cała zawartość i tak mieści się w AX
+	xor	edx, edx
+	mov	bx, 1000
+	div	bx		; maksymalny typ to 1024, więc zaczynamy
+				;  dzielenie od 1000
+	add	&quot;0&quot;		; zmiana wyniku na ASCII
+	mov	[numer], al
+
+	mov	eax, edx	; EAX = reszta z poprzedniego dzielenia
+	mov	bl, 100
+	div	bl
+	add	al, &quot;0&quot;
+	mov	[numer+1], al
+
+	shr	ax, 8		; AX = AH = reszta z poprzedniego dzielenia
+	mov	bl, 10
+	div	bl
+	add	ax, &quot;00&quot;
+	mov	[numer+2], ax	; na miejsce trzecie wstawiamy iloraz,
+				; a na czwarte - od razu resztę
+
+
+	mov	dh, 10
+	mov	ax, [ecx + Gpm_Event.x]	; x = kolumna
+	div	dh
+	add	ax, &quot;00&quot;		; zamiana ilorazu i reszty na ASCII
+	mov	[miejsce+4], ax		; od razu wstawiamy iloraz i resztę
+
+	mov	ax, [ecx + Gpm_Event.y]	; y = wiersz
+	div	dh
+	add	ax, &quot;00&quot;
+	mov	[miejsce+1], ax
+
+	mov	bx, [ecx + Gpm_Event.x]
+	mov	cx, [ecx + Gpm_Event.y]
+	call	zmiana_poz	; zmiana pozycji kursora tekstowego
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, zdarz
+	mov	edx, zdarz_dl
+	int	80h		; na ustalonej przed chwila pozycji
+				; piszemy info o zdarzeniu
+
+	pop	edx
+	pop	ecx
+	pop	ebx
+
+.koniec:
+	xor	eax, eax	;zerowa wartość zwracana oznacza brak błędu
+	leave			; przywracamy ESP i EBP
+	ret
+
+
+
+; procedura zmiany pozycji kursora tekstowego (nie myszy)
+; wykorzystuje sekwencje kontrolne terminala
+zmiana_poz:
+
+;  BX = nowa kolumna
+;  CX = nowy wiersz
+
+	push	eax
+	push	ebx
+	push	ecx
+	push	edx
+
+	mov	dh, 10
+	mov	ax, bx			; AX = kolumna znaku
+	and	ax, 0FFh
+	div	dh			; dzielimy przez 10
+	add	ax, &quot;00&quot;		; zmiana ilorazu i reszty na ASCII
+	mov	[kolumna], ax		; zapisanie ilorazu i reszty
+
+	mov	ax, cx			; AX = wiersz znaku
+	and	ax, 0FFh
+	div	dh
+	add	ax, &quot;00&quot;
+	mov	[wiersz], ax
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, pozycja
+	mov	edx, pozycja_dl
+	int	80h		; wyświetlenie sekwencji kontrolnej
+
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+
+	ret
+
+
+section .data
+
+zdarz		db	&quot;Zdarzenie: &quot;
+numer		db	&quot;xxxx w &quot;	; typ zdarzenia
+miejsce		db	&quot;(ww,kk)&quot;	; pozycja na ekranie
+zdarz_dl	equ	$ - zdarz
+
+
+ESC		equ	1Bh		; kod ASCII klawisza Escape
+
+					; sekwencja zmiany pozycji kursora
+pozycja		db	ESC, &quot;[&quot;
+wiersz		db	&quot;00;&quot;
+kolumna		db	&quot;00H&quot;
+pozycja_dl	equ	$ - pozycja
+
+czysc		db	ESC, &quot;[2J&quot;	; sekwencja czyszczenia ekranu
+czysc_dl	equ	$ - czysc
+
+section .bss
+
+	; conn jest strukturą typu Gpm_Connect:
+conn		istruc	Gpm_Connect</PRE>
+
+
+<br><br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm" name="mysz_tut_linux03" id="mysz_tut_linux03">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

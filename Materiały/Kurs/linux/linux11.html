@@ -1,0 +1,501 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 11 - Pliki </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux10.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux12.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="linux, linuks, kurs, asm, asembler, assembler, pliki, sys_open,
+	sys_close, sys_read, sys_write, sys_lseek, sys_unlink">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:58 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 11 - Pamięć jest nietrwała, czyli jak posługiwać się plikami</h1></div>
+
+<P>
+Jak wiemy, wszystkich danych nie zmieścimy w pamięci. A nawet jeśli zmieścimy, to pozostaną
+tam tylko do najbliższego wyłączenia prądu. Dlatego trzeba je zapisywać do pliku, a
+potem umieć je z tego pliku odczytać. W tej części zajmiemy się właśnie operacjami na plikach.
+</P>
+<P>
+Do operowania na plikach posłużymy się kilkoma funkcjami przerwania 80h:</P>
+<UL>
+ <LI>EAX = 5 (<span lang="en">sys_open</span>) - otwarcie/utworzenie pliku.
+	<P>EBX = adres nazwy pliku (zakończonej bajtem zerowym).<BR>
+	ECX = flagi (atrybuty) - 0=Tylko do odczytu, 1=Tylko do zapisu, 2=Odczyt i zapis, 0100h=Utwórz.<BR>
+	EDX = tryb otwarcia (rozkład bitów jest taki sam, jak przy uprawnieniach do pliku, w
+		kolejności: zapis, odczyt, uruchomienie dla właściciela, grupy i innych).<BR>
+	W EAX funkcja zwraca deskryptor pliku.
+	</P></LI>
+ <LI>EAX = 8 (<span lang="en">sys_creat</span>) - utworzenie pliku.
+	<P>EBX = adres nazwy pliku (zakończonej bajtem zerowym).<BR>
+	ECX = tryb utworzenia (bity takie same jak w EDX dla EAX=5).<BR>
+	W EAX funkcja zwraca deskryptor pliku.
+	</P></LI>
+ <LI>EAX = 3 (<span lang="en">sys_read</span>) - odczyt z pliku.
+	<P>EBX = deskryptor (specjalny numerek) pliku.<BR>
+	ECX = adres bufora, do	którego będziemy czytać.<BR>
+	EDX = liczba bajtów do odczytania.<BR>
+	W EAX funkcja zwraca liczbę odczytanych bajtów.
+	</P></LI>
+ <LI>EAX = 4 (<span lang="en">sys_write</span>) - zapis do pliku.
+	<P>EBX = deskryptor pliku.<BR>
+	ECX = adres bufora, z którego będą pobierane dane do zapisu.<BR>
+	EDX = liczba bajtów do zapisania. Jak zapewne sobie przypominacie, tej właśnie
+		funkcji używaliśmy do wyświetlania napisów na ekranie, z EBX = 1
+		(1 = standardowe urządzenie wyjścia).<BR>
+	W EAX funkcja zwraca liczbę zapisanych bajtów.
+	</P></LI>
+ <LI>EAX = 6 (<span lang="en">sys_close</span>) - zamyka plik.
+	<P>EBX = deskryptor pliku.
+	</P></LI>
+ <LI>EAX = 19 (<span lang="en">sys_lseek</span>) - przechodzenie na określoną pozycję w pliku.
+	<P>EBX = deskryptor pliku.<BR>
+	ECX = długość skoku (może być ujemna).<BR>
+	EDX mówi, skąd wyruszamy: 0 - początek pliku, 1 - bieżąca pozycja w pliku,
+	 2 - koniec pliku.<BR>
+	Zwraca w EAX bieżącą pozycję w pliku.
+	</P></LI>
+ <LI>EAX = 10 (<span lang="en">sys_unlink</span>) - usuwa plik.
+	<P>EBX = adres nazwy pliku (zakończonej bajtem zerowym).<BR>
+	</P></LI>
+</UL>
+<P>
+Błędy (podobnie jak w innych funkcjach Linuksowych) są zwykle sygnalizowane przez EAX mniejsze od zera.<BR>
+Po szczegóły odsyłam do <a href="przer80h_1.html" hreflang="pl">mojego spisu funkcji
+systemowych</a>,
+ <A HREF="http://linuxasembly.org" hreflang="en" lang="en"
+	>linuxasembly.org</A>,
+<A HREF="http://www.lxhp.in-berlin.de/lhpsyscal.html" hreflang="en"
+	>www.lxhp.in-berlin.de/lhpsyscal.html</A> oraz do stron manuala dotyczących
+poszczególnych funkcji, na przykład <span class="b">man 2 open</span>.
+</P>
+<P>
+Przykładowe użycie tych funkcji:</P>
+	<BR><a href="#linux1101" tabindex="1" class="bezdruk">(przeskocz przykłady)</a>
+<P>
+Utworzenie pliku i zapisanie czegoś do niego:</P>
+<PRE title="przykłady">
+	mov	eax, 8		; numer funkcji - tworzenie pliku
+	mov	ebx, nazwa	; adres nazwy pliku
+	mov	edx, 111111111b	; tryb otwierania - ósemkowo 777
+	int	80h
+
+	cmp	eax, 0
+	jl	blad		; czy wystąpił błąd?
+
+	mov	ebx, eax	; EBX = deskryptor pliku
+
+	mov	eax, 4		; numer funkcji - zapis
+				; EBX = deskryptor pliku
+	mov	ecx, bufor	; adres bufora
+	mov	edx, 1024	; liczba bajtów
+	int	80h
+
+	cmp	eax, 0
+	jl	blad		; czy wystąpił błąd?
+
+	mov	eax, 6		; numer funkcji - zamknij
+				; EBX = deskryptor pliku
+	int	80h
+
+	cmp	eax, 0
+	jl	blad		; czy wystąpił błąd?</PRE>
+
+<P>Otwarcie istniejącego pliku, odczytanie i zapisanie czegoś do niego:</P>
+
+<PRE title="przykłady">
+	mov	eax, 5		; numer funkcji - otwieranie pliku
+	mov	ebx, nazwa	; adres nazwy pliku
+	mov	ecx, 2		; zapis i odczyt
+	mov	edx, 111111111b	; tryb otwierania - ósemkowo 777
+	int	80h
+
+	cmp	eax, 0
+	jl	blad		; czy wystąpił błąd?
+
+	mov	ebx, eax	; EBX = deskryptor pliku
+
+	mov	eax, 3		; numer funkcji - odczyt
+				; EBX = deskryptor pliku
+	mov	ecx, bufor	; adres bufora
+	mov	edx, 1024	; liczba bajtów
+	int	80h
+
+	cmp	eax, 0
+	jl	blad		; czy wystąpił błąd?
+
+	; .... operacje na bajtach z pliku, na przykład
+	xor	byte [bufor], 0ffh
+
+	mov	eax, 4		; numer funkcji - zapis
+				; EBX = deskryptor pliku
+	mov	ecx, bufor	; adres bufora
+	mov	edx, 1024	; liczba bajtów
+	int	80h
+
+	; Zauważcie, że zapisane bajty wylądowały po odczytanych, gdyż nie
+	; zmieniliśmy pozycji w pliku, a ostatnia operacja (odczyt) zostawiła
+	; ją tuż po odczytanych bajtach
+
+	cmp	eax, 0
+	jl	blad		; czy wystąpił błąd?
+
+	mov	eax, 6		; numer funkcji - zamknij
+				; EBX = deskryptor pliku
+	int	80h
+
+	cmp	eax, 0
+	jl	blad		; czy wystąpił błąd?</PRE>
+
+<P><a name="linux1101" id="linux1101">A teraz <q>prawdziwy</q> przykład</a>.
+ Będzie to nieco uszczuplona (pominąłem wczytywanie nazwy pliku)
+wersja mojego programu <q>na_male.asm</q>. Program ten zamienia wszystkie wielkie litery w podanym
+pliku na ich małe odpowiedniki. Reszta znaków pozostaje bez zmian.
+Jedna rzecz jest warta uwagi - nigdzie nie zmieniam rejestru EBX, więc ciągle w nim
+jest deskryptor pliku i nie muszę tego uchwytu zapisywać do pamięci.
+A teraz kod:</P>
+	<BR><a href="#linux1102" class="bezdruk">(przeskocz na_male.asm)</a>
+<PRE title="na_male.asm">
+; Program zamienia wszystkie litery w podanym pliku z wielkich na male.
+;
+; Autor: Bogdan D.
+; kontakt: bogdandr (at) op (dot) pl
+;
+; nasm -O999 -f elf na_male.asm
+; ld -s -o na_male na_male.o
+
+section .text
+
+global _start
+
+_start:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, info
+	mov	edx, info_dl
+	int	80h		; wypisanie informacji o programie
+
+	mov	eax, 5
+	mov	ebx, plik
+	mov	ecx, 2
+	mov	edx, 111000000b	; 700 - zabroń innym dostępu
+	int	80h
+
+	cmp	eax, 0
+
+	jnl	otw_ok
+	call	plik_blad	; uruchamiamy tę procedurę,
+				; gdy wystąpił błąd
+
+	jmp	zamk_ok		; jeśli nie udało się nam nawet
+				; otworzyć pliku, to od razu
+				; wychodzimy z programu.
+
+
+otw_ok:
+	mov	ebx, eax	; zapisujemy deskryptor pliku
+	mov	ebp, 400h	; EBP = rozmiar bufora.
+
+czytaj:
+	mov	eax, 3		; funkcja czytania
+				; EBX = deskryptor
+	mov	ecx, bufor	; adres bufora, dokąd czytamy
+	mov	edx, ebp
+	int	80h
+
+czyt_ok:
+	xor	edi, edi	; EDI będzie wskaźnikiem do bufora.
+				; Na początku go zerujemy.
+
+	cmp	eax, edx	; czy liczba bajtów odczytana (EAX) =
+				; = liczba żądana (EDX) ?
+	jne	przy_eof	; jeśli nie, to plik się skończył
+
+zamiana:
+	mov	dl, [bufor+edi]	; wczytujemy znak z bufora do DL
+
+	cmp	dl, &quot;A&quot;
+	jb	znak_ok
+	cmp	dl, &quot;Z&quot;
+	ja	znak_ok
+
+	or	dl, 20h		; jeśli okazał się wielką literą,
+				; zamieniamy go na małą
+	mov	[bufor+edi],dl	; i zapisujemy w miejsce,
+				; gdzie poprzednio był
+
+znak_ok:
+	inc	edi		; przechodzimy do innych znaków
+	loop	zamiana		; aż przejdziemy przez cały bufor
+				; (CX = BP = 400h)
+
+	mov	ecx, eax	; ECX = liczba przeczytanych bajtów
+
+	mov	eax, 19		; funkcja przejścia do innej
+				; pozycji w pliku
+				; EBX = deskryptor
+	neg	ecx		; ECX = - liczba przeczytanych bajtów
+	mov	edx, 1		; wyruszamy z bieżącej pozycji
+	int	80h
+
+	cmp	eax, 0
+	jnl	idz_ok
+	call	plik_blad
+
+idz_ok:				; po udanym przeskoku
+
+	mov	eax, 4		; funkcja zapisu do pliku
+				; EBX = deskryptor
+	mov	ecx, bufor
+	mov	edx, ebp	; EDX = EBP = 400h = długość bufora.
+	int	80h
+
+	cmp	eax, 0
+	jg	czytaj		; i idziemy czytać nową partię danych
+				; (jeśli nie ma błędu)
+
+	call	plik_blad
+
+	jmp	zamk
+
+przy_eof:			; gdy jesteśmy już przy końcu pliku.
+
+;	xor	edi, edi	; EDI już = 0 (zrobione wcześniej)
+
+	mov	ebp, eax	; EBP = liczba przeczytanych znaków
+	mov	ecx, eax	; ECX = liczba przeczytanych znaków
+
+zamiana2:
+	mov	dl, [bufor+edi]	; pobieramy znak z bufora do DL
+
+	cmp	dl, &quot;A&quot;
+	jb	znak_ok2
+	cmp	dl, &quot;Z&quot;
+	ja	znak_ok2
+
+	or	dl,20h		; jeśli okazał się wielką literą,
+				; zamieniamy go na małą
+	mov	[bufor+edi],dl	; i zapisujemy w miejsce,
+				; gdzie poprzednio był
+
+znak_ok2:
+	inc	edi		; przechodzimy do innych znaków
+	loop	zamiana2	; aż przejdziemy przez cały bufor
+				; (CX = BP = liczba bajtów)
+
+	mov	ecx, eax	; EDX = liczba przeczytanych bajtów
+
+	mov	eax, 19		; funkcja przejścia do innej
+				; pozycji w pliku
+				; EBX = deskryptor
+	neg	ecx		; ECX = - liczba przeczytanych bajtów
+	mov	edx, 1		; wyruszamy z bieżącej pozycji
+	int	80h
+
+	cmp	eax, 0
+	jnl	idz_ok2
+	call	plik_blad
+
+idz_ok2:			; po udanym przeskoku
+
+	mov	eax, 4		; funkcja zapisu do pliku
+				; EBX = deskryptor
+	mov	ecx, bufor
+	mov	edx, ebp	; EDX=EBP=liczba przeczytanych bajtów
+	int	80h
+
+	cmp	eax, 0
+	jnl	zamk		; i zamykamy plik (jeśli nie ma błędu)
+
+	call	plik_blad
+
+zamk:
+	mov	eax, 6		; zamykamy plik
+				; EBX = deskryptor
+	int	80h
+
+
+zamk_ok:
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h
+
+
+plik_blad:			; procedura wyświetla informację
+				; o tym, że wystąpił błąd i
+				; wypisuje numer tego błędu.
+	push	eax
+	push	ebx
+	push	ecx
+	push	edx
+	push	ebx
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, blad_plik
+	mov	edx, blad_plik_dl
+	int	80h		; wypisanie informacji o tym,
+				; że wystąpił błąd
+
+	pop	ebx
+	call	pl		; wypisanie numeru błędu
+
+        mov     eax, 4
+        mov     ebx, 1
+        mov     ecx, nwln
+        mov     edx, 1
+        int     80h		; przejście do nowej linii
+
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+
+	ret
+
+pl:
+
+piszrej:
+
+;we: ebx - rejestr do wypisania (hex)
+;wy: rejestr, niszczone: eax
+
+	mov	eax, ebx
+	shr	eax, 28
+	call	pc2
+	mov	eax, ebx
+	shr	eax, 24
+	and	al, 0fh
+	call	pc2
+	mov	eax, ebx
+	shr	eax, 20
+	and	al, 0fh
+	call	pc2
+	mov	eax, ebx
+	shr	eax, 16
+	and	al, 0fh
+	call	pc2
+	mov	ax, bx
+	shr	ax, 12
+	and	al, 0fh
+	call	pc2
+	mov	ax, bx
+	shr	ax, 8
+	and	al, 0fh
+	call	pc2
+	mov	al, bl
+	shr	al, 4
+	and	al, 0fh
+	call	pc2
+	mov	al, bl
+	and	al, 0fh
+	call	pc2
+
+	ret
+
+pc2:
+;we: AL - cyfra hex
+;wy: wyświetla cyfrę, niszczone: nic
+
+	push	eax
+	push	ebx
+	push	ecx
+	push	edx
+
+	cmp	al, 9
+	ja	hex
+	or	al, &quot;0&quot;
+	jmp	short pz
+hex:
+	add	al, &quot;A&quot;-10
+
+pz:
+	mov	[cyfra], al
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, cyfra
+	mov	edx, 1
+	int	80h
+
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+
+	ret
+
+section .data
+
+align 16
+bufor 		times 400h db 0		; bufor wielkości jednego kilobajta
+;plik 		times 80 db 0
+plik		db &quot;aaa.txt&quot;,0		; nazwa pliku
+
+info 	db &quot;Program zamienia wielkie litery w pliku na male.&quot;,10
+info_dl		equ	$-info
+
+input1		db &quot;Podaj nazwe pliku do przetworzenia: &quot;
+input1_dl	equ	$-input1
+
+zla_nazwa 	db 10, &quot;Zla nazwa pliku.&quot;
+zla_nazwa_dl	equ	$-zla_nazwa
+
+blad_plik 	db 10,&quot;Blad operacji na pliku. Kod: &quot;
+blad_plik_dl	equ	$-blad_plik
+
+cyfra		db 0
+</PRE>
+
+<P><a name="linux1102" id="linux1102">Ten program chyba nie był za trudny</a>, prawda?
+ Cała treść skupia się na odczytaniu paczki bajtów,
+ewentualnej ich podmianie i zapisaniu ich w to samo miejsce, gdzie były wcześniej.
+</P>
+<P>
+Pliki są podstawowym sposobem przechowywania danych. Myślę więc, że się ze mną zgodzicie, iż
+opanowanie ich obsługi jest ważne i nie jest to aż tak trudne, jakby się mogło wydawać.</P>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux10.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux12.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Napisz program, który wykona po kolei następujące czynności:
+  <OL class="alfa">
+   <LI>Utworzy nowy plik</LI>
+   <LI>Zapisze do niego 256 bajtów o wartościach od 00 do FF (nie musicie zapisywać po 1 bajcie)</LI>
+   <LI>Zamknie ten plik</LI>
+   <LI>Otworzy ponownie ten sam plik</LI>
+   <LI>Zapisze odczytane bajty w nowej tablicy 256 słów w taki sposób:
+	<PRE>		00 00 00 01 00 02 00 03 00 04 .... 00 FD 00 FE 00 FF</PRE>
+	czyli każdy oddzielony bajtem zerowym (należy przeczytać wszystkie bajty, po czym ręcznie
+	je przenieść gdzie indziej i <q>wzbogacić</q>)</LI>
+   <LI>Zamknie otwarty plik</LI>
+   <LI>Usunie ten plik</LI>
+  </OL>
+ </LI>
+</OL>
+
+</BODY></HTML>

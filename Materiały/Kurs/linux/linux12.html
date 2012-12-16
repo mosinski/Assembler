@@ -1,0 +1,190 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 12 - Linia poleceń i środowisko </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux11.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux13.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, linia poleceń, PSP, środowisko,
+	command line, environment, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:58 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 12 - Czego od nas pragną, czyli linia poleceń programu.
+	 Zmienne środowiska</h1></div>
+
+<P>
+Teraz zajmiemy się dość istotną sprawą z punktu widzenia programisty i użytkownika
+oprogramowania: linią poleceń. Nie wszyscy lubią podawać dane programowi w czasie jego
+pracy i odpowiadać na pytania o dane. Często (o ile jest to możliwe) można
+tego oszczędzić i zamiast bezustannie zadawać użytkownikowi pytania, przeczytać, co wpisano
+nam w linię poleceń. Umożliwia to pisanie programów, które raz uruchomione z prawidłową linią
+poleceń nie pytają już się o nic a tylko wykonują swoją pracę bez przeszkadzania
+użytkownikom.
+</P>
+<P>
+Przejdźmy więc do szczegółów. Jeśli ktoś z Was zna język C, to na pewno wie, jak zadeklarować
+funkcję główną programu tak, aby mogła odczytać parametry i zmienne środowiska. Deklaracja
+taka wygląda zazwyczaj tak:</P>
+<PRE>		int main (int argc, char *argv[], char *env[])</PRE>
+<P>gdzie:</P>
+<UL>
+ <LI> <CODE>argc</CODE> - liczba całkowita mówiąca o tym, z jaką ilością parametrów uruchomiono
+	nasz program.
+	</LI>
+ <LI> <CODE><span lang="en">char</span> *argv[]</CODE> -
+ 	 tablica wskaźników do poszczególnych parametrów. Tutaj,
+	<CODE>argv[0]</CODE> - nazwa uruchomionego programu, <CODE>argv[1]</CODE> - pierwszy
+	parametr programu itd.
+	</LI>
+ <LI> <CODE><span lang="en">char</span> *env[]</CODE> - tablica wskaźników do zmiennych środowiskowych.
+	</LI>
+</UL>
+<P>Ale gdzie są te zmienne?<BR>
+Na stosie, oczywiście!<BR>
+Po wykonaniu typowego prologu do funkcji (czyli <code><span lang="en">push</span> ebp / mov ebp, esp</code>),
+ zmienna <q>argc</q> znajduje
+się w [ebp+4], wskaźniki do parametrów linii poleceń zaczynają się od [ebp+8]
+i idą w górę stosu, po nich jest
+wskaźnik zerowy i dalej w górę są wskaźniki do zmiennych środowiska,
+ też zakończone wskaźnikiem zerowym.
+</P>
+<P>
+Wszystko ładnie wygląda w teorii, ale jak tego używać?<BR>
+Aby odpowiedzieć na to pytanie, napisałem ten oto krótki programik. Jedynym celem jego życia
+jest wyświetlenie, z iloma argumentami go wywołano (co najmniej jeden - nazwa programu),
+wyświetlenie tych argumentów i zmiennych środowiska.<BR>
+<BR>
+A teraz kod:</P>
+	<BR><a href="#linux1201" tabindex="1" class="bezdruk">(przeskocz program wyświetlający linię poleceń)</a>
+<PRE>
+; Program wyświetla własną linię poleceń i zmienne środowiskowe.
+;
+; Autor: Bogdan D.
+; kontakt: bogdandr (at) op (dot) pl
+;
+; nasm -O999 -f elf liniap.asm
+; ld -s -o liniap liniap.o bibl/lib/libasmio.a
+;
+; fasm liniap.asm liniap.o
+; ld -s -o liniap liniap.o bibl/lib/libasmio.a
+
+	; przyda się nam moja biblioteczka
+%include &quot;bibl/incl/linuxbsd/nasm/std_bibl.inc&quot;
+section .text
+global _start
+
+; FASM:
+; format ELF
+; include &quot;bibl/incl/linuxbsd/fasm/std_bibl.inc&quot;
+; section &quot;.text&quot; executable
+; public _start
+
+
+_start:
+	push	ebp		; typowy prolog, o którym wspomniałem
+	mov	ebp, esp
+
+%idefine	argc	ebp+4		; liczba parametrów
+%idefine	argv	ebp+8		; parametry
+
+; FASM:
+; 	argc	equ	ebp+4		; liczba parametrów
+;	argv	equ	ebp+8		; parametry
+
+
+	mov	eax, [argc]		; EAX = liczba parametrów
+	pisz32e				; wypisz EAX
+	nwln				; przejdź do nowej linii
+
+	xor	edi, edi		; zerujemy licznik
+					; wyświetlonych parametrów
+
+wypisz_argv:
+	cmp	edi, eax		; czy liczba wyświetlonych =
+					; = liczba parametrów?
+	je	koniec_wypisz_argv	; jeśli tak, to koniec
+					; wyświetlania parametrów
+
+	mov	esi, [argv+edi*4]	; pobierz parametr numer EDI.
+					; każdy wskaźnik jest czterobajtowy,
+					; dlatego mnożymy EDI przez 4.
+
+	pisz_esi			; wypisz napis pod adresem ESI
+					; czyli nasz parametr
+	nwln				; przejdź do nowej linii
+
+	add	edi, 1			; wybieramy kolejny parametr
+	jmp	short	wypisz_argv	; i idziemy pisać od nowa
+
+koniec_wypisz_argv:
+			; parametry się skończyły. Teraz będzie jeden
+			; wskaźnik zerowy i zmienne środowiska
+
+	inc	edi			; przeskocz wskaźnik zerowy
+
+wypisz_env:
+        mov     esi, [argv+edi*4]	; pobierz zmienną środowiskową
+
+	test	esi, esi		; sprawdź, czy nie wskaźnik zerowy
+	jz	koniec_wypisz_env	; jeśli zero, to skończyliśmy
+
+        pisz_esi			; wypisz zmienną środowiskową
+        nwln				; przejdź do nowej linii
+
+        add     edi, 1			; przechodzimy na kolejna zmienną
+        jmp     short   wypisz_env	; i wypisujemy dalej
+
+
+koniec_wypisz_env:
+	wyjscie				; koniec...</PRE>
+
+<P><a name="linux1201" id="linux1201">Jak widać, nie było to aż takie trudne</a>
+ jak się mogło zdawać na początku. Właśnie poznaliście
+kolejną rzecz, która jest łatwa w użyciu, a możliwości której są duże. Teraz będziecie mogli
+śmiało zacząć pisać programy, których jedynym kanałem komunikacyjnym z użytkownikiem
+będzie linia poleceń, co znacznie uprości ich obsługę.<BR>
+</P>
+<P>
+Tylko pamiętajcie o dodaniu kodu wyświetlającego sposób użycia programu, gdy nie podano mu
+żadnych parametrów.</P>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux11.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux13.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Napisz program, który utworzy plik podany jako parametr. Jeśli podano drugi parametr
+	(oddzielony od pierwszego spacją), zapisz jego wartość do tego pliku. Jeśli nie podano
+	żadnych parametrów, niech program wypisze stosowną wiadomość.<BR><BR></LI>
+
+ <LI>Napisz program, który oblicza <acronym title="Największy Wspólny Dzielnik">NWD</acronym>
+ 	 (patrz część 8) dwóch liczb podanych na linii poleceń.
+	Jeśli nie podano wystarczającej liczby parametrów, niech program wyświetli stosowną
+	wiadomość.</LI>
+</OL>
+
+
+</BODY></HTML>

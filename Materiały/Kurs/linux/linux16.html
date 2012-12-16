@@ -1,0 +1,321 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 16 - Łańcuchy znaków </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux15.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, regex, wyrażenia regularne,
+	REP, REPE, REPNE, REPZ, REPNZ, CMPS, SCAS, LODS, STOS, MOVS, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:58 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 16 - Operacje na łańcuchach znaków. Wyrażenia regularne</h1></div>
+
+<P>
+Jak wiemy, łańcuch znaków to nic innego jak jednowymiarowa tablica bajtów. Dlatego podane tutaj
+informacje tak samo działają dla tablic.
+</P>
+
+<P>
+W zestawie instrukcji procesora przeznaczonych jest klika rozkazów przeznaczonych specjalnie
+do operacji na łańcuchach znaków: <code>MOVS</code>, <code>CMPS</code>, <code>SCAS</code>,
+<code>LODS</code>, <code>STOS</code>. To nimi właśnie teraz się zajmiemy.</P>
+<P>
+Rozkazy te operują na łańcuchach spod DS:[ESI/RSI] lub ES:[EDI/RDI] lub obydwu. Rejestry
+segmentowe nie będą tutaj grać dużej roli bo pokazują zawsze na ten sam segment, więc będziemy
+ je pomijać. Oraz, zajmiemy się omówieniem instrukcji tylko na ESI oraz EDI, pomijając rejestry 64-bitowe,
+ dla których wszystko wygląda analogicznie.
+</P>
+<P>
+Instrukcje występują w 4 formach: *B, *W, *D (dla 32-bitowych) i *Q (dla 64-bitowych).
+Operują one odpowiednio na bajtach, słowach, podwójnych słowach i danych 64-bitowych.
+Po każdym wykonaniu pojedynczej operacji zwiększają rejestry
+SI/ESI/RSI i DI/EDI/RDI o 1, 2, 4 lub 8, przechodząc tym samym na następne elementy.
+</P>
+<P>
+<em class="wazne">UWAGA:</em> Zwiększaniem rejestrów *SI i *DI steruje flaga kierunku DF: jeśli równa 0,
+oba rejestry są zwiększane, jeśli 1 - są zmniejszane o odpowiednią liczbę (co pozwala na przykład na
+przeszukiwanie łańcuchów wspak). Flagę DF można wyczyścić instrukcją CLD, a ustawić instrukcją
+STD.
+</P>
+
+
+
+
+
+<BR><BR>
+<HR>
+<h2 class="nag">MOVS</h2>
+
+	<BR><a href="#cmps" tabindex="1" class="bezdruk">(przeskocz MOVS)</a>
+<P>
+Zasadą działania tej instrukcji jest przeniesienie odpowiedniej ilości bajtów spod [ESI] i
+umieszczenie ich pod [EDI]. Ale przeniesienie co najwyżej 4 bajtów to przecież żaden wysiłek:</P>
+<PRE>
+	mov	eax, [esi]
+	mov	[edi], eax</PRE>
+
+<P>Dlatego wymyślono prefiks <code>REP</code> (powtarzaj). Jest on ważny tylko dla instrukcji operujących na
+łańcuchach znaków oraz instrukcji <code>INS</code> i <code>OUTS</code>. Powoduje on powtórzenie
+działania instrukcji ECX razy. Teraz już widać możliwości tej instrukcji. Chcemy przenieść 128 bajtów? Proszę
+bardzo:</P>
+<PRE title="przykład użycia MOVS">
+	mov	esi, zrodlo
+	mov	edi, cel
+	cld				; idź do przodu
+	mov	ecx, 128
+	rep	movsb</PRE>
+
+<P>Oczywiście, dwie ostatnie linijki można było zastąpić czymś takim i też by podziałało:</P>
+<PRE>
+	mov	ecx, 32
+	rep	movsd</PRE>
+
+<P>Sposób drugi oczywiście jest lepszy, bo ma mniej operacji (choć najwięcej czasu i tak zajmuje
+ samo rozpędzenie się instrukcji <code>REP</code>).</P>
+<P>
+Instrukcji <code>REP MOVS*</code> można używać do przenoszenia małej ilości danych. Gdy ilości danych rosną,
+lepiej sprawują się MMX i SSE (patrz: <a href="linux06.html" hreflang="pl">część 6</a>).
+</P>
+
+
+
+
+
+
+
+
+<BR><BR>
+<HR>
+	<h2 class="nag"><a name="cmps" id="cmps">CMPS</a></h2>
+
+	<BR><a href="#scas" class="bezdruk">(przeskocz CMPS)</a>
+<P>
+Ta instrukcja porównuje odpowiednią liczbę bajtów spod [ESI] i [EDI]. Ale nas oczywiście nie
+interesuje porównywanie pojedynczych ilości. Myślimy więc o prefiksie <code>REP</code>, ale po chwili
+zastanowienia dochodzimy do wniosku, że w ten sposób otrzymamy tylko wynik ostatniego porównania,
+wszystkie wcześniejsze zostaną zaniedbane. Dlatego wymyślono prefiksy <code>REPE/REPZ</code> (powtarzaj,
+dopóki równe/flaga ZF ustawiona) oraz <code>REPNE/REPNZ</code> (powtarzaj, dopóki nie równe/flaga ZF = 0).
+<BR>
+Na przykład, aby sprawdzić równość dwóch łańcuchów, zrobimy tak:</P>
+<PRE title="przykład użycia CMPS">
+	mov	esi, lancuch1
+	mov	edi, lancuch2
+
+	mov	ecx, 256	; tyle bajtów maksymalnie chcemy porównać
+	cld
+	repe	cmpsb		; dopóki są równe, porównuj dalej
+	jnz	lancuchy_nie_rowne</PRE>
+
+<P><code>REPE</code> przestanie działać na pierwszych różniących się bajtach. W ECX otrzymamy pewną liczbę.
+Różnica liczby 256 i tej liczby mówi o ilości identycznych znaków i jednocześnie o tym, na
+której pozycji znajdują się różniące się znaki.<BR>
+Oczywiście, jeśli po ukończeniu <code>REPE</code> rejestr ECX=0, to znaczy że sprawdzono wszystkie znaki
+(i wszystkie dotychczas były równe). Wtedy flagi mówią o ostatnim porównaniu.<BR>
+<code>REPE CMPS</code> ustawia flagi jak normalna instrukcja <code>CMP</code>.</P>
+
+
+
+
+
+
+
+
+<BR><BR>
+<HR>
+	<h2 class="nag"><a name="scas" id="scas">SCAS</a></h2>
+
+	<BR><a href="#lods" class="bezdruk">(przeskocz SCAS)</a>
+<P>
+Ta instrukcja przeszukuje łańcuch znaków pod [EDI] w poszukiwaniu bajtu z AL, słowa z AX lub
+podwójnego słowa z EAX. Służy to do szybkiego znalezienia pierwszego wystąpienia danego
+elementu w łańcuchu.<BR>
+Przykład: znaleźć pozycję pierwszego wystąpienia litery Z w łańcuchu <q>lancuch1</q>:</P>
+<PRE title="przykład użycia SCAS">
+	mov	al, &quot;Z&quot;		; poszukiwany element
+	mov	edi, lancuch1
+	mov	ecx, 256
+	cld
+	repne	scasb		; dopóki sprawdzany znak różny
+				; od &quot;Z&quot;, szukaj dalej
+
+	je	znaleziono
+
+	mov	edi, -1		; gdy nie znaleziono, zwracamy -1
+	jmp	koniec
+
+    znaleziono:
+	sub	edi, lancuch1	; EDI = pozycja znalezionego znaku w łańcuchu</PRE>
+
+<P><code>REPNE</code> przestanie działać w dwóch przypadkach: ECX=0 (wtedy nie znaleziono szukanego elementu)
+oraz wtedy, gdy ZF=1 (gdy po drodze natrafiła na szukany element, wynik porównania ustawił flagę ZF).</P>
+
+
+
+
+
+
+
+
+<BR><BR>
+<HR>
+	<h2 class="nag"><a name="lods" id="lods">LODS</a></h2>
+
+	<BR><a href="#stos" class="bezdruk">(przeskocz LODS)</a>
+<P>
+Instrukcje <code>LODS*</code> pobierają do AL/AX/EAX odpowiednią liczbę bajtów spod [ESI]. Jak widać,
+prefiksy <code>REP*</code> nie mają tutaj sensu, bo w rejestrze docelowym i tak zawsze wyląduje ostatni
+element.<BR>
+Ale za to tej instrukcji można używać do pobierania poszczególnych znaków do dalszego
+sprawdzania, na przykład</P>
+<PRE title="przykład użycia LODS">
+	cld
+    petla:
+	lodsb				; pobierz kolejny znak
+
+	cmp	al, 13
+	jne	nie_enter
+
+	cmp	al, &quot;0&quot;
+	je	al_to_zero
+
+	....
+
+	loop	petla</PRE>
+
+
+
+
+
+
+
+
+
+<BR><BR>
+<HR>
+	<h2 class="nag"><a name="stos" id="stos">STOS</a></h2>
+
+	<BR><a href="#regex" class="bezdruk">(przeskocz STOS)</a>
+<P>
+Instrukcja ta umieszcza AL/AX/EAX pod [EDI]. Poza oczywistym zastosowaniem, jakim jest na przykład
+zapisywanie kolejnych podawanych przez użytkownika znaków gdzieś do tablicy, <code>STOS</code> można też
+użyć do szybkiej inicjalizacji tablicy w czasie działania programu lub do wyzerowania pamięci:</P>
+<PRE>
+	mov	edi, tablica
+
+	mov	eax, 11223344h
+	mov	ecx, 1000
+	cld
+	rep	stosd
+	...
+
+	tablica: times 1000 dd 0</PRE>
+
+
+
+
+
+
+<BR><BR>
+<HR>
+	<h2 class="nag"><a name="regex" id="regex">Wyrażenia regularne</a></h2>
+<P>
+Wyrażenia regularne (<span lang="en">regular expressions</span>, regex) to po prostu ciągi znaczków,
+ przy użyciu których możemy opisywać dowolne
+łańcuchy znaków (adresy <span lang="en">e-mail</span>,
+<acronym lang="en" title="World Wide Web">WWW</acronym>, nazwy plików z pełnymi ścieżkami, ...).<BR>
+Na wyrażenie regularne składają się różne symbole. Postaram się je teraz po krótce omówić.</P>
+<UL>
+ <LI> <q>aaa</q> (dowolny ciąg znaków) - reprezentuje wszystkie łańcuchy, które go zawierają, na przykład
+	<q>laaaaaaaaaato</q>.</LI>
+ <LI> ^ - oznacza początek linii (wiersza). Na przykład wyrażenie <q>^asembler</q> reprezentuje
+	wszystkie linie, które zaczynają się od ciągu znaków <q>asembler</q>. Innymi słowy, każda
+	linia zaczynająca się od <q>asembler</q> pasuje do tego wyrażenia.</LI>
+ <LI> $ - oznacza koniec linii. Na przykład wyrażenie <q>asm$</q> reprezentuje wszystkie linie,
+	które kończą się na <q>asm</q>.</LI>
+ <LI> . (kropka) - dowolny znak (z wyjątkiem znaku nowej linii). Na przykład wyrażenie
+	<q>^a.m$</q> reprezentuje linie, które zawierają w sobie tylko a*m, gdzie gwiazdka to
+	dowolny znak (w tym cyfry). Do tego wzorca pasują <q>asm</q>, <q>aim</q>, <q>a0m</q>
+	i wiele innych.
+	</LI>
+ <LI> | (Shift+BackSlash)- oznacza alternatywę. Na przykład wyrażenie <q>a|b|z</q> reprezentuje
+	dowolną z tych trzech liter i żadną inną.</LI>
+ <LI> (,) - nawiasy służą do grupowania wyrazów. Na przykład <q>^(aa)|(bb)|(asm)</q> reprezentuje
+	linie, które zaczynają się od <q>aa</q>, <q>bb</q> lub <q>asm</q>.</LI>
+ <LI> [,] - wyznaczają klasę znaków. Na przykład wszystkie wyrazy zaczynające się od <q>k</q>, <q>a</q> lub
+	<q>j</q> pasują do wzorca <q>[ajk].*</q>. Można tutaj podawać przedziały znaków - wtedy 2 skrajne
+	znaki oddzielamy myślnikiem, na przykład <q>[a-z]</q>. Umieszczenie w środku znaku daszka ^ oznacza
+	przeciwieństwo, na przykład <q>[^0-9]</q> reprezentuje znaki, które nie są cyfrą (a tym samym
+	wszystkie ciągi nie zawierające cyfr).</LI>
+ <LI> ? - oznacza co najwyżej jedno wystąpienie poprzedzającego znaku lub grupy. Na przykład,
+	<q>ko?t</q> reprezentuje wyrazy <q>kot</q> i <q>kt</q>, ale już nie <q>koot</q>.</LI>
+ <LI> * - oznacza dowolną liczbę wystąpień poprzedzającego znaku/grupy. Wyrażenie <q>ko*t</q>
+	reprezentuje więc wyrazy <q>kt</q>, <q>kot</q>, <q>koot</q>, <q>kooot</q>, itd.</LI>
+ <LI> + - oznacza co najmniej jedno wystąpienie poprzedzającego znaku/grupy. Na przykład
+	<q>al(fa)+</q> reprezentuje <q>alfa</q>, <q>alfafa</q>, <q>alfafafa</q> itd, ale nie <q>al</q>.</LI>
+ <LI> {n} - oznacza dokładnie n wystąpień poprzedzającego znaku/grupy. Wyrażenie
+	<q>[0-9]{7}</q> reprezentuje więc dowolny ciąg składający się dokładnie z 7 cyfr.</LI>
+ <LI> {n,} - oznacza co najmniej n wystąpień poprzedzającego znaku/grupy. Wyrażenie
+	<q>[a-z]{2,}</q> reprezentuje więc dowolny ciąg znaków składający się co najmniej z 2 małych
+	liter.</LI>
+ <LI> {n,m} - oznacza co najmniej n i co najwyżej m wystąpień poprzedzającego znaku/grupy.
+	Więc wyrażenie <q>[A-M]{3,7}</q> reprezentuje dowolny ciąg znaków składający się
+	z co najmniej 3 i co najwyżej 7 wielkich liter z przedziału od A do M.</LI>
+ <LI>Jeśli w łańcuchu może wystąpić któryś ze znaków specjalnych, należy go w wyrażeniu
+	poprzedzić odwrotnym ukośnikiem <q>\</q>.</LI>
+</UL>
+<P>Dalsze przykłady:</P>
+<UL>
+ <LI> ([a-zA-Z0-9]+\.?)+[a-zA-Z]+@([a-zA-Z0-9]+\.)+[a-zA-Z]{2,4} - adres e-mail (zapisany
+	tak, by login ani domena nie kończyły się kropką)</LI>
+ <LI> ([a-zA-Z]{3,6}://)?([a-zA-Z0-9/\-]+\.?)+[a-zA-Z0-9]+(#[a-zA-Z0-9\-]+)? - adres
+	(z protokołem lub bez)
+	zasobu na serwerze (zapisany tak, by nie kończył się kropką, może zawierać myślniki
+	a w ostatnim członie także znak #)</LI>
+</UL>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux15.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux17.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+<HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Napisać program zawierający 2 tablice DWORDów o wymiarach 17 na 31, po czym w trakcie
+	działania programu wypełnić każde pole pierwszej wartością FFEEDDCCh. Potem, 8
+	pierwszych elementów skopiować do drugiej tablicy, a resztę drugiej wypełnić wartością
+	BA098765h. Wtedy porównać zawartość obu tablic i wyliczyć pierwszą pozycję, na której
+	się różnią (powinna oczywiście wynosić 9)<BR><BR></LI>
+ <LI>Napisać wyrażenie regularne, które opisze:
+  <UL>
+   <LI>wszystkie wyrażenia deklaracji zmiennych: DB, DW, DP, DQ, DT</LI>
+   <LI>znacznik HTML bez atrybutów, czyli coś wyglądające tak:
+   	&lt; PRE &gt; lub tak: &lt; /LI &gt; (bez spacji).</LI>
+   <LI>liczbę szesnastkową dowolnej niezerowej długości z ewentualnym przedrostkiem <q>0x</q> albo
+	(do wyboru) przyrostkiem <q>H</q> lub <q>h</q>.</LI>
+
+  </UL></LI>
+</OL>
+
+
+</BODY></HTML>

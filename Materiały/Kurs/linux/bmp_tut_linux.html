@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Wyświetlanie obrazków BMP </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm">
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Wyświetlanie obrazków BMP w asemblerze pod Linuksem">
+<META NAME="Keywords" CONTENT="BMP, assembler, asm, asembler, bitmapa, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Wed, Mar 23 2011 17:58:45 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Wyświetlanie obrazków BMP pod Linuksem</h1>
+
+<P>
+Jeśli przejrzeliście mój poprzedni kurs związany z grafiką, to umiecie już coś samodzielnie
+narysować.</P>
+<P>
+Ale przecież w Internecie (i nie tylko) jest tyle ciekawych rysunków, nie mówiąc już o tych,
+które moglibyście stworzyć dla jakiegoś specjalnego celu, na przykład swojej własnej gry. Dlatego
+teraz pokażę, jak takie rysunki wyświetlać. Ze względu na prostotę formatu, wybrałem pliki
+typu BMP (bitmapy). Plik, który wyświetlimy, powinien mieć rozmiar 320x200 pikseli w 256
+kolorach (można oczywiście wziąć dowolną inną rozdzielczość, ale trzeba wtedy dobrać tryb graficzny).<BR>
+Wszystkie operacje na plikach zostały już przez mnie szczegółowo opisane w jednej z części
+mojego kursu, więc tutaj nie będziemy poświęcać im zbyt wiele uwagi.<BR>
+Ale przejdźmy wreszcie do interesujących nas szczegółów.</P>
+<P>
+Powinniście zaopatrzyć się w cokolwiek, co opisuje format BMP. Informacje, z których
+będę tutaj korzystał, znalazłem w Internecie (niestety, nie pamiętam już gdzie, ale możecie
+poszukać na <A HREF="http://www.wotsit.org/" hreflang="en" tabindex="1">Wotsit.org</A>).<BR>
+A oto nagłówek pliku BMP (składnia języka Pascal niestety, informacja:
+<q>Piotr Sokolowski, 6 maja 1998r</q>):</P>
+	<BR><a href="#lbmp_tut01" class="bezdruk">(przeskocz opis nagłówka)</a>
+<PRE title="nagłówek BMP" lang="en">
+	Type
+ 	 TBitMapHeader =
+  	  Record
+		bfType :             Word; (dwa bajty)
+   		bfSize :             LongInt; (cztery bajty)
+   		bfReserved :         LongInt;
+   		bfOffBits :          LongInt;
+   		biSize :             LongInt;
+   		biWidth :            LongInt;
+   		biHeight :           LongInt;
+   		biPlanes :           Word;
+   		biBitCount :         Word;
+   		biCompression :      LongInt;
+   		biSizeImage :        LongInt;
+   		biXPelsPerMeter :    LongInt;
+   		biYPelsPerMeter :    LongInt;
+   		biClrUsed :          LongInt;
+   		biClrImportant :     LongInt;
+  	  End;
+</pre>
+<P>Gdzie:</P>
+<ul>
+ <li><span lang="en">bftype</span> - jest to dwubajtowa sygnatura <q>BM</q></li>
+ <li><span lang="en">bfsize</span> - czterobajtowy rozmiar pliku</li>
+ <li><span lang="en">bfreserved</span> - pole zarezerwowane (0)</li>
+ <li><span lang="en">bfoffbits</span> - przesunięcie (adres) początku danych graficznych</li>
+ <li><span lang="en">bisize</span> - podaje rozmiar nagłówka</li>
+ <li><span lang="en">biwidth</span> - wysokość bitmapy w pikselach</li>
+ <li><span lang="en">biheight</span> - szerokość bitmapy w pikselach</li>
+ <li><span lang="en">biplanes</span> - liczba planów (prawie zawsze ma wartość 1)</li>
+ <li><span lang="en">bibitcound</span> - liczba bitów na piksel. Przyjmuje wartość 1,4,8 lub 24.</li>
+ <li><span lang="en">bicompression</span> - sposób kompresji</li>
+ <li><span lang="en">bisizeimag</span> - rozmiar obrazka w bajtach. W przypadku bitmapy nieskompresowanej równe 0.</li>
+ <li><span lang="en">biXpelspermeter, biYpelspermeter</span> - liczba pikseli na metr</li>
+ <li><span lang="en">biclrused</span> - liczba kolorów istniejącej palety, a używanych właśnie przez bitmapę</li>
+ <li><span lang="en">biclrimporant</span> - określa, który kolor bitmapy jest najważniejszy, gdy równy
+ 	 0 to wszystkie	są tak samo istotne.</li>
+</ul>
+
+<P><a name="lbmp_tut01" id="lbmp_tut01">Ale spokojnie - nie musicie znać tych wszystkich pól</a>,
+ bo my nie będziemy wszystkich używać.
+Ściśle mówiąc, nie będziemy używać ani jednego z tych pól!<BR>
+No to po co to wszystko?<BR>
+Po to, aby znać długość nagłówka pliku (54 bajty), który ominiemy przy analizie pliku.</P>
+<P>
+Po nagłówku idzie paleta 256 kolorów * 4 bajty/kolor = kolejny 1<acronym title="kilobajt">kB</acronym>.
+Jeśli macie jakieś wątpliwości co do
+tego jednego kilobajta, to słusznie. Oczywiście, do opisu koloru wystarczą 3 bajty (odpowiadające
+kolorom czerwonemu, zielonemu i niebieskiemu - RGB), co daje razem 768 bajtów. Co czwarty bajt
+nie zawiera żadnej istotnej informacji i będziemy go pomijać (zmienna <q>z</q> w programie).</P>
+<P>
+Zaraz po palecie jest obraz, piksel po pikselu. Niestety, nie jest to tak logiczne
+ustawienie, jak byśmy sobie tego życzyli. Otóż, pierwsze 320 bajtów to ostatni wiersz obrazka,
+drugie 320 - przedostatni, itd. Dlatego trzeba będzie troszkę pokombinować.</P>
+<P>
+W tym artykule też wykorzystam możliwości biblioteki <span class="b">SVGAlib</span>, ze względu na prostotę
+ jej opanowania. Aby móc z niej korzystać, musicie zainstalować pakiety svgalib oraz
+ svgalib-devel lub po prostu samemu skompilować bibliotekę, jeśli pakiety nie są dostępne.</p>
+<P>
+Do działania programów pod X-ami potrzebne mogą być uprawnienia do pliku
+ <span class="b">/dev/console</span> a pod konsolą tekstową - do pliku <span class="b">/dev/mem</span>.</P>
+
+<P>
+ Zwróćcie uwagę na
+ <em class="wazne">sposób kompilacji</em> poniższego programu. Korzystamy z bibliotek
+ dostępnych dla programistów języka C, więc do łączenia programu w całość
+ najlepiej użyć GCC - zajmie się on
+ dołączeniem wszystkich niezbędnych bibliotek. A skoro używamy gcc, to funkcja
+ główna zamiast _start, <em class="wazne">musi się
+ nazywać main</em> - tak samo jak funkcja główna w programach napisanych w C.
+ I tak samo, zamiast funkcji wychodzenia
+ z programu, możemy użyć komendy RET, aby zamknąć program.
+</P>
+
+<P>
+Ale dobierzmy się wreszcie do kodu (składnia FASM):</P>
+
+	<BR><a href="#lbmp_tut03" class="bezdruk">(przeskocz program)</a>
+<PRE title="program wyświetlający bitmapę">
+; Program wyświetlający obrazek BMP pod Linuksem z wykorzystaniem SVGAlib
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+;   fasm bmp.fasm
+;   gcc -o bmp bmp.o -lvga
+
+format ELF
+section &quot;.text&quot; executable
+
+public	main
+
+G320x200x256	= 5
+TEXT		= 0
+
+extrn	vga_setmode
+extrn	vga_drawscansegment
+extrn	vga_setpalvec
+
+
+main:
+	mov	eax, 5		; otwieranie pliku
+	mov	ebx, plik	; adres nazwy
+	mov	ecx, 0		; odczyt
+	mov	edx, 400o	; - R-- --- ---
+	int	80h
+
+	cmp	eax, 0		; czy błąd?
+	jng	koniec
+
+	mov	ebx, eax	; EBX = deskryptor
+
+	mov	eax, 19		; zmiana pozycji w pliku
+	mov	ecx, 54		; idziemy tyle bajtów...
+	mov	edx, 0		; ...od początku pliku
+	int	80h
+
+	cmp	eax, 0
+	jge	seek_ok
+
+problem:			; tu trafiamy po błędzie obsługi pliku
+	push	eax
+	mov	eax, 6
+	int	80h		; zamykamy plik
+	pop	eax
+
+	jmp	koniec
+
+seek_ok:
+	xor	esi, esi	; indeks do tablicy &quot;paleta&quot;
+
+czytaj_pal:
+	mov	eax, 3		; czytaj z pliku
+	mov	ecx, b		; pod ten adres
+	mov	edx, 4		; 4 bajty (zmienne b, g, r i z)
+	int	80h
+
+	cmp	eax, 0		; czy błąd?
+	jl	problem
+
+				; ustawiamy paletę:
+	mov	al, [r]
+	shr	al, 2		; dzielimy przez 4, ograniczając liczby do
+				; przedziału 0-63
+	and	eax, 3fh	; zerujemy pozostałe bity
+	mov	[paleta+esi], eax     ; paleta[esi] = [r] / 4
+
+	mov	al, [g]
+	shr	al, 2
+	and	eax, 3fh
+	mov	[paleta+esi+1*4], eax ; paleta[esi] = [g] / 4
+
+	mov	al, [b]
+	shr	al, 2
+	and	eax, 3fh
+	mov	[paleta+esi+2*4], eax ; paleta[esi] = [b] / 4
+
+	add	esi, 3*4	; przejdź o 3 miejsca dalej -
+				; na kolejne wartości RGB
+				; każde miejsce zajmuje 4 bajty
+
+	cmp	esi, 256*3*4	; sprawdź, czy nie zapisaliśmy
+				; już wszystkich kolorów
+	jb	czytaj_pal
+
+wyslij_palete:
+	push	dword G320x200x256
+	call	vga_setmode	; ustawiamy tryb graficzny:
+				; 320x200 w 256 kolorach
+	add	esp, 1*4	; zdejmujemy argument ze stosu
+
+	push	dword paleta
+	push	dword 256
+	push	dword 0
+	call	vga_setpalvec	; ustawiamy paletę barw
+	add	esp, 3*4	; zdejmujemy argumenty ze stosu
+
+	mov	edi, 200	; tyle linii wyświetlimy
+obrazek:
+	push	edi		; zachowaj EDI
+	mov	eax, 3		; czytaj z pliku
+	mov	ecx, kolor	; do tej zmiennej
+	mov	edx, 320	; 320 bajtów (jedną linię obrazu)
+	int	80h
+
+	cmp	eax, 0
+	jge	.dalej
+
+				; w razie błędu wyłączamy tryb graficzny
+	push	dword TEXT
+	call	vga_setmode	; ustawiamy tryb tekstowy 80x25
+	add	esp, 1*4
+
+	jmp	problem
+.dalej:
+
+	push	dword 320	; tyle bajtów na raz wyświetlić
+	dec	edi		; teraz EDI = numer linii na ekranie (0-199)
+	push	edi		; numer linii, na której wyświetlić dane
+	push	dword 0		; numer kolumny
+	push	dword kolor	; dane do wyświetlenia
+	call	vga_drawscansegment
+	add	esp, 4*4
+
+	pop	edi		; przywróć EDI
+
+	dec	edi		; zmniejsz numer wyświetlanej linii
+	jnz	obrazek		; jeśli EDI różne od zera, rób kolejne linie
+
+	mov	eax, 6
+	int	80h		; zamknij plik
+
+	mov	eax, 3
+	xor	ebx, ebx
+	mov	ecx, z
+	mov	edx, 1
+	int	80h		; czekamy na klawisz
+
+	push	dword TEXT
+	call	vga_setmode	; ustawiamy tryb tekstowy 80x25
+	add	esp, 1*4
+
+	xor	eax, eax	; kod błędu=0 (brak błędu)
+koniec:
+	mov	ebx, eax
+	mov	eax, 1
+	int	80h		; wyjście z programu
+
+
+section &quot;.data&quot; writeable
+
+plik		db	&quot;test.bmp&quot;, 0
+paleta:		times 768*4 db 0
+b		db 0
+g		db 0
+r		db 0
+z		db 0
+kolor:		times 320 db 0
+</PRE>
+
+<P><a name="lbmp_tut03" id="lbmp_tut03">Mam nadzieję, że kod jest dość jasny.</a>
+ Nawet jeśli znacie asemblera tylko w takim stopniu, w
+jakim to jest możliwe po przeczytaniu mojego kursu, zrozumienie tego programu nie powinno
+sprawić Wam kłopotów.</P>
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+</BODY></HTML>

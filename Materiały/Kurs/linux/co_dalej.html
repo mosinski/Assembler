@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Pomysły na programy i projekty </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm">
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Pomysły na programy i projekty">
+<META NAME="Keywords" CONTENT="asm, assembler, asembler">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite/Kate; www.kate-editor.org">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:57 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Co dalej z tą wiedzą?</h1>
+
+<P>
+Przebrnęliście przez kurs, może przebrnęliście także przez mini-kursy. Zdobyliście trochę
+wiedzy. Raz na jakiś czas przydałoby się z niej skorzystać, by nie zapomnieć, o co w tym
+wszystkim chodziło. Ale czasem trudno jest znaleźć pomysł na jakiś ciekawy program, który
+można byłoby napisać. Dlatego poniżej przedstawiam Wam kilka propozycji, gdzie wiedza o
+programowaniu w asemblerze może się przydać.
+</P>
+<P>
+<em class="wazne">UWAGA</em>: część z tych projektów jest dość zaawansowana, nie każdy
+będzie mógł wszystko od razu napisać. To normalne. Lista poniżej przedstawia tylko moje
+propozycje. Zawsze możecie pisać inne programy. Zachęcam też do przysyłania swoich ciekawych
+pomysłów do dopisania do listy. Najlepiej jeśli projekt będzie ciekawy i nowy lub rzadko
+spotykany (nie każdy musi mieć swój edytor tekstu).</P>
+<ol>
+ <li>kalkulator - 4 podstawowe działania, wpisywanie z klawiatury (wybór działania z góry
+ 	lub między podawaniem liczb)</li>
+ <li>kalkulator - 4 podstawowe działania, potęgowanie i pierwiastkowanie dowolnych stopni,
+ 	silnia, funkcje trygonometryczne, logarytmy, zamiana podstaw systemu liczenia
+ 	(także dla ułamków), zamiana stopni na radiany i na odwrót, wczytywanie
+ 	parametrów z klawiatury, linii poleceń lub pliku</li>
+ <li>program wyświetlający wszystkie dostępne informacje o procesorze (najpierw typ, a
+ 	jeśli obsługuje <code lang="en">CPUID</code>, to także wszystkie informacje stamtąd, wliczając w to
+ 	informacje rozszerzone otrzymywane z EAX=8000000xh)</li>
+ <li>program wyświetlający wszystkie informacje o znalezionych napędach
+ 	<acronym lang="en" title="Floppy Disk Drive">FDD</acronym>,
+ 	<acronym lang="en" title="Hard Disk Drive">HDD</acronym> i
+	<acronym lang="en" title="Compact Disc">CD</acronym>/
+	<acronym lang="en" title="Digital Versatile Disc">DVD</acronym>
+	(na przykład model, tryb pracy) oraz ilości pamięci
+	<acronym lang="en" title="Random Access Memory">RAM</acronym> w komputerze</li>
+ <li>program wyświetlający numer seryjny płyty głównej lub
+ 	<acronym lang="en" title="Basic Input/Output System">BIOS</acronym>u (jako że zwykle jest w
+ 	różnych miejscach, należy znaleźć najdłuższy ciąg znaków
+ 	<acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>).
+ 	</li>
+ <li>program wyświetlający wszystkie informacje o znalezionych urządzeniach
+ 	<acronym lang="en" title="Peripheral Component Interconnect">PCI</acronym></li>
+ <li>program wyświetlający wszystkie informacje o znalezionych urządzeniach
+ 	<acronym lang="en" title="Universal Serial Bus">USB</acronym></li>
+ <li>prosty program do wysyłania treści (komend, plików) przez port szeregowy i równoległy</li>
+ <li>rozbudowany program do wysyłania treści (komend, plików) przez port szeregowy i równoległy:
+ 	obsługa linii poleceń, wszystkich parametrów transmisji, sekwencji sterujących ANSI,
+ 	z buforem wejściowym i możliwością obsługi wielu portów na raz (poprzez zmianę
+ 	zawartości ekranu), z obsługą sieci itd.</li>
+ <li>wszystkie powyższe programy umieścić w bootsektorze dyskietki</li>
+ <li>wszystkie powyższe programy umieścić w bootsektorze bootowalnej płyty CD
+ 	(system plików w standardzie
+ 	<acronym title="International Organization for Standardization" lang="en">ISO</acronym>-9660)
+ 	</li>
+ <li>program umożliwiający przeglądanie obrazków w różnych formatach (najlepiej dla
+ 	<a href="http://www.freedos.org" hreflang="en"
+ 	><acronym lang="en" title="Disk Operating System">DOS</acronym>a</a>, bo
+ 	niewiele tam takich pewnie jest, ale może być pod inny system)</li>
+ <li>odtwarzacz plików WAV i MID (lub także innych) - także najlepiej dla
+ 	<a href="http://www.freedos.org" hreflang="en">DOSa</a>, ale może być pod
+ 	inny system. Jeśli obsługiwane będą pliki MID, dobrze byłoby mieć możliwość wpisania
+ 	własnych fontów dźwiękowych (z pliku do karty)</li>
+ <li>rozszerzenie możliwości <a href="http://www.freedos.org" hreflang="en">DOS</a>owego
+ 	sterownika CON (konsola) o wyświetlanie tekstu w kodowaniu
+ 	<acronym lang="en" title="Unicode Transformation Format">UTF</acronym>,
+ 	na przykład <a href="http://pl.wikipedia.org/wiki/UTF-8" hreflang="pl">UTF-8</a></li>
+ <li>biblioteka bezpośredniego dostępu do systemu plików, na przykład FAT12, FAT16, FAT32 (najlepiej
+ 	do takiego systemu plików, do którego jeszcze nie ma biblioteki)</li>
+ <li>biblioteka graficzna umożliwiająca ustawienie dowolnego trybu graficznego, narysowanie
+ 	w nim piksela o danym kolorze i pozycji oraz odcinka i koła lub elipsy. Można dodatkowo
+ 	dorobić obsługę przekształceń i trzech wymiarów.</li>
+ <li>dorobienie do <a href="http://cutemouse.sourceforge.net/" hreflang="en">CuteMouse</a>
+ 	obsługi myszy USB w DOSie (najlepiej z obsługą rozgałęziaczy USB)</li>
+ <li>sterownik <a href="http://www.freedos.org" hreflang="en">DOS</a>owy (czy to SYS, czy
+ 	<acronym title="Terminate and Stay Resident" lang="en">TSR</acronym>)
+ 	do obsługi klawiatur USB (najlepiej z obsługą rozgałęziaczy USB)</li>
+ <li>rozszerzenie możliwości <a href="http://flatassembler.net/" hreflang="en">FASMa</a>
+ 	o czytanie kodu z obiektów nie będących plikami (potoki, gniazda, standardowe wejście
+ 	i cokolwiek jeszcze, co nie obsługuje zmiany pozycji) i zapisywanie pliku wynikowego
+ 	do takich obiektów (na przykład standardowe wyjście)</li>
+ <li>makra typu <span lang="en">in-line</span> w FASMie</li>
+ <li>DOSowy program rezydentny wydający jakiś dźwięk z głośniczka przy naciskaniu klawiszy
+    na klawiaturze/myszy (najlepiej jeden klawisz - jeden dźwięk)</li>
+ <li>biblioteka sieciowa dla <a href="http://www.freedos.org" hreflang="en">DOS</a>a
+    (najlepiej trzymająca się standardów - nazw funkcji, parametrów)
+    z obsługą jak największej liczby protokołów
+    (<acronym title="Transmission Control Protocol" lang="en">TCP</acronym>,
+    <acronym title="User Datagram Protocol" lang="en">UDP</acronym>,
+    <acronym title="Internet Control Message Protocol" lang="en">ICMP</acronym>)</li>
+ <li>program usuwający wszystkie niedrukowalne znaki z pliku (lub zastępujący je spacjami).
+    Powinien móc operować na standardowym wejściu i wyświetlać na standardowe wyjście.</li>
+ <li>program usuwający wszystkie drukowalne znaki z pliku (lub zastępujący je spacjami).
+    Powinien móc operować na standardowym wejściu i wyświetlać na standardowe wyjście.</li>
+ <li>program usuwający wszystkie sekwencje ANSI z pliku.
+    Powinien móc operować na standardowym wejściu i wyświetlać na standardowe wyjście.</li>
+ <li>program usuwający z pliku wszystkie sekwencje UTF o długości 2 lub więcej bajtów.
+    Powinien móc operować na standardowym wejściu i wyświetlać na standardowe wyjście.</li>
+ <li>dodać obsługę dysków USB we <a href="http://www.freedos.org" hreflang="en">FreeDOS</a>ie
+     (najlepiej z obsługą rozgałęziaczy USB)</li>
+ <li>dodać obsługę dysków <acronym title="Serial Advanced Technology Attachment" lang="en">SATA</acronym>
+    (jeśli trzeba) we <a href="http://www.freedos.org" hreflang="en">FreeDOS</a>ie</li>
+ <li>sterownik <a href="http://www.freedos.org" hreflang="en">DOS</a>owy (czy to SYS, czy
+ 	TSR) do obsługi konwerterów USB na RS-232 i na odwrót (najlepiej z obsługą rozgałęziaczy USB)</li>
+ <li>odtwarzacz CD Audio dla <a href="http://www.freedos.org" hreflang="en">DOS</a>a z opcją
+     uruchomienia go jako programu rezydentnego</li>
+</ol>
+
+<P>Sprawą jasną jest, że Wy jesteście autorami swoich kodów i macie do nich pełne prawa. Zachęcam Was
+jednak do publikowania swoich programów na zasadach licencji
+<a href="http://www.gnu.org/licenses/gpl.html" hreflang="en">GPL</a>
+lub
+<a href="http://www.gnu.org/licenses/lgpl.html" hreflang="en">LGPL</a> (w przypadku bibliotek).
+Dzięki temu Wasze prawa zostaną zachowane, a wiele innych projektów będzie mogło korzystać z
+Waszych osiągnięć, dzięki czemu zostaniecie zapamiętani.
+</P>
+<P>
+Jeśli macie zamiar udostępnić kody źródłowe swoich dzieł, byłoby też dobrze, gdyby były one
+w składni jednego z darmowych kompilatorów (jak
+<A HREF="http://nasm.sourceforge.net" hreflang="en">NASM</a>,
+<A HREF="http://www.tortall.net/projects/yasm" hreflang="en">YASM</a>, czy
+<A HREF="http://www.flatassembler.net" hreflang="en">FASM</a>), żeby nie zmuszać
+nikogo do pobierania czegokolwiek, czego mógłby używać niezgodnie z licencją.</P>
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

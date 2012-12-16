@@ -1,0 +1,372 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"     CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language" CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<LINK rel="stylesheet" href="asm.css" type="text/css">
+
+<TITLE> Programowanie w języku asembler </TITLE>
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs programowania w asemblerze">
+<META NAME="Keywords" CONTENT="assembler, asembler, asm, kurs, nauka, linux, linuks, kurs assemblera, kurs asemblera, kurs asma, nauka assemblera, nauka asemblera, nauka asma, bograndr, assembler w linuksie, asembler w linuksie">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite/Kate; www.kate-editor.org">
+</HEAD><BODY>
+
+<div class="bezdruk">
+<A accesskey="0" hreflang="pl" href="ulatwie.htm">Ułatwienia dla niepełnosprawnych</a>
+ (Alt+0; Shift+Alt+0; w Operze: Shift+Esc, potem 0; w Konquerorze: Ctrl, potem 0)<BR>
+</div>
+
+<div class="c"> Witam na mojej skromnej stronie.<BR>
+ Mam nadzieję, że zamieszczone tutaj informacje
+wynagrodzą niezbyt wyszukany wygląd, a moje kursy w szybki i łatwy sposób umożliwią
+każdemu zdobycie niemałych umiejętności w programowaniu z wykorzystaniem języka
+<em class="wazne">asembler</em>.
+<BR><BR></div>
+
+
+
+<BR><BR>
+Jeśli trafiliście tu przez przypadek i nie interesuje Was język asembler,
+to przeczytajcie chociaż
+<A HREF="wstep.htm" tabindex="1" hreflang="pl">wstęp do tematu</A>, aby przekonać się, ile
+	<em class="wazne">błędnych i niesprawiedliwych</em>
+opinii krąży o tym wspaniałym języku w środowisku tak zwanych prawdziwych programistów (którzy
+najczęściej o asemblerze po prostu <em class="wazne">nic nie wiedzą</em>).
+<BR><BR>
+<em class="wazne">UWAGA:</em> Materiały zgromadzone na tej stronie dotyczą procesorów rodziny
+x86, czyli od 8086 poprzez 80586,
+aż do najnowszych modeli Intela oraz wszystkich procesorów zgodnych z procesorami Intela:
+<acronym title="Advanced Micro Devices" lang="en">AMD</acronym>,
+Cyrix,
+Transmeta, ...  Nie wiem nic o programowaniu układów 805x,
+<acronym lang="en" title="Programmable Interrupt Controller">PIC</acronym>, ARM, AVR, Alpha, SPARC,
+PowerPC, Motoroli 68000,
+wyświetlaczy <acronym lang="en" title="Liquid Crystal Display">LCD</acronym> i tym podobnych rzeczy.
+
+
+
+
+<BR><BR>
+<HR>
+<h1 class="c nag">Oto, co ja Wam oferuję</h1>
+<OL class="rom">
+ <li>Kodu źródłowego umieszczonego w tym kursie można używać na zasadach licencji
+ <a href="http://www.gnu.org/licenses/lgpl.html" hreflang="en">GNU LGPL w wersji trzeciej</a>. Wyjątkiem
+ jest program l_mag, którego licencją jest <a href="http://www.gnu.org/licenses/gpl.html"
+ hreflang="en">GNU GPL w wersji trzeciej</a>. Programy innych osób mają swoje licencje.<br><br></li>
+
+ <LI> Kurs języka asembler dla <acronym lang="en" title="Disk Operating System">DOS</acronym>-a
+ 	 online (dla kompilatorów:
+ 	<A HREF="http://community.borland.com/museum/" hreflang="en">Turbo Assembler - TASM</A>,
+	<A HREF="http://sourceforge.net/projects/nasm" hreflang="en"><span lang="en">Netwide Assembler</span> - NASM</A> i
+	<A HREF="http://flatassembler.net" hreflang="en">Flat Assembler - FASM</A>):<BR>
+	<a href="#s01" class="bezdruk">(przeskocz kurs dla DOSa)</a>
+  <UL>
+   <LI><A HREF="dos/a_kurs01.htm" accesskey="3" hreflang="pl">Część 1D</A> - Podstawy, czyli czym to się je.</LI>
+   <LI><A HREF="dos/a_kurs02.htm" hreflang="pl">Część 2D</A> - Pamięć, czyli gdzie upychać coś, co się nie mieści
+        w procesorze.</LI>
+   <LI><A HREF="dos/a_kurs03.htm" hreflang="pl">Część 3D</A> - Podstawowe instrukcje, czyli poznajemy dialekt
+        procesora.</LI>
+   <LI><A HREF="dos/a_kurs04.htm" hreflang="pl">Część 4D</A> - Pierwsze programy, czyli przełamywanie
+	 pierwszych lodów.</LI>
+   <LI><A HREF="dos/a_kurs05.htm" hreflang="pl">Część 5D</A> - Koprocesor, czyli jak liczyć na ułamkach.
+	 Odwrotna Notacja Polska.</LI>
+   <LI><A HREF="dos/a_kurs06.htm" hreflang="pl">Część 6D</A> -
+   	<acronym title="Single Instruction, Multiple Data" lang="en">SIMD</acronym>, czyli jak działa
+   	<acronym title="MultiMedia Extension" lang="en">MMX</acronym>.</LI>
+   <LI><A HREF="dos/a_kurs07.htm" hreflang="pl">Część 7D</A> - Porty, czyli łączność między procesorem a innymi
+        urządzeniami.</LI>
+   <LI><A HREF="dos/a_kurs08.htm" hreflang="pl">Część 8D</A> - Zaawansowane programy, czyli zobaczmy,
+        co ten język naprawdę potrafi.</LI>
+   <LI><A HREF="dos/a_kurs09.htm" hreflang="pl">Część 9D</A> - Narzędzia programisty,
+   	czyli co może nam pomagać w programowaniu.</LI>
+   <LI><A HREF="dos/a_kurs10.htm" hreflang="pl">Część 10D</A> - Nie jesteśmy sami, czyli jak łączyć asemblera
+	 z innymi językami.</LI>
+   <LI><A HREF="dos/a_kurs11.htm" hreflang="pl">Część 11D</A> - Pamięć jest nietrwała, czyli jak
+	 posługiwać się plikami.</LI>
+   <LI><A HREF="dos/a_kurs12.htm" hreflang="pl">Część 12D</A> - Czego od nas pragną, czyli linia poleceń programu.
+	Zmienne środowiska.</LI>
+   <LI><A HREF="dos/a_kurs13.htm" hreflang="pl">Część 13D</A> - Operacje na bitach, czyli to, w czym
+	asembler błyszczy najbardziej.</LI>
+   <LI><A HREF="dos/a_kurs14.htm" hreflang="pl">Część 14D</A> - Operacje o wielokrotnej precyzji,
+	czyli co zrobić, gdy liczby nie mieszczą się w rejestrach.</LI>
+   <LI><A HREF="dos/a_kurs15.htm" hreflang="pl">Część 15D</A> - If/else if/else, do, while, for, switch/case
+	 - czyli o tym, jak używać bloków kontrolnych.</LI>
+   <LI><A HREF="dos/a_kurs16.htm" hreflang="pl">Część 16D</A> - Operacje na łańcuchach znaków. Wyrażenia regularne.</li>
+   <LI><A HREF="dos/a_kurs17.htm" hreflang="pl">Część 17D</A> - Pobieranie i wyświetlanie,
+   	czyli jak komunikować się ze światem.<BR><BR></LI>
+
+
+   <LI>Opis podstawowych funkcji najczęściej używanych <A HREF="dos/dos_int.htm" hreflang="pl">przerwań</A></LI>
+   <LI><A HREF="dos/skankod.htm" hreflang="pl">Skankody i kody
+   	<acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym> klawiszy</A></LI>
+   <LI><A HREF="dos/fntasm.htm" hreflang="pl">Różnice między dyrektywami różnych kompilatorów</A></LI>
+
+  </UL><BR></LI>
+
+ <LI> <a name="s01" id="s01">Kurs języka asembler dla Linuksa</a> online (dla kompilatorów:
+ 	<A HREF="http://sourceforge.net/projects/nasm" hreflang="en">Netwide Assembler - NASM</A> i
+	<A HREF="http://flatassembler.net" hreflang="en">Flat Assembler - FASM</A>):<BR>
+	<a href="#s02" class="bezdruk">(przeskocz kurs dla Linuksa)</a>
+  <UL>
+   <LI><A HREF="linux/bsd.html" hreflang="pl">Informacja</A> dla użytkowników *BSD</LI>
+   <LI><A HREF="linux/linux01.html" accesskey="4" hreflang="pl">Część 1L</A> - Podstawy, czyli czym to się je.</LI>
+   <LI><A HREF="linux/linux02.html" hreflang="pl">Część 2L</A> - Pamięć, czyli gdzie upychać coś, co się nie mieści
+        w procesorze.</LI>
+   <LI><A HREF="linux/linux03.html" hreflang="pl">Część 3L</A> - Podstawowe instrukcje, czyli poznajemy dialekt
+        procesora.</LI>
+   <LI><A HREF="linux/linux04.html" hreflang="pl">Część 4L</A> - Pierwsze programy, czyli przełamywanie pierwszych lodów.
+         </LI>
+   <LI><A HREF="linux/linux05.html" hreflang="pl">Część 5L</A> - Koprocesor, czyli jak liczyć na ułamkach.
+   	Odwrotna Notacja Polska.</LI>
+   <LI><A HREF="linux/linux06.html" hreflang="pl">Część 6L</A> -
+   	<acronym title="Single Instruction, Multiple Data" lang="en">SIMD</acronym>, czyli jak działa
+   	<acronym title="MultiMedia Extension" lang="en">MMX</acronym>.</LI>
+   <LI><A HREF="linux/linux07.html" hreflang="pl">Część 7L</A> - Porty, czyli łączność między procesorem a innymi
+        urządzeniami.</LI>
+   <LI><A HREF="linux/linux08.html" hreflang="pl">Część 8L</A> - Zaawansowane programy, czyli zobaczmy,
+        co ten język naprawdę potrafi.</LI>
+   <LI><A HREF="linux/linux09.html" hreflang="pl">Część 9L</A> - Narzędzia programisty,
+   	czyli co może nam pomagać w programowaniu.</LI>
+   <LI><A HREF="linux/linux10.html" hreflang="pl">Część 10L</A> - Nie jesteśmy sami, czyli jak łączyć asemblera
+	 z innymi językami.</LI>
+   <LI><A HREF="linux/linux11.html" hreflang="pl">Część 11L</A> - Pamięć jest nietrwała, czyli jak
+	 posługiwać się plikami.</LI>
+   <LI><A HREF="linux/linux12.html" hreflang="pl">Część 12L</A> - Czego od nas pragną, czyli linia poleceń programu.
+	Zmienne środowiska.</LI>
+   <LI><A HREF="linux/linux13.html" hreflang="pl">Część 13L</A> - Operacje na bitach, czyli to, w czym
+	asembler błyszczy najbardziej.</LI>
+   <LI><A HREF="linux/linux14.html" hreflang="pl">Część 14L</A> - Operacje o wielokrotnej precyzji,
+	czyli co zrobić, gdy liczby nie mieszczą się w rejestrach.</LI>
+   <LI><A HREF="linux/linux15.html" hreflang="pl">Część 15L</A> - If/else if/else, do, while, for, switch/case
+	 - czyli o tym, jak używać bloków kontrolnych.</LI>
+   <LI><A HREF="linux/linux16.html" hreflang="pl">Część 16L</A> - Operacje na łańcuchach znaków. Wyrażenia regularne.</li>
+   <LI><A HREF="linux/linux17.html" hreflang="pl">Część 17L</A> - Pobieranie i wyświetlanie,
+   	czyli jak komunikować się ze światem.<BR><BR></LI>
+
+
+   <LI> Opis przerwania systemowego Linuksa int 80h: <A HREF="linux/przer80h_1.html" hreflang="pl">funkcje 1-50 (x86)</A></LI>
+   <LI> Opis przerwania systemowego Linuksa int 80h: <A HREF="linux/przer80h_2.html" hreflang="pl">funkcje 51-100 (x86)</A></LI>
+   <LI> Opis przerwania systemowego Linuksa int 80h: <A HREF="linux/przer80h_3.html" hreflang="pl">funkcje 101-150 (x86)</A></LI>
+   <LI> Opis przerwania systemowego Linuksa int 80h: <A HREF="linux/przer80h_4.html" hreflang="pl">funkcje 151-200 (x86)</A></LI>
+   <LI> Opis przerwania systemowego Linuksa int 80h: <A HREF="linux/przer80h_5.html" hreflang="pl">funkcje 201-250 (x86)</A></LI>
+   <LI> Opis przerwania systemowego Linuksa int 80h: <A HREF="linux/przer80h_6.html" hreflang="pl">funkcje 251-300 (x86)</A></LI>
+   <LI> Opis przerwania systemowego Linuksa int 80h: <A HREF="linux/przer80h_7.html" hreflang="pl">funkcje 301-349 (x86)</A></LI>
+   <LI> Opis funkcji systemowych Linuksa 64-bit: <A HREF="linux/syscall64_1.html" hreflang="pl">funkcje 0-50 (x86-64)</A></LI>
+   <LI> Opis funkcji systemowych Linuksa 64-bit: <A HREF="linux/syscall64_2.html" hreflang="pl">funkcje 51-100 (x86-64)</A></LI>
+   <LI> Opis funkcji systemowych Linuksa 64-bit: <A HREF="linux/syscall64_3.html" hreflang="pl">funkcje 101-150 (x86-64)</A></LI>
+   <LI> Opis funkcji systemowych Linuksa 64-bit: <A HREF="linux/syscall64_4.html" hreflang="pl">funkcje 151-200 (x86-64)</A></LI>
+   <LI> Opis funkcji systemowych Linuksa 64-bit: <A HREF="linux/syscall64_5.html" hreflang="pl">funkcje 201-250 (x86-64)</A></LI>
+   <LI> Opis funkcji systemowych Linuksa 64-bit: <A HREF="linux/syscall64_6.html" hreflang="pl">funkcje 251-300 (x86-64)</A></LI>
+   <LI> Opis funkcji systemowych Linuksa 64-bit: <A HREF="linux/syscall64_7.html" hreflang="pl">funkcje 301-312 (x86-64)</A></LI>
+   <LI> Różnice między składnią Intela a AT&amp;T: <A HREF="linux/attintel.html" hreflang="pl">AT&amp;T a Intel</A></LI>
+   <LI> Różnice między dyrektywami NASMa i FASMa: <A HREF="linux/fnasm.html" hreflang="pl">NASM a FASM</A></LI>
+
+  </UL><BR></LI>
+
+ <LI> <a name="s02" id="s02">Mini-kursy dla DOSa</a> (online):<BR>
+	<a href="#s03" class="bezdruk">(przeskocz mini-kursy dla DOSa)</a>
+  <UL>
+   <LI><A HREF="dos/spkr_tut.htm" hreflang="pl">Programowanie głośniczka w asemblerze</A></LI>
+   <LI><A HREF="dos/bibl_tut.htm" hreflang="pl">Pisanie własnych bibliotek</A></LI>
+   <LI><A HREF="dos/diod_tut.htm" hreflang="pl">Manipulacja diodami klawiatury</A></LI>
+   <LI><A HREF="dos/boot_tut.htm" hreflang="pl">Pisanie boot-sektorów</A> + przykładowy bootsektor</LI>
+   <LI><A HREF="dos/pwr_tut.htm" hreflang="pl">Zarządzanie zasilaniem komputera.</A> Wyłączanie
+	monitora, resetowanie programowo, parkowanie głowic twardych dysków.</LI>
+   <LI><A HREF="dos/tryb_txt.htm" hreflang="pl">Bezpośredni dostęp do ekranu</A> z programem do rysowania ramek</LI>
+   <LI><A HREF="dos/tsr_tut.htm" hreflang="pl">Pisanie programów rezydentnych (TSR-ów)</A> z przykładowym programem
+   	<acronym title="Terminate and Stay Resident" lang="en">TSR</acronym></LI>
+   <LI><A HREF="dos/mysz_tut.htm" hreflang="pl">Obsługa myszy w asemblerze</A> z przykładowym programem</LI>
+   <LI><A HREF="dos/graf_tut.htm" hreflang="pl">Rysowanie w trybie graficznym</A> z programem do rysowania linii i koła</LI>
+   <LI><A HREF="dos/cpu_tut.htm" hreflang="pl">Wykrywanie typu procesora</A></LI>
+   <LI><A HREF="dos/uruchtut.htm" hreflang="pl">Uruchamianie innych programów</A> (z przykładem)</LI>
+   <LI><A HREF="dos/alloctut.htm" hreflang="pl">Dynamiczna alokacja pamięci</A></LI>
+   <LI><A HREF="dos/sys_tut.htm" hreflang="pl">Pisanie plików .SYS</A> (z przykładem)</LI>
+   <LI><A HREF="dos/bmp_tut.htm" hreflang="pl">Wyświetlanie obrazków BMP</A> (z programem)</LI>
+   <LI><A HREF="dos/dataczas.htm" hreflang="pl">Pobieranie i ustawianie daty oraz czasu</A> (z programem)</LI>
+   <LI><A HREF="dos/hw_tut.htm" hreflang="pl">Wykrywanie sprzętu</A></LI>
+   <LI><A HREF="dos/portytut.htm" hreflang="pl">Korzystanie z portów komunikacyjnych</A></LI>
+
+  </UL><BR></LI>
+
+ <LI> <a name="s03" id="s03">Mini-kursy dla Linuksa</a> (online):<br>
+	<a href="#s04" class="bezdruk">(przeskocz mini-kursy dla Linuksa)</a>
+  <UL>
+   <LI><A HREF="linux/bsd.html" hreflang="pl">Informacja</A> dla użytkowników *BSD</LI>
+   <LI><A HREF="linux/spkr_tut_linux.html" hreflang="pl">Programowanie głośniczka w asemblerze pod Linuksem</A> z przykładowym programem</LI>
+   <LI><A HREF="linux/bibl_tut_linux.html" hreflang="pl">Pisanie własnych bibliotek pod Linuksem</A></LI>
+   <LI><A HREF="linux/diody_tut_linux.html" hreflang="pl">Manipulacja diodami klawiatury pod Linuksem</A> z przykładowym programem</LI>
+   <LI><A HREF="linux/boot_tut_linux.html" hreflang="pl">Pisanie boot-sektorów pod Linuksem</A> + przykładowy bootsektor</LI>
+   <LI><A HREF="linux/pwr_tut_linux.html" hreflang="pl">Zarządzanie zasilaniem komputera pod Linuksem.</A> Resetowanie programowo,
+   	wyłączanie twardych dysków.</LI>
+   <LI><A HREF="linux/tryb_txt_linux.html" hreflang="pl">Bezpośredni dostęp do ekranu pod Linuksem</A> z programem do rysowania ramek</LI>
+   <LI><A HREF="linux/tsr_tut_linux.html" hreflang="pl">Pisanie programów rezydentnych w Linuksie</A> z przykładowym programem</LI>
+   <LI><A HREF="linux/mysz_tut_linux.html" hreflang="pl">Obsługa myszy w asemblerze pod Linuksem</A> z przykładowym programem</LI>
+   <LI><A HREF="linux/graf_tut_linux.html" hreflang="pl">Rysowanie w trybie graficznym pod Linuksem</A> z programem do rysowania linii i koła</LI>
+   <LI><A HREF="linux/cpu_tut_linux.html" hreflang="pl">Wykrywanie typu procesora pod Linuksem</A></LI>
+   <LI><A HREF="linux/uruch_tut_linux.html" hreflang="pl">Uruchamianie innych programów pod Linuksem</A> (z przykładem)</LI>
+   <LI><A HREF="linux/alloc_tut_linux.html" hreflang="pl">Dynamiczna alokacja pamięci pod Linuksem</A></LI>
+   <LI><A HREF="linux/sys_tut_linux.html" hreflang="pl">Pisanie sterowników (modułów jądra)</A> z przykładowym modułem</LI>
+   <LI><A HREF="linux/bmp_tut_linux.html" hreflang="pl">Wyświetlanie obrazków BMP pod Linuksem</A> (z programem)</LI>
+   <LI><A HREF="linux/dataczas_linux.html" hreflang="pl">Pobieranie i ustawianie daty oraz czasu pod Linuksem</A> (z programem)</LI>
+   <LI><A HREF="linux/siec_linux.html" hreflang="pl">Pisanie programów sieciowych pod Linuksem</A> z przykładowym serwerem i klientem</LI>
+   <LI><A HREF="linux/watki_linux.html" hreflang="pl">Pisanie programów wielowątkowych pod Linuksem</A> z przykładowym programem</LI>
+   <LI><A HREF="linux/porty_tut_linux.html" hreflang="pl">Korzystanie z portów komunikacyjnych pod Linuksem</A> z przykładowym programem</LI>
+
+  </UL><BR></LI>
+
+ <LI><a name="s04" id="s04">Moja biblioteka procedur</a> (napisanych oczywiście w asemblerze)
+ 	dla procesorów x86:<BR>
+	<a href="#s05" class="bezdruk">(przeskocz bibliotekę)</a>
+   <UL>
+    <LI>wyświetlanie i pobieranie liczb całkowitych, od 8 do 64 bitów długości: dwójkowo, ósemkowo,
+    	dziesiętnie i szestnastkowo</LI>
+    <LI>wyświetlanie i pobieranie liczb zmiennoprzecinkowych dowolnej precyzji (32, 64 lub 80
+	bitów) dowolnej postaci, w tym wykładniczej</LI>
+    <LI>wyświetlanie i pobieranie tekstów</LI>
+    <LI>generowanie liczb pseudolosowych od 8 do 64 bitów długości</LI>
+    <LI>wykrywanie rodzaju procesora i koprocesora</LI>
+    <LI>emitowanie dźwięku przez głośniczek</LI>
+    <LI>operacje na łańcuchach znaków</LI>
+    <LI>operacje na spakowanych i niespakowanych liczbach <acronym
+    	title="Binary Coded Decimal">BCD</acronym>, od 8 do 64 bitów długości</LI>
+    <LI>instrukcja obsługi i gotowe przykłady użycia</LI>
+    <LI>wersja Linux/*BSD: numery większości funkcji systemowych, stałe systemowe, numery
+    	błędów systemowych, obsługa składni NASMa i FASMa, część struktur używanych przez
+	 przerwanie int 80h</LI>
+    <LI>wersja DOS/<acronym lang="en" title="Basic Input/Output System">BIOS</acronym>:
+    	 obsługa składni TASMa, FASMa i NASMa</LI>
+   </UL><BR>
+	Wersja dla każdego systemu (DOS, BIOS, Linux, BSD):
+		<A HREF="bibl.zip">bibl.zip</A><BR>
+
+	Wersja DLL dla Windowsa, dzięki uprzejmości <span class="b">Remka</span>:
+	 <A HREF="dos/asm/bibl_dll.zip">bibl_dll.zip</A>
+
+	<BR><BR>
+	Biblioteka przeznaczona jest dla tych, którzy chcą się uczyć asemblera, lecz jeszcze
+	nie chcą zagnieżdżać się w mroczne zakamarki wypisywania i pobierania danych.
+	Wejście/wyjście może dla niektórych okazać się najtrudniejszą rzeczą do napisania w
+	całym programie! Moja biblioteka służy właśnie do tego, aby tym się nie przejmować, a
+	skupić się na tym, co jest najważniejsze - zrozumieniu języka i pisaniu algorytmów.
+	W archiwum znajduje się krótki opis użytkowania: <em class="wazne">bibl\czytaj.txt</em>
+	oraz przykłady zastosowania procedur: <em class="wazne">bibl\przykl\</em>.
+	<BR><BR></LI>
+
+ <LI><A HREF="programy.htm" name="s05" id="s05" hreflang="pl">Różne programy</A> - przykłady w asemblerze,
+ 	konwertery w Perlu, definicje kolorowania składni dla edytora KDE Kate/KWrite.
+ 	<br><br></li>
+<!--
+ <LI><a name="s06" id="s06">Różności</a>:<br>
+	<a href="#s10" class="bezdruk">(przeskocz różności)</a>
+  <UL>
+   <LI>Humor (w języku angielskim): O tym, jak w różnych jezykach programowania <A HREF="strzelan.txt" hreflang="en">strzelić sobie w stopę.</A></LI>
+   <LI><A HREF="http://www.gnu.org/fun/humor.html" hreflang="en">GNU humor</A> (w języku angielskim)</LI>
+   <LI>Humor: <A HREF="tao_programowania.txt" hreflang="pl">TAO Programowania</A></LI>
+   <li>Humor - rysunek wyjaśniający różne <a href="rys/comptech.png">terminy informatyczne</a></li>
+   <LI>Humor: <A HREF="http://matematyka.org/main312030320,3,ymvp.htm" hreflang="pl">O matematyce i matematykach</A></LI>
+   <li><a href="Kostka/index.html" hreflang="pl">Instrukcja skladania Kostki Rubika</a></li>
+  </UL>
+ <BR></LI>
+-->
+
+ <LI>Autoryzowane kopie moich materiałów:<br><br>
+	<ul>
+	 <li>Dział <A HREF="http://www.linuxstorm.org/modules/sections/index.php?op=listarticles&amp;secid=8"
+		hreflang="pl">Programowanie</A> na stronach serwisu <A href="http://www.linuxstorm.org/"
+		hreflang="pl">LinuxStorm</a><br><br></li>
+
+	 <li>Książka <q><a href="http://szkolahakerow.pl/bezpieczenstwo-aplikacji-windows/" hreflang="pl"
+		>Bezpieczeństwo Aplikacji Windows</a></q> w <a href="http://szkolahakerow.pl/"
+		hreflang="pl">Szkole Hakerów</a></li>
+	</ul>
+ 	<br></li>
+
+ <LI><A HREF="linki.htm" name="s10" id="s10" hreflang="pl">Odnośniki do innych stron</A>
+ 	 (kompilatory, kursy, książki, dokumentacja, programy)</LI>
+
+</OL>
+<BR>
+<HR>
+Jeśli macie jakieś pytania lub uwagi dotyczące tej strony, biblioteki lub moich kursów,
+to piszcie.
+Wasze opinie są dla mnie ważne, gdyż dzięki nim mogę bardziej dostosować treść strony do
+Waszych potrzeb.
+<br>
+Proszę <em class="wazne">nie pisać do mnie w sprawach innych procesorów</em> niż te z
+rodziny x86 lub jej 64-bitowej
+następczyni. Nie wiem nic o programowaniu układów 805x,
+PIC, ARM, AVR, Alpha, SPARC, PowerPC, Motoroli 68000, wyświetlaczy LCD i tym podobnych rzeczy.
+<BR><BR>
+Mój adres to bogdandr MAŁPKA op KROPKA pl.<BR>
+Proszę <em class="wazne">NIE dodawać</em> sobie mojego adresu do książki adresowej, a przede
+ wszystkim <em class="wazne">NIE umieszczać</em> go na żadnej stronie internetowej. Osoby, które
+ już to zrobiły, proszę o usunięcie.<br><br>
+
+<A HREF="http://www.jabberpl.org" hreflang="pl">Jabber-ID</A> (to
+<em class="wazne">NIE</em> jest e-mail): bogdro MAŁPKA jabber.gda.pl (klucz
+<a href="http://www.gnupg.org" hreflang="en"
+><acronym title="GNU Privacy Guard" lang="en">GnuPG</acronym></a> /
+<acronym title="Pretty Good Privacy" lang="en">PGP</acronym> ten sam co poniżej)<BR>
+
+<BR><BR>
+Mój certyfikat publiczny:
+<BR>
+MD5 certyfikatu: 4A:D5:A0:81:8A:C9:F0:69:95:73:2C:B4:A9:74:10:48
+<BR>
+SHA1 certyfikatu: 1C:F9:01:4A:34:62:3C:CE:2D:EA:13:EA:94:11:10:74:C8:49:85:90
+<BR>
+Certyfikat wystawcy (jeśli potrzebny):
+<BR>
+MD5 certyfikatu wystawcy: EB:77:B9:23:0F:21:02:2A:29:54:8A:78:A3:A4:8F:20
+<BR>
+SHA1 certyfikatu wystawcy: FE:E7:83:1D:AA:8D:1E:10:32:40:2D:08:1D:23:00:0F:86:C4:48:46
+<BR><BR>
+
+Mój klucz publiczny GnuPG/PGP:
+<BR>
+SHA1 klucza: E91E 699F 1026 D0EF 745E  EC3B 353A D368 1C56 DA1E
+
+
+<BR><BR>
+Jeśli nie wiecie, co zrobić z tym powyżej, to przeczytajcie krótką
+<A HREF="szyfry.htm" hreflang="pl">instrukcję obsługi</A>.
+<BR><HR>
+Jeśli macie pytania ogólne dotyczące asemblera lub jeśli macie problem ze swoimi programami,
+zachęcam Was do pisania na grupy dyskusyjne
+<em class="wazne"><A HREF="news:alt.pl.asm">alt.pl.asm</A></em>,
+<em class="wazne"><A HREF="news:alt.pl.asm.win32">alt.pl.asm.win32</A></em>
+ (nie wszędzie dostępne) lub
+<em class="wazne"><A HREF="news:pl.comp.lang.asm">pl.comp.lang.asm</A></em>
+ (powinna być wszędzie dostępna), aby inni także
+mogli się czegoś nauczyć. My nie wyśmiewamy nikogo za proste pytania!<BR><BR>
+
+<!--Swoje pytania możecie zadawać także na forach poświęconych programowaniu (również w asemblerze):
+<A HREF="http://profesor.niesfornazyta.pl/" hreflang="pl">Forum techniczne</A>,
+<A HREF="http://www.koder.org.pl/forum/index.php" hreflang="pl">Forum koder.org</A>-->
+<!--, <A HREF="http://komputron.com/" hreflang="pl">komputron.com</A>-->.
+
+<BR><BR>
+Aktualnie grupę grupy <span class="b">alt.pl.asm</span> i
+<span class="b">pl.comp.lang.asm</span> można znaleźć między innymi na tych serwerach:<BR>
+<A HREF="news://news.task.gda.pl">news.task.gda.pl</A><BR>
+<A HREF="news://news.gazeta.pl">news.gazeta.pl</A> (trzeba mieć konto)<BR>
+<A HREF="news://news.tpi.pl">news.tpi.pl</A> (dla abonentów TP S.A.)<BR>
+Chętnie <em class="wazne">zbieram informacje</em> o innych serwerach news posiadających te grupy.<BR>
+<BR>
+Polecam też (głównie do czytania) anglojęzyczne grupy dyskusyjne
+<A HREF="news:alt.lang.asm">alt.lang.asm</A> oraz
+<A HREF="news:comp.lang.asm.x86">comp.lang.asm.x86</A> (lepsza).
+<br><br>
+
+<div class="bezdruk">
+<A accesskey="0" hreflang="pl" href="ulatwie.htm">Ułatwienia dla niepełnosprawnych</a>
+ (Alt+0; Shift+Alt+0; w Operze: Shift+Esc, potem 0; w Konquerorze: Ctrl, potem 0)<BR>
+</div>
+
+</BODY></HTML>

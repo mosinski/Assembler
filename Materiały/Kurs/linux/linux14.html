@@ -1,0 +1,713 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 14 - Wielokrotna precyzja </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux13.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux15.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Mon, Jul 4 2011 18:29:36 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 14 - Wielokrotna precyzja, czyli co robić,
+		gdy dane nie mieszczą się w rejestrach</h1></div>
+
+
+<P>
+Czasami w naszych programach zachodzi potrzeba, aby posługiwać się na przykład liczbami przekraczającymi
+4 czy nawet 8 bajtów, a my mamy tylko rejestry 32-bitowe (lub czasem 16-bitowe).<BR>
+Co wtedy zrobić?<BR>
+Odpowiedzi na to właśnie pytanie postaram się udzielić w tej części kursu.
+</P>
+
+<P>
+Do naszych celów posłuży coś, co się nazywa <q>arytmetyką wielokrotnej precyzji</q> (ang.
+<span lang="en">Multiprecision Arithmetic</span>).
+ Generalną zasadą będzie zajmowanie się obliczeniami <q>po kawałku</q>
+(bo z resztą inaczej się nie da) i zapamiętywanie, czy z poprzedniego kawałka wynieśliśmy coś
+<q>w pamięci</q> (do tego celu w prosty sposób wykorzystamy flagę CF, która wskazuje właśnie, czy
+nie nastąpiło przepełnienie).<BR>
+Najpierw kilka ustaleń:</P>
+<OL>
+ <LI>Będę tutaj używał rejestrów 32-bitowych, ale w razie potrzeby dokładnie
+	te same algorytmy działają także dla rejestrów innych rozmiarów.</LI>
+ <LI>Zmienne <q>arg1</q> i <q>arg2</q> mają po 16 bajtów (128 bitów) każda. Na potrzeby nauki
+	wystarczy w sam raz.</LI>
+ <LI>Zmienna <q>wynik</q> ma tyle samo bajtów, co <q>arg1</q> i <q>arg2</q>, z wyjątkiem mnożenia,
+	gdzie oczywiście musi być dwa razy większa.</LI>
+ <LI>Zmienna <q>wynik</q> na początku zawiera zero.</LI>
+ <LI>Kod nie zawsze będzie optymalny, ale chodzi mi o to, aby był jak najbardziej jasny i przejrzysty.
+	</LI>
+</OL>
+<P>A więc do dzieła.</P>
+
+
+
+
+
+<BR>
+<HR>
+<h2 class="nag">Dodawanie</h2>
+
+	<BR><a href="#linux1401" tabindex="1" class="bezdruk">(przeskocz dodawanie)</a>
+<P>
+Dodawanie, podobnie jak uczyli nas w szkole, zaczynamy od najmłodszych
+cyfr (cyfr jedności) - tyle że zamiast pojedynczych cyferek będziemy dodawać całe 32-bitowe
+kawałki naraz. Flaga CF powie nam, czy z poprzedniego dodawania wynosimy coś w pamięci (nawet z
+dodawania dużych liczb wyniesiemy co najwyżej 1 bit <q>w pamięci</q>). To coś
+trzeba oczywiście dodać potem do wyższej części wyniku.<BR>
+No to dodajemy:</P>
+	<BR><a href="#linux1401" class="bezdruk">(przeskocz program do dodawania)</a>
+
+<PRE title="dodawanie dwóch liczb">
+	mov	eax, [arg1]
+	add	eax, [arg2]	; dodajemy 2 pierwsze części liczb
+	mov	[wynik], eax	; i ich sumę zapisujemy w pierwszej
+				; części wyniku. Flaga CF mówi, czy
+				; wynosimy coś w pamięci
+
+	mov	eax, [arg1+4]
+	adc	eax, [arg2+4]	; dodajemy drugie części + to,
+				; co wyszło z poprzedniego dodawania
+				; [arg1] i [arg2] (a to jest w fladze
+				; CF, stąd instrukcja ADC zamiast ADD)
+
+	mov	[wynik+4], eax 	; całość:[arg1+4]+[arg2+4]+&quot;w pamięci&quot;
+				; z pierwszego dodawania zapisujemy tu
+				; Flaga CF zawiera (lub nie) bit
+				; &quot;w pamięci&quot;, ale tym razem z ADC
+
+				; podobnie reszta działania:
+	mov	eax, [arg1+8]
+	adc	eax, [arg2+8]
+	mov	[wynik+8], eax
+
+	mov	eax, [arg1+12]
+	adc	eax, [arg2+12]
+	mov	[wynik+12], eax
+
+	jc	blad_przepelnienie</PRE>
+
+<BR>
+
+
+
+
+
+<BR><HR>
+<h2 class="nag"><a name="linux1401" id="linux1401">Odejmowanie</a></h2>
+
+	<BR><a href="#linux1402" class="bezdruk">(przeskocz odejmowanie)</a>
+<P>
+W szkole uczyli nas, że zaczynamy od najmłodszych cyfr i
+ewentualnie <q>pożyczamy</q> od starszych. Tutaj będziemy robić dokładnie tak samo! Wymaga to
+jednak poznania nowej instrukcji - <code>SBB</code> (<span lang="en">Subtract with Borrow</span>).
+ Działa ona tak samo, jak
+zwykła instrukcja odejmowania <code><span lang="en">SUB</span></code>, ale dodatkowo odejmuje wartość
+ flagi CF, czyli 1 lub 0,
+w zależności od tego, czy w poprzednim kroku musieliśmy <q>pożyczać</q> czy też nie. Ewentualną
+<q>pożyczkę</q> trzeba oczywiście odjąć od wyższej części wyniku.<BR>
+Piszmy więc (od <q>arg1</q> będziemy odejmować <q>arg2</q>):</P>
+	<BR><a href="#linux1402" class="bezdruk">(przeskocz program do odejmowania)</a>
+
+<PRE title="odejmowanie dwóch liczb">
+	mov	eax, [arg1]
+	sub	eax, [arg2]             ; odejmujemy 2 pierwsze części
+	mov	[wynik], eax            ; i zapisujemy wynik
+	                                ; flaga CF mówi, czy była pożyczka
+
+	mov	eax, [arg1+4]
+	sbb	eax, [arg2+4]		; odejmujemy razem z pożyczką (CF),
+	                                ; jeśli w poprzednim odejmowaniu
+					; musieliśmy coś pożyczać
+
+	mov	[wynik+4], eax          ; wynik: [arg1+4]-[arg2+4]-pożyczka
+	                                ; z pierwszego odejmowania
+					; CF teraz zawiera pożyczkę z SBB
+
+					; podobnie reszta działania:
+	mov	eax, [arg1+8]
+	sbb	eax, [arg2+8]
+	mov	[wynik+8], eax
+
+	mov	eax, [arg1+12]
+	sbb	eax, [arg2+12]
+	mov	[wynik+12], eax
+
+	jc	arg1_mniejszy_od_arg2</PRE>
+<BR>
+
+
+
+
+<HR>
+<h2 class="nag"><a name="linux1402" id="linux1402">Zmiana znaku liczby</a></h2>
+
+	<BR><a href="#linux1403" class="bezdruk">(przeskocz NEG)</a>
+<P>
+Teraz zajmiemy się negacją (zmianą znaku liczby). Ta operacja jest o tyle <q>dziwna</q>, że
+wykonujemy ją <q>od góry</q> (od najstarszych bajtów) i po negacji niższych trzeba zadbać o
+<q>pożyczkę</q> we wszystkich wyższych częściach.<BR>
+Popatrzcie (będziemy negować <q>arg1</q>):</P>
+	<BR><a href="#linux1402_1" class="bezdruk">(przeskocz program do negacji)</a>
+
+<PRE title="negacja liczby">
+	neg	dword [arg1+12]         ; negujemy najstarszą część
+
+	neg	dword [arg1+8]          ; negujemy drugą od góry
+	sbb	dword [arg1+12], 0      ; jeśli była pożyczka od starszej
+	                                ; (a prawie zawsze będzie), to tę
+					; pożyczkę odejmujemy od starszej
+
+	neg	dword [arg1+4]          ; negujemy kolejną część i odejmujemy
+	                                ; pożyczki od starszych części
+	sbb	dword [arg1+8], 0
+	sbb	dword [arg1+12], 0
+
+	neg	dword [arg1]            ; negujemy kolejną część i odejmujemy
+	                                ; pożyczki od starszych części
+	sbb	dword [arg1+4], 0
+	sbb	dword [arg1+8], 0
+	sbb	dword [arg1+12], 0</PRE>
+
+<P><a name="linux1402_1" id="linux1402_1">Dla większych liczb</a>
+ nie wygląda to za ciekawie. Dlatego najprostszym sposobem będzie po prostu
+odjęcie danej liczby od zera, do czego zastosujemy poprzedni algorytm odejmowania.</P>
+
+
+
+
+
+<BR><HR>
+<h2 class="nag"><a name="linux1403" id="linux1403">Mnożenie</a></h2>
+
+	<BR><a href="#linux1404" class="bezdruk">(przeskocz mnożenie)</a>
+<P>
+Mnożenie jest nieco bardziej skomplikowane, ale ciągle robione tak jak w szkole, czyli od
+prawej. Ustalmy dla wygody, że arg1 zawiera ABCD, a arg2 - PQRS (każda z liter oznacza 32
+bajty). Ogólny schemat wygląda teraz tak:</P>
+
+	<BR><a href="#linux1403_1" class="bezdruk">(przeskocz schemat mnożenia)</a>
+
+<PRE title="schemat i program mnożenia">
+				A  B  C  D
+			      *	P  Q  R  S
+			      =
+					D*S
+				     C*S
+				  B*S
+			       A*S
+				     D*R
+				  C*R
+			       B*R
+			    A*R
+				  D*Q
+			       C*Q
+			    B*Q
+			 A*Q
+			       D*P
+			    C*P
+			 B*P
+		    + A*P
+		=
+		       F  G  H  I  J  K  L
+
+
+	[wynik]    = L = D*S
+	[wynik+4]  = K = C*S + D*R
+	[wynik+8]  = J = B*S + C*R + D*Q
+	[wynik+12] = I = A*S + B*R + C*Q + D*P
+	[wynik+16] = H = A*R + B*Q + C*P
+	[wynik+20] = G = A*Q + B*P
+	[wynik+24] = F = A*P
+	(rzecz jasna, każdy iloczyn zajmuje 2 razy po 4 bajty, na przykład L zajmuje
+	 [wynik] i częściowo [wynik+4], ale tutaj podałem tylko miejsca,
+	 gdzie pójdą najmłodsze części każdego w iloczynów)</PRE>
+
+<P><a name="linux1403_1" id="linux1403_1">Obliczenia wyglądałyby tak</a>
+ (pamiętamy, że wynik operacji MUL jest w EDX:EAX):</P>
+	<BR><a href="#linux1404" class="bezdruk">(przeskocz program mnożenia)</a>
+<PRE>
+	; przez rozpoczęciem procedury zmienna "wynik" musi być wyzerowana!
+;[wynik] = L = D*S
+
+	mov  eax, dword [arg1]		; EAX = D
+	mul  dword [arg2]		; EDX:EAX = D*S
+	mov  dword [wynik], eax
+	mov  dword [wynik+4], edx
+
+
+;[wynik+4]  = K = C*S + D*R
+
+	mov  eax, dword [arg1+4]	; EAX = C
+	mul  dword [arg2]		; EDX:EAX = C*S
+	add  dword [wynik+4], eax
+	adc  dword [wynik+8], edx
+
+	adc  dword [wynik+12], 0
+
+	mov  eax, dword [arg1]		; EAX = D
+	mul  dword [arg2+4]		; EDX:EAX = D*R
+	add  dword [wynik+4], eax
+	adc  dword [wynik+8], edx
+
+	adc  dword [wynik+12], 0
+
+;[wynik+8]  = J = B*S + C*R + D*Q
+
+	mov  eax, dword [arg1+8]	; EAX = B
+	mul  dword [arg2]		; EDX:EAX = B*S
+	add  dword [wynik+8], eax
+	adc  dword [wynik+12], edx
+
+	adc  dword [wynik+16], 0
+
+	mov  eax, dword [arg1+4]	; EAX = C
+	mul  dword [arg2+4]		; EDX:EAX = C*R
+	add  dword [wynik+8], eax
+	adc  dword [wynik+12], edx
+
+	adc  dword [wynik+16], 0
+
+	mov  eax, dword [arg1]		; EAX = D
+	mul  dword [arg2+8]		; EDX:EAX = D*Q
+	add  dword [wynik+8], eax
+	adc  dword [wynik+12], edx
+
+	adc  dword [wynik+16], 0
+
+;[wynik+12] = I = A*S + B*R + C*Q + D*P
+
+	mov  eax, dword [arg1+12]	; EAX = A
+	mul  dword [arg2]		; EDX:EAX = A*S
+	add  dword [wynik+12], eax
+	adc  dword [wynik+16], edx
+
+	adc  dword [wynik+20], 0
+
+	mov  eax, dword [arg1+8]	; EAX = B
+	mul  dword [arg2+4]		; EDX:EAX = B*R
+	add  dword [wynik+12], eax
+	adc  dword [wynik+16], edx
+
+	adc  dword [wynik+20], 0
+
+	mov  eax, dword [arg1+4]	; EAX = C
+	mul  dword [arg2+8]		; EDX:EAX = C*Q
+	add  dword [wynik+12], eax
+	adc  dword [wynik+16], edx
+
+	adc  dword [wynik+20], 0
+
+	mov  eax, dword [arg1]		; EAX = D
+	mul  dword [arg2+12]		; EDX:EAX = D*P
+	add  dword [wynik+12], eax
+	adc  dword [wynik+16], edx
+
+	adc  dword [wynik+20], 0
+
+;[wynik+16] = H = A*R + B*Q + C*P
+
+	mov  eax, dword [arg1+12]	; EAX = A
+	mul  dword [arg2+4]		; EDX:EAX = A*R
+	add  dword [wynik+16], eax
+	adc  dword [wynik+20], edx
+
+	adc  dword [wynik+24], 0
+
+	mov  eax, dword [arg1+8]	; EAX = B
+	mul  dword [arg2+8]		; EDX:EAX = B*Q
+	add  dword [wynik+16], eax
+	adc  dword [wynik+20], edx
+
+	adc  dword [wynik+24], 0
+
+	mov  eax, dword [arg1+4]	; EAX = C
+	mul  dword [arg2+12]		; EDX:EAX = C*P
+	add  dword [wynik+16], eax
+	adc  dword [wynik+20], edx
+
+	adc  dword [wynik+24], 0
+
+;[wynik+20] = G = A*Q + B*P
+
+	mov  eax, dword [arg1+12]	; EAX = A
+	mul  dword [arg2+8]		; EDX:EAX = A*Q
+	add  dword [wynik+20], eax
+	adc  dword [wynik+24], edx
+
+	adc  dword [wynik+28], 0
+
+	mov  eax, dword [arg1+8]	; EAX = B
+	mul  dword [arg2+12]		; EDX:EAX = B*P
+	add  dword [wynik+20], eax
+	adc  dword [wynik+24], edx
+
+	adc  dword [wynik+28], 0
+
+;[wynik+24] = F = A*P
+
+	mov  eax, dword [arg1+12]	; EAX = A
+	mul  dword [arg2+12]		; EDX:EAX = A*P
+	add  dword [wynik+24], eax
+	adc  dword [wynik+28], edx
+
+	adc  dword [wynik+32], 0</pre>
+<!--
+	mov	eax, [arg1]		; EAX = D
+	mul	dword [arg2]		; EDX:EAX = D*S
+	mov	[wynik], eax
+	mov	[wynik+4], edx
+
+	mov	eax, [arg1+4]		; EAX = C
+	mul	dword [arg2]		; EDX:EAX = C*S
+	add	[wynik+4], eax
+	adc	[wynik+8], edx
+
+	mov	eax, [arg1]		; EAX = D
+	mul	dword [arg2+4]		; EDX:EAX = D*R
+	add	[wynik+4], eax
+	adc	[wynik+8], edx
+
+	;adc	[wynik+12], 0		; gdy będziemy dalej liczyć</PRE>
+-->
+
+
+
+<BR><HR>
+<h2 class="nag"><a name="linux1404" id="linux1404">Dzielenie</a></h2>
+
+	<BR><a href="#linux1405" class="bezdruk">(przeskocz dzielenie)</a>
+<P>
+Dzielenie dwóch liczb dowolnej długości może być kłopotliwe i dlatego zajmiemy się przypadkiem
+dzielenia dużych liczb przez liczbę, która mieści się w 32 bitach. Dzielić będziemy od
+najstarszych bajtów do najmłodszych. Jedna sprawa zasługuje na uwagę: między dzieleniami
+będziemy <em class="wazne">zachowywać resztę w EDX (nie będziemy go zerować)</em>,
+ gdyż w taki sposób otrzymamy
+prawidłowe wyniki. Oto algorytm (dzielimy <q>arg1</q> przez 32-bitowe <q>arg2</q>):</P>
+	<BR><a href="#linux1404_1" class="bezdruk">(przeskocz program dzielenia)</a>
+
+<PRE>
+	mov	ebx, [arg2]	; zachowujemy dzielnik w wygodnym miejscu
+
+	xor	edx, edx	; przed pierwszym dzieleniem zerujemy EDX
+	mov	eax, [arg1+12]	; najstarsze 32 bity
+	div	ebx
+	mov	[wynik+12], eax	; najstarsza część wyniku już jest policzona
+
+				; EDX bez zmian! Zawiera teraz resztkę
+				; z [wynik+12], która jest mniejsza od
+				; EBX. Ta resztka będzie teraz starszą
+				; częścią liczby, którą dzielimy.
+	mov	eax, [arg1+8]
+	div	ebx
+	mov	[wynik+8], eax
+
+				; EDX bez zmian!
+	mov	eax, [arg1+4]
+	div	ebx
+	mov	[wynik+4], eax
+
+				; EDX bez zmian!
+	mov	eax, [arg1]
+	div	ebx
+	mov	[wynik], eax
+				; EDX = reszta z dzielenia</PRE>
+
+<P><a name="linux1404_1" id="linux1404_1">Jeśli wasz dzielnik może mieć więcej</a> niż 32 bity,
+ to trzeba użyć algorytmu podobnego do tego,
+którego uczyliśmy się w szkole. Ale po takie szczegóły odsyłam do AoA (patrz ostatni akapit
+w tym tekście).</P>
+
+
+
+
+
+<BR>
+<HR>
+<h2 class="nag"><a name="linux1405" id="linux1405">Operacje logiczne i bitowe</a></h2>
+
+	<BR><a href="#linux1406" class="bezdruk">(przeskocz operacje bitowe)</a>
+<P>
+Przerobiliśmy już operacje arytmetyczne, przyszła więc kolej na operacje logiczne. Ich
+<q>normalne</q> wersje możecie poznać w <a href="linux13.html"
+hreflang="pl">części 13-tej kursu</a>, teraz zajmiemy się ich rozbudowaną wersją.<BR>
+Na szczęście operacje bitowe <code><span lang="en">AND</span></code>, <code>OR</code>,
+<code>XOR</code> i <code>NOT</code> nie zależą od wyników poprzednich działań,
+więc po prostu wykonujemy je na odpowiadających sobie częściach zmiennych i niczym innym się
+nie przejmujemy. Oto przykład (obliczenie <q>arg1</q> <code><span lang="en">AND</span></code> <q>arg2</q>):</P>
+
+	<BR><a href="#linux1405_1" class="bezdruk">(przeskocz <span lang="en">AND</span>)</a>
+<PRE>
+	mov	eax, [arg1]
+	and	eax, [arg2]
+	mov	[wynik], eax
+
+	mov	eax, [arg1+4]
+	and	eax, [arg2+4]
+	mov	[wynik+4], eax
+
+	mov	eax, [arg1+8]
+	and	eax, [arg2+8]
+	mov	[wynik+8], eax
+
+	mov	eax, [arg1+12]
+	and	eax, [arg2+12]
+	mov	[wynik+12], eax</PRE>
+
+<P><a name="linux1405_1" id="linux1405_1">Pozostałe trzy (OR, XOR i NOT)</a>
+ będą przebiegać dokładnie w ten sam sposób.</P>
+<P>
+Sprawa z przesunięciami (<code>SHL/SHR</code>) i rotacjami jest nieco bardziej skomplikowana, gdyż
+bity wychodzące z jednej części zmiennej muszą jakoś znaleźć się w wyższej części.
+Ale spokojnie, nie jest to aż takie trudne, gdy przypomnimy sobie, że ostatni wyrzucony bit
+ląduje we fladze CF.<BR>
+A co zrobić, gdy chcemy przesuwać o więcej niż jeden bit (wszystkie wyrzucone bity nie
+znajdą się przecież naraz w CF)?<BR>
+Niestety, trzeba to robić po jednym bicie na raz. Ale ani <code>SHL</code> ani <code>SHR</code>
+nie pobiera niczego z flagi CF. Dlatego użyjemy operacji rotacji bitów przez flagę CF.</P>
+
+<P>Pora na przykład (<code>SHL arg1, 2</code>):</P>
+
+	<BR><a href="#linux1405_2" class="bezdruk">(przeskocz SHL)</a>
+<PRE>
+	shl	dword [arg1], 1		; wypychamy najstarszy bit do CF
+	rcl	dword [arg1+4], 1	; wypchnięty bit wyląduje tutaj w
+					; bicie numer 0, a najstarszy zostaje
+					; wypchnięty do CF
+
+	rcl	dword [arg1+8], 1       ; najstarszy bit z [arg1+4] staje się
+	                                ; tutaj najmłodszym, a najstarszy z
+					; tej części ląduje w CF
+	rcl	dword [arg1+12], 1      ; najstarszy bit z [arg1+8] staje się
+	                                ; tutaj najmłodszym, a najstarszy z
+					; tej części ląduje w CF
+
+					; mamy już SHL o 1 pozycję. Teraz
+					; drugi raz (dokładnie tak samo):
+	shl	dword [arg1], 1
+	rcl	dword [arg1+4], 1
+	rcl	dword [arg1+8], 1
+	rcl	dword [arg1+12], 1</PRE>
+
+<P><a name="linux1405_2" id="linux1405_2">Podobnie będzie przebiegać operacja <code>SHR</code></a>
+ (rzecz jasna, <code>SHR</code> wykonujemy <em class="wazne">OD GÓRY</em>):</P>
+	<BR><a href="#linux1405_3" class="bezdruk">(przeskocz SHR)</a>
+<PRE>
+	; SHR arg1, 1
+
+	shr	dword [arg1+12], 1      ; wypychamy najmłodszy bit do CF
+	rcr	dword [arg1+8], 1	;wypchnięty bit wyląduje tutaj w bicie
+	                                ; najstarszym, a najmłodszy zostaje
+					; wypchnięty do CF
+	rcr	dword [arg1+4], 1       ; najmłodszy bit z [arg1+8] staje się
+	                                ; tutaj najstarszym, a najmłodszy z
+					; tej części ląduje w CF
+	rcr	dword [arg1], 1         ; najmłodszy bit z [arg1+4] staje się
+	                                ; tutaj najstarszym, a najmłodszy z
+					; tej części ląduje w CF</PRE>
+
+
+<P><a name="linux1405_3" id="linux1405_3">Gorzej jest z obrotami (<code>ROL</code>, <code>ROR</code>,
+<code>RCL</code>, <code>RCR</code>)</a>, gdyż ostatni wypchnięty bit musi się
+jakoś znaleźć na początku. Oto, jak możemy to zrobić (pokażę ROL arg1, 1):</P>
+	<BR><a href="#linux1405_4" class="bezdruk">(przeskocz ROL)</a>
+<PRE>
+	; najpierw normalny SHL:
+
+	shl	dword [arg1], 1
+	rcl	dword [arg+4], 1
+	rcl	dword [arg+8], 1
+	rcl	dword [arg1+12], 1
+
+	; teraz ostatni bit jest w CF. Przeniesiemy go do
+	; najmłodszego bitu EBX.
+
+	mov	ebx, 0			; tu nie używać XOR! (zmienia flagi)
+	rcl	ebx, 1			; teraz EBX = CF
+					; (można też użyć <q>ADC ebx, 0</q>)
+
+	; i pozostaje nam już tylko dopisać najmłodszy bit w wyniku:
+
+	or	[arg1], ebx		; lub ADD - bez różnicy</PRE>
+
+<P><a name="linux1405_4" id="linux1405_4"><code>ROL</code> o więcej niż 1</a> będzie przebiegać dokładnie tak
+ samo (ten sam kod trzeba powtórzyć wielokrotnie). Sprawa z <code>RCL</code> różni się
+niewiele od tego, co pokazałem wyżej. Ściśle mówiąc, <code>SHL</code> zamieni się na <code>RCL</code>
+i nie musimy zajmować się bitem, który wychodzi do CF (bo zgodnie z tym, jak działa <code>RCL</code>,
+ten bit musi tam pozostać). Cała operacja będzie więc wyglądać po prostu tak:</P>
+	<BR><a href="#linux1405_5" class="bezdruk">(przeskocz RCL)</a>
+<PRE>
+	rcl	dword [arg1], 1
+	rcl	dword [arg+4], 1
+	rcl	dword [arg+8], 1
+	rcl	dword [arg1+12], 1</PRE>
+
+<P><a name="linux1405_5" id="linux1405_5">Operacje <code>ROR</code> i <code>RCR</code>
+przebiegają podobnie</a>:</P>
+	<BR><a href="#linux1405_6" class="bezdruk">(przeskocz ROR)</a>
+<PRE>
+	; ROR arg1, 1
+
+	; najpierw normalny SHR (pamiętajcie, że od góry):
+
+	shr	dword [arg1+12], 1
+	rcr	dword [arg1+8], 1
+	rcr	dword [arg1+4], 1
+	rcr	dword [arg1], 1		; najmłodszy bit został wypchnięty
+
+	; teraz ostatni bit jest w CF. Przeniesiemy go do
+	; najstarszego bitu EBX.
+
+	mov	ebx, 0			; tu nie używać XOR! (zmienia flagi)
+	rcr	ebx, 1			; teraz EBX = 00000000 lub 80000000h
+
+	; i pozostaje nam już tylko dopisać najstarszy bit w wyniku:
+
+	or	[arg1+12], ebx</PRE>
+
+<P><a name="linux1405_6" id="linux1405_6">I już tylko prosty <code>RCR</code></a>:</P>
+	<BR><a href="#linux1406" class="bezdruk">(przeskocz RCR)</a>
+<PRE>
+	rcr	dword [arg1+12], 1
+	rcr	dword [arg1+8], 1
+	rcr	dword [arg1+4], 1
+	rcr	dword [arg1], 1</PRE>
+
+
+
+
+
+
+
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="linux1406" id="linux1406">Porównywanie liczb</a></h2>
+
+	<BR><a href="#linux1407" class="bezdruk">(przeskocz porównywanie)</a>
+<P>
+Porównywanie należy oczywiście zacząć od najstarszej części i schodzić do coraz
+ to niższych części. Pierwsza różniąca się para porównywanych elementów powie nam, jaka
+ jest relacja między całymi liczbami. Porównywać można dowolną liczbę bitów na raz,
+ w tym przykładzie użyję podwójnych słów (32 bity) i będę sprawdzał na równość:</P>
+
+	<BR><a href="#linux1405_7" class="bezdruk">(przeskocz program do porównywania)</a>
+<pre title="Porównywanie liczb wielokrotnej precyzji">
+	mov	eax, [arg1+12]
+	cmp	eax, [arg2+12]	; porównujemy najstarsze części
+	jne	nie_rowne
+	mov	eax, [arg1+8]
+	cmp	eax, [arg2+8]
+	jne	nie_rowne
+	mov	eax, [arg1+4]
+	cmp	eax, [arg2+4]
+	jne	nie_rowne
+	mov	eax, [arg1]
+	cmp	eax, [arg2]	; porównujemy najmłodsze części
+	jne	nie_rowne
+	jmp	rowne
+</pre>
+<P>
+Porównywanie liczb na inne warunki niż równość lub nierówność jest jednak trochę trudniejsze.
+Jest tak dlatego, gdyż nawet jeśli najstarsza część pierwszej liczby
+nie jest, na przykład, większa od najstarszej części drugiej
+liczby, to nie możemy od razu przejść do porównywania drugich części liczb.</P>
+<P>
+Może się zdarzyć, że najstarsza część pierwszej liczby jest mniejsza od
+najstarszej części drugiej liczby, a druga część pierwszej liczby jest większa od
+drugiej części drugiej liczby. Nie możemy się w takim przypadku zgodzić z tym, że pierwsza liczba jest
+większa od drugiej (gdyż w tym przypadku to najstarsze części liczb powinny o tym decydować).</P>
+<P>
+Dlatego należy wprowadzić dodatkowy skok warunkowy po porównaniu każdej pary części liczb,
+na przykład:</P>
+<pre title="Porównywanie liczb wielokrotnej precyzji na to, która jest większa">
+	mov	eax, [arg1+12]
+	cmp	eax, [arg2+12]	; porównujemy najstarsze części
+	ja	pierwsza_wieksza
+	jb	druga_wieksza
+	; skoro ani JA, ani JB, to wiemy, że te części tych liczb są równe
+	mov	eax, [arg1+8]
+	cmp	eax, [arg2+8]
+	ja	pierwsza_wieksza
+	jb	druga_wieksza
+	mov	eax, [arg1+4]
+	cmp	eax, [arg2+4]
+	ja	pierwsza_wieksza
+	jb	druga_wieksza
+	mov	eax, [arg1]
+	cmp	eax, [arg2]	; porównujemy najmłodsze części
+	ja	pierwsza_wieksza
+	jb	druga_wieksza
+	jmp	rowne
+</pre>
+<P>
+Teraz do porównywania drugich i dalszych części liczb przechodzimy tylko w przypadku, gdy
+najstarsze części są równe. W innym przypadku albo pierwsza, albo druga liczba jest większa.
+</P>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P>
+<a name="linux1405_7" id="linux1405_7">To by było na tyle z rozszerzonej arytmetyki</a>.
+ Mam nadzieję, że algorytmy te wytłumaczyłem
+wystarczająco dobrze, abyście mogli je zrozumieć. Jeśli nawet coś nie jest od razu jasne, to
+należy przejrzeć rozdział o instrukcjach procesora i wrócić tutaj - to powinno rozjaśnić
+wiele ewentualnych wątpliwości.
+</P>
+
+<P>
+<a name="linux1407" id="linux1407">Niektóre algorytmy zawarte</a> tutaj wziąłem ze wspaniałej książki
+<A HREF="http://webster.cs.ucr.edu" hreflang="en" lang="en">Art of asembler</a>
+ (<span lang="en">Art of asembly Language Programming</span>, AoA)
+  autorstwa <em class="wazne">Randalla <span lang="en">Hyde</span>'a</em>.
+ Książkę tę zawsze i wszędzie polecam
+jako świetny materiał do nauki nie tylko samego asemblera, ale także architektury komputerów
+i logiki. Książka ta dostępna jest <em class="wazne">ZA DARMO</em>.</P>
+
+
+<br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux13.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux15.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Napisz program, który zrobi, co następuje:
+  <OL class="alfa">
+   <LI>Przemnoży EAX przez EBX (wartości dowolne, ale nie za małe) i zachowa wynik (najlepiej
+	w rejestrach).</LI>
+   <LI>Przemnoży ECX przez EBP.</LI>
+   <LI>Jeśli dowolny wynik wyszedł zero (sprawdzić każdy co najwyżej 1 instrukcją), to niech
+	 przesunie te drugi w prawo o 4 miejsca. Jeśli nie, to niech doda je do siebie.</LI>
+  </OL></LI>
+</OL>
+
+</BODY></HTML>

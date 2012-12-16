@@ -1,0 +1,918 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="asm.css" type="text/css">
+
+<TITLE> Krótki kurs szyfrowania </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="index.htm">
+<link rel="Contents" hreflang="pl" lang="en" href="index.htm">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Krótki przewodnik po współczesnej kryptografii">
+<META NAME="Keywords" CONTENT="szyfr, deszyfr, PGP, GnuPG, GPG, certyfikat, S/MIME, PKCS,
+	 crypto, kryptologia, kryptografia, RSA, El-Gamal, Pretty Good Privacy, ochrona, bezpieczeństwo">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="Kwrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 18:00:01 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Jak nauczyć się szyfrowania</h1>
+<BR>
+Na pewno każdemu z Was zdarzyło się kiedyś wysłać e-maila, którego treść powinna być
+przeczytana wyłącznie przez odbiorcę. Mógł to być list służbowy, zawierający
+ważne dane finansowe lub list bardzo prywatny. Na pewno nie chcielibyście, by taki
+list był przeczytany przez niewłaściwą osobę: szpiega przemysłowego,
+wścibskie rodzeństwo itd.<BR>
+ Tymczasem, nawet jeśli odbiorca chroni
+swój program pocztowy hasłem, to i tak Wasz list, zanim do niego trafi,
+przechodzi (w postaci jawnej) przez jakieś 20-30 serwerów.<BR>
+
+ Nie wierzycie? Wykonajcie polecenie
+<code><span lang="en">traceroute</span> smtp.wasz.serwer.pocztowy.pl</code>
+ (pod <span lang="en">Windows</span> jest <span class="b" lang="en">tracert</span>).<BR>
+
+To polecenie pokazuje, jaką drogę przebywają pakiety (a więc i list), zanim dotrą do
+Waszego serwera pocztowego. Potem jeszcze wasz list przechodzi od tego serwera do
+serwera pocztowego odbiorcy, a potem do niego samego. Długa trasa, nieprawdaż?
+A do tego na każdym skrzyżowaniu (routerze) czeka potencjalne zagrożenie.<BR>
+Ten krótki artykuł uświadomi Wam, <em class="wazne">jak łatwo jest chronić</em> swoją pocztę przed
+nieodpowiednimi osobami oraz dać odbiorcy całkowitą pewność, że dany list pochodzi
+właśnie od Was.<BR><BR>
+
+Spis treści:<br>
+<ul>
+ <li><a hreflang="pl" href="#smime" tabindex="1">Certyfikaty cyfrowe S/MIME</a></li>
+ <li><a hreflang="pl" href="#pgp">Klucze PGP (<span lang="en">Pretty Good Privacy</span>)</a></li>
+ <li><a hreflang="pl" href="#dane">Szyfrowanie danych na dysku</a></li>
+ <li><a hreflang="pl" href="#trans">Zabezpieczanie danych przesyłanych przez sieć</a></li>
+ <li><a hreflang="pl" href="#jakdziala">Jak to wszystko naprawdę działa</a></li>
+</ul>
+
+
+
+
+<!--  ===================================================================================== -->
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="smime" id="smime">S/MIME</a> (certyfikaty cyfrowe, identyfikatory cyfrowe)</h2>
+<BR>
+<a href="#pgp" class="bezdruk" hreflang="pl">(przeskocz do PGP)</a>
+<BR><BR>
+
+Skrót S/MIME oznacza <span lang="en">Secure Multipurpose Internet Mail Extensions</span>. Jest to
+pewien standard, rozszerzający normalne MIME o możliwości szyfrowania.
+S/MIME opiera się na <span class="b">certyfikatach cyfrowych</span>, które zawierają
+ informacje o tym,
+kto jest właścicielem certyfikatu oraz klucze: prywatny i publiczny danej osoby.<BR><BR>
+
+Certyfikaty w standardzie
+ <Acronym title="Public Key Cryptography System" lang="en">PKCS</acronym>, o których tu mowa,
+  <em class="wazne">NIE</em> są zgodne z kluczami w standardzie
+ <acronym title="Pretty Good Privacy" lang="en">PGP</acronym>/<span lang="en">Open</span>PGP, które omówię później.
+<BR><BR>
+
+<span class="b">Klucz prywatny</span> - służy do odszyfrowywania odebranych wiadomości oraz do
+ cyfrowego podpisywania wysyłanych przez nas
+wiadomości. Dzięki temu odbiorca wie, że ich <em class="wazne">treść nie została zmieniona</em>
+ po drodze oraz że wiadomość rzeczywiście <em class="wazne">pochodzi od Was</em>.
+Musi więc być <em class="wazne">chroniony za wszelką cenę!</em><BR><BR>
+
+<span class="b">Klucz publiczny</span> - może być dowolnie rozdawany, gdyż to on umożliwia innym
+wysyłanie nam zaszyfrowanych wiadomości oraz sprawdzania cyfrowego podpisu w
+wiadomościach wysłanych przez nas. <em class="wazne">Musimy posiadać klucz publiczny
+ (certyfikat publiczny) osoby, do której chcemy wysyłać zaszyfrowane wiadomości.</em>
+
+<BR><BR>
+
+Aby móc wysyłać odbiorcy zaszyfrowane wiadomości, wystarczy posiadać jego
+certyfikat publiczny (który zawiera także klucz publiczny). Samemu teoretycznie nie
+trzeba mieć certyfikatu, ale większość programów pocztowych odmówi szyfrowania listów
+bez posiadania własnego certyfikatu, bo nie będzie ich potem można odszyfrować.<BR>
+<BR>
+Ze względów bezpieczeństwa, nie można też szyfrować do odbiorcy, którego certyfikat stracił
+ ważność.
+<BR><BR>
+
+A jak zdobyć dla siebie certyfikat?<BR>
+Jest kilka sposobów:
+<BR><a href="#szyfry00_1" class="bezdruk">(przeskocz sposoby)</a>
+<UL>
+ <LI>wykupić w znanej firmie, na przykład
+     <A HREF="http://www.verisign.com" hreflang="en" lang="en">Verisign</A>,
+     <A HREF="http://www.comodo.com" hreflang="en" lang="en">Comodo</A>,
+     <A HREF="http://www.thawte.com" hreflang="en" lang="en">Thawte</A>,
+     <A HREF="http://www.globalsign.com" hreflang="en" lang="en">GlobalSign</A>. W Polsce
+     certyfikaty wydaje na przykład <A HREF="http://www.certum.pl" hreflang="pl">Unizeto Certum</A>.<BR>
+     Jeśli certyfikat ma być bardzo wiarygodny (a więc i droższy), to należy podać
+     firmie dużo szczegółów o sobie. W zamian dostajemy certyfikat oznaczony dużym
+     zaufaniem i rozpoznawany przez większość programów pocztowych.<BR><BR></LI>
+
+ <LI>dostać za darmo w znanej firmie, na przykład
+     <A HREF="http://www.cacert.org" hreflang="en" lang="en">CAcert</A>,
+     <A HREF="http://www.comodo.com" hreflang="en" lang="en">Comodo</A>.<BR>
+     Zazwyczaj taki certyfikat będzie miał
+     klucz średniej długości (a więc i średniej sile szyfrowania), na przykład 512 bitów,
+     zwykle nie będzie w nim naszego imienia, tylko adres e-mail (który zawsze musi być),
+     a certyfikat (skoro nie podaliśmy żadnych danych pozwalających na identyfikację)
+     będzie miał niższy stopień zaufania i krótki okres ważności. Dlatego polecam
+     Comodo, gdyż można tam wpisać swoje imię i <em class="wazne">wybrać długość klucza</em>,
+     a certyfikat będzie <em class="wazne">ważny przez rok</em> (co jest dość długim okresem
+     w porównaniu z innymi).<BR><BR></LI>
+
+ <LI>wyrobić sobie samemu - wystarczy dowolny system operacyjny z zainstalowanym
+     pakietem <A HREF="http://www.openssl.org" hreflang="en" lang="en">OpenSSL</A> na przykład Linux (ale
+     są też wersje <A HREF="http://www.slproweb.com/products/Win32OpenSSL.html" hreflang="en"
+     ><span lang="en">OpenSSL</span> dla <span lang="en">Windows</span></A>).
+     <BR>Zalety takiego rozwiązania są duże:
+  <UL>
+   <LI>można wybrać klucz dowolnej długości (na przykład 4096 bitów!)</LI>
+   <LI>certyfikat będzie zawierał nasze imię i wszystkie dane, które chcemy umieścić</LI>
+   <LI>może być ważny nawet przez 30 lat!</LI>
+  </UL>
+     Jedyną wadą będzie to, że nie będzie zaufany przez żadną znaną firmę, ale z tym
+     też można sobie poradzić.</LI>
+</UL>
+<a name="szyfry00_1" id="szyfry00_1">Jako że wyrobienie certyfikatu przez
+ <acronym title="World Wide Web" lang="en">WWW</acronym></a> trwa tylko kilka minut i jest dość proste,
+nie będę się tym zajmował. Firmy wydające posiadają dość dobre instrukcje, co należy wykonać.<BR>
+Zamiast tego opiszę tutaj szczegółowo,
+co należy zrobić, aby wyrobić go sobie samemu.<BR><BR>
+
+Wyrabianie certyfikatu z wykorzystaniem oprogramowania <span lang="en">OpenSSL</span>:
+<OL>
+ <LI>Wykonanie certyfikatu podpisanego przez samego siebie, o 2048-bitowym kluczu
+ 	<acronym title="Rivest-Shamir-Adleman" lang="en">RSA</acronym>
+	(oficjalnie zalecana minimalna długość to 1024 bity), ważnego
+     przez około 30 lat:
+	<BR><a href="#szyfry01" class="bezdruk">(przeskocz wyrabianie certyfikatu prywatnego)</a><br>
+     <code lang="en">openssl req -x509 -days 10950 -newkey rsa:2048 -keyout cert1_key.pem -out cert1_cert.pem</code>
+	<br><br>
+	<em class="wazne">UWAGA</em>: podany tu czas ważnosci certyfikatu w dniach (10950) jest bliski
+	górnemu limitowi (czy to limit OpenSSL, czy programów pocztowych, czy też samego standardu).
+	Przekroczenie tej liczby może spowodować, że certyfikat będzie rozpoznawany, ale
+	bezużyteczny!
+	<br><br>
+     Należy podać tyle informacji o sobie, aby certyfikat był wiarygodny. Zalecam wpisać:
+     <UL>
+      <LI>adres e-mail (bez tego w ogóle nie będzie można korzystać z certyfikatu). Jeśli posiadacie więcej
+          niż jeden adres e-mail, to na każdy z tych adresów niestety musicie wyrobić osobny certyfikat.</LI>
+      <LI>swoje pełne imię i nazwisko</LI>
+      <LI>miasto zamieszkania, region, kraj</LI>
+     </UL>
+     Aby cała zabawa miała sens, nasz klucz prywatny musimy ochronić
+      <em class="wazne">dobrym hasłem</em> (czyli:
+     co najmniej 8 znaków, litery duże i małe, cyfry i znaki specjalne).<BR><BR>
+
+
+     <em class="wazne">Plik cert1_key.pem zawiera wasz klucz prywatny, musi więc być dobrze chroniony.</em>
+     <BR><BR>
+     Wasz <em class="wazne">klucz prywatny nigdy nie zostanie wysłany</em> przez żaden wiarygodny
+      program pocztowy wbrew Waszej woli.
+
+  <BR><BR></LI>
+
+ <LI><a name="szyfry01" id="szyfry01">Wyeksportowanie naszego certyfikatu</a> do formatu PKCS#12,
+ 	 przyjmowanego przez większość programów pocztowych:
+	<BR><a href="#szyfry02" class="bezdruk">(przeskocz eksport certyfikatu)</a><br>
+     <code lang="en">openssl pkcs12 -export -in cert1_cert.pem -inkey cert1_key.pem -out cert1.p12 -name &quot;Moj certyfikat&quot;</code>
+	<br><br>
+     W tracie wykonywania tego polecenia będziemy poproszeni o hasło chroniące nasz klucz prywatny
+     (to, które wpisaliśmy w kroku 1) oraz o nowe hasło eksportowe, chroniące cały plik P12. Jeśli nie
+     zamierzacie po wszystkim skasować pliku P12 (zachowując pliki .pem), to w dalszym ciągu
+     obowiązują powyższe reguły <em class="wazne">dobrego hasła</em>.<BR><BR>
+
+     <em class="wazne">Plik cert1.p12 zawiera wasz klucz prywatny i publiczny, musi więc być
+      dobrze chroniony.</em><BR><BR>
+
+     Możecie wejść na
+     <A HREF="http://www.certum.pl/pl/dokumentacja/pu/index.html" hreflang="pl">strony z dokumentacją Certum</A>
+     lub na
+     <A HREF="http://www.signet.pl/download/index.html" hreflang="pl">strony Signet</A>
+     po instrukcje, jak zainstalować i korzystać z certyfikatu w swoim programie pocztowym
+      (wystarczy go zainstalować w dziale <q>certyfikaty osobiste</q> lub podobnym).
+
+	<BR><BR>
+
+     Jeśli korzystacie z
+     <A HREF="http://www.thunderbird.pl" hreflang="pl">Mozilli Thunderbirda</A>,
+      to najpierw zainstalujcie plik DER (patrz niżej).<BR>
+     Potem wybierzcie Edycja(Narzędzia)-->gt; Preferencje-->gt; Zaawansowane-->gt;Menadżer certyfikatów-->gt;
+       Twoje certyfikaty-->gt; Importuj. Należy podać hasło chroniące plik P12 oraz hasło
+       <q>Głównego Urządzenia zabezpieczającego</q> (<span lang="en">Software Security Device</span>).
+       To drugie będzie służyć
+       do obsługi wszystkich certyfikatów (abyście nie musieli pamiętać wszystkich haseł do
+       kluczy prywatnych).<BR>
+     Potem już tylko Edycja-->gt; Konfiguracja kont-->gt; Zabezpieczenia (pod jakimś kontem)-->gt;
+      Wybierz certyfikat i
+     <q>Podpisz wiadomości cyfrowo (domyślnie)</q>.<BR><BR>
+      Możemy już cyfrowo podpisywać
+     wiadomości, ale nikt do nas nie będzie szyfrował, jeśli nie rozdamy innym naszego certyfikatu
+     publicznego.
+     <BR><BR></LI>
+
+ <LI><a name="szyfry02" id="szyfry02">Niektóre programy pocztowe będą wymagać</a>,
+ 	 aby nasz certyfikat był wystawiony przez znaną im
+     firmę. Dlatego zainstalujemy im nasz certyfikat jako certyfikat firmy wystawiającej
+     (<span lang="en">Certificate Authority</span>, CA). Oto, co należy zrobić:
+	<BR><a href="#szyfry03" class="bezdruk">(przeskocz wyrabianie certyfikatu wystawcy)</a><br>
+     <code lang="en">openssl x509 -in cert1_cert.pem -outform DER -out cert1_cert.der</code>
+	<br><br>
+     Otrzymany plik DER instalujemy w programie pocztowym <em class="wazne">w miejscu
+      przeznaczonym dla wystawców
+     certyfikatów, z pełnym zaufaniem</em> i nasz certyfikat zdobywa zaufanie programu.
+   <BR><BR></LI>
+
+ <LI><a name="szyfry03" id="szyfry03">Wyrobienie certyfikatu publicznego</a> odbywa się tak:
+	<BR><a href="#szyfry04" class="bezdruk">(przeskocz wyrabianie certyfikatu publicznego)</a><br>
+     <code lang="en">openssl pkcs12 -in cert1.p12 -out cert1_pub.pem -nokeys -clcerts</code><br>
+     <code lang="en">openssl x509 -in cert1_pub.pem -outform DER -out cert1_pub.cer</code><br>
+     <code lang="en">openssl crl2pkcs7 -nocrl -certfile cert1_pub.pem -outform DER -out cert1_pub.p7b</code>
+		<br><br>
+	Otrzymane w ten sposób pliki PEM, CER i P7B zawierają <span class="b">ten sam</span>
+     	 Wasz certyfikat PUBLICZNY (zawierający klucz publiczny),
+      tylko w różnych formatach, odpowiednich dla różnych programów pocztowych.<BR>
+     Te pliki umieszczajcie wszędzie, gdzie to jest tylko możliwe tak, by
+     jak najwięcej osób miało do nich dostęp (na przykład na swojej stronie WWW).<BR>
+     Możliwe jest, że wraz ze swoim certyfikatem publicznym będziecie musieli
+      <em class="wazne">wysyłać też certyfikat wystawcy</em>, utworzony punkt wcześniej.
+	<BR><BR></LI>
+
+ <LI><a name="szyfry04" id="szyfry04">Wykonanie certyfikatu głównego</a> do podpisywania innych.<BR>
+	<a href="#szyfry05" class="bezdruk">(przeskocz wyrabianie certyfikatu głównego)</a><Br>
+ 	Jeśli po wykonaniu powyższych punktów <em class="wazne">działa</em> szyfrowanie,
+ 	podpisywanie, importowanie
+ 	waszych certyfikatów u odbiorcy (czyli wszystko jest w porządku), to pomińcie ten punkt.<BR><BR>
+
+	Może się zdarzyć że mimo zaimportowania (Waszego) certyfikatu wystawcy, program pocztowy
+	 odbiorcy dalej uparcie nie chce zaimportować Waszego certyfikatu publicznego. W takim przypadku
+	 nie kasujcie od razu tamtych plików, tylko czytajcie dalej (jeśli jednak skasowaliście, możecie
+ 	 sobie wyrobić od nowa, według punktu 1, lub od razu jako żądanie podpisania certyfikatu,
+ 	  pomijając opcję <code>-x509</code> w punkcie 1).<BR><BR>
+
+	Musicie sobie wyrobić mocny certyfikat główny
+	 i użyć go do podpisania certyfikatów, które wyrobiliście na poszczególne adresy e-mail.<BR>
+	Certyfikat główny to nic innego jak samopodpisany certyfikat, więc
+	 <em class="wazne">powtarzamy czynności z punktów 1 i 3</em>
+	 powyżej. Jako że certyfikatu głównego nie polecam do szyfrowania poczty, można pominąć adres
+	 e-mail, oraz dać lepszy klucz (na przykład 4096 bitów).<BR><BR>
+
+	Teraz certyfikaty na każdą skrzynkę, które wyrobiliście wcześniej, zamieniamy na
+	 żądania podpisania
+	 certyfikatu, dzięki czemu będzie je można podpisać naszym świeżym certyfikatem głównym:<br>
+	<code lang="en">openssl x509 -x509toreq -signkey cert2_klucz.pem -in cert2_cert.pem -out cert2_req.pem</code>
+	<br>Tak utworzone żądanie podpisujemy naszym certyfikatem głównym:<br>
+	<code lang="en">openssl ca -days 10000 -cert cert_glowny.pem -keyfile cert_glowny_klucz.pem -in cert2_req.pem -out cert_nowy.pem</code>
+	<br><br>
+	<em class="wazne">UWAGA</em>: podany tu czas ważnosci certyfikatu w dniach (10000) jest bliski
+	górnemu limitowi (czy to limit OpenSSL, czy programów pocztowych, czy też samego standardu).
+	Przekroczenie liczby 10950 może spowodować, że certyfikat będzie rozpoznawany, ale
+	bezużyteczny i żadne podpisane nim certyfikaty nie będą mogły być importowane przez
+	programy pocztowe!
+	<br><br>
+
+	<br>Z plików cert_nowy.pem i cert2_klucz.pem (klucz bez zmian) tworzymy plik PKCS#12 (według punktu 2) dla naszego programu pocztowego
+	 oraz certyfikaty publiczne dla odbiorców naszej poczty, według punktu 4. Odbiorcom naszej poczty dajemy swój nowy certyfikat publiczny
+	 (na przykład cert2.cer) i plik DER <em class="wazne">otrzymany z certyfikatu głównego</em> według punktu 3, który instalujemy też u siebie
+	 jako wystawcę certyfikatów (z pełnym zaufaniem).
+
+ 	</LI>
+</OL><BR><BR>
+
+<a name="szyfry05" id="szyfry05">Większość programów pocztowych</a> <em class="wazne">zaimportuje
+ automatycznie Wasz certyfikat</em>
+ u odbiorcy, gdy po raz pierwszy otworzy on otrzymaną od Was wiadomość
+ <em class="wazne">podpisaną cyfrowo</em>. Do cyfrowego podpisania wiadomości używany
+  jest klucz prywatny, ale podczas tej operacji sam <em class="wazne">klucz prywatny NIGDY nie jest
+ wysyłany</em>, jest bezpiecznie przechowywany przez program pocztowy.
+
+
+<BR><BR> Osoby mające Wasz
+ certyfikat publiczny mogą do Was szyfrować. Abyście i Wy mogli to robić, musicie mieć certyfikat
+ publiczny odbiorcy. Najprościej jest poprosić tego kogoś, aby przysłał Wam wiadomość podpisaną cyfrowo.
+ Można też wymienić się certyfikatami publicznymi na dyskietkach/płytach lub wysłać jako załączniki do listów.
+<BR>
+ Od tej pory wasza korespondencja nie będzie mogła być przeczytana ani sfałszowana przez innych.
+<BR><BR>
+<em class="wazne">UWAGA:</em><BR>
+Najlepiej wszystkie wytworzone pliki należy zachować
+ w kilku bezpiecznych miejscach (na przykład na płycie CD-R, którą potem starannie schowamy). Najważniejsze są
+ cert1_key.pem i cert1_cert.pem, bo z nich da się odtworzyć resztę.
+<BR> <em class="wazne">NIGDY</em> nie należy umieszczać swoich kluczy prywatnych na żadnych
+ publicznie dostępnych serwerach.
+<BR><BR>
+<BR><BR>
+
+
+
+
+
+
+
+<!--  ===================================================================================== -->
+
+Jeśli chcecie do kogoś ręcznie zaszyfrować jakiś plik, niekoniecznie wysyłając e-mail, możecie
+ to zrobić na jeden z następujących sposobów.
+<OL>
+
+ <LI>Szyfrowanie kluczem publicznym odbiorcy i swoim (aby móc to potem rozszyfrować),
+ 	 <span class="b">nierozsądne bez podpisu</span>:
+	<BR><a href="#szyfry06" class="bezdruk">(przeskocz ręczne szyfrowanie)</a><br>
+	<code title="szyfrowanie">openssl smime -encrypt -in dane.txt -out dane.aes
+	-from adres@nadawcy -to adres@odbiorcy
+	-subject &quot;Tajna wiadomosc&quot; -aes256 cert_publ_odbiorcy1.pem cert_publ_odbiorcy2.pem </code>
+	<br><br>
+	Powyższa komenda ma być <span class="b">w jednej linijce</span>, a jako jeden
+	 z certyfikatów odbiorców podaj <span class="b">swój certyfikat publiczny!</span><BR>
+	Wadą tego podejścia jest to, że wynik jest w postaci części (lub całej) gotowej
+	 wiadomości e-mail, ale z tym też można sobie poradzić.<BR><BR>
+
+	Opcja <CODE lang="en">-encrypt</CODE> oczywiście włącza szyfrowanie.<BR>
+	Opcje <CODE>-in</CODE> i <CODE lang="en">-out</CODE> określają pliki, z których brać dane do
+	 zaszyfrowania i gdzie je po zaszyfrowaniu umieścić.<BR>
+	Opcje <CODE>-from</CODE>, <CODE>-to</CODE> i <CODE lang="en">-subject</CODE> określają odpowiednio:
+	 adres nadawcy, adres odbiorcy i temat wiadomości (wynik tego polecenia można wysłać jak e-mail,
+	 na przykład przez sendmail).<BR>
+	Opcja <CODE>-aes256</CODE> określa typ użytego szyfru: 256-bitowy
+	 <acronym title="Advanced Encryption Standard" lang="en">AES</acronym>.<BR><BR>
+
+	Odszyfrowanie odbywa się tak:<br>
+	<code>openssl smime -decrypt -in dane.aes -inkey nasz_klucz_pryw.pem -recip nasz_cert_publ.pem</code>
+	<br>Opcja <CODE>-recip</CODE> określa certyfikat publiczny odbiorcy (nasz).
+	<BR><BR>
+	</LI>
+
+ <LI><a name="szyfry06" id="szyfry06">Szyfrowanie kluczem publicznym</a> odbiorcy i swoim oraz cyfrowe
+ 	 podpisanie danych:
+	<BR><a href="#szyfry07" class="bezdruk">(przeskocz ręczne szyfrowanie z podpisem)</a><br>
+	<code title="szyfrowanie z podpisem">openssl smime -sign -in dane.txt -signer nasz_cert_publiczny.pem -inkey nasz_klucz_pryw.pem
+        | openssl smime -encrypt -out dane.aes
+	-from adres@nadawcy -to adres@odbiorcy
+	-subject &quot;Tajna wiadomosc&quot; -aes256 cert_publ_odbiorcy1.pem cert_publ_odbiorcy2.pem </code>
+	<br><br>
+	Powyższa komenda ma być <span class="b">w jednej linijce</span>, a jako jeden z
+	 certyfikatów odbiorców podaj <span class="b">swój certyfikat publiczny!</span><BR>
+	Zauważ symbol potoku <CODE>|</CODE>, otrzymywany jako Shift+\.<BR>
+	Podobnie jak wyżej, wynik jest w postaci gotowej wiadomości e-mail.<BR><BR>
+
+	Opcja <CODE lang="en">-sign</CODE> powoduje cyfrowe podpisanie wiadomości.<BR>
+	Opcje <CODE lang="en">-signer</CODE> i <CODE lang="en">-inkey</CODE> pozwalają wybrać certyfikat i klucz podpisujący.<BR><BR>
+
+	Odszyfrowanie i weryfikacja odbywają się tak:
+	<BR><a href="#szyfry07_1" class="bezdruk">(przeskocz weryfikację i odszyfrowanie)</a><br>
+	<code title="weryfikacja i odszyfrowanie">openssl smime -decrypt -in dane.aes -inkey nasz_klucz_pryw.pem -recip nasz_cert_publ.pem |
+ 		openssl smime -verify -CAfile plik_z_CA.pem -signer cert_publ_nadawcy.pem</code><br><br>
+	  <a name="szyfry07_1" id="szyfry07_1">Opcja <CODE lang="en">-CAfile</CODE></a>
+	 pozwala określić plik z zaufanymi certyfikatami
+	 (czasem po prostu wystarczy cert_publ_nadawcy.pem).
+
+	<BR><BR>
+	</LI>
+
+ <LI><a name="szyfry07" id="szyfry07">Szyfrowanie na hasło</a> (szyfrem symetrycznym)
+	<BR><a href="#szyfry08" class="bezdruk">(przeskocz szyfrowanie na hasło)</a><BR>
+ 	Najpierw sprawdzamy, jakie szyfry symetryczne obsługuje nasz program openssl:<br>
+ 	<code lang="en">openssl list-cipher-commands</code><br><br>
+ 	Potem wybieramy jeden z nich, na przykład <span lang="en">Blowfish</span> (bf). Szyfrowanie odbywa się tak:<br>
+ 	<code lang="en">openssl enc -bf -a -salt -in dane.txt -out dane.txt.bf</code><br><br>
+ 	Opcja <CODE>-bf</CODE> włącza szyfrowanie właśnie algorytmem Blowfish.<BR>
+ 	Opcja <CODE>-salt</CODE> wprowadza dodatkową losowość do klucza generowanego z hasła. Zalecane!<BR>
+ 	Opcja <CODE>-a</CODE> włącza kodowanie zaszyfrowanych danych algorytmem BASE64, żeby zamiast
+ 	 <q>krzaczków</q>, w pliku wyjściowym były normalne znaki
+	 	<acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>.<BR><BR>
+ 	<em class="wazne">NIE</em> polecam szyfrów: IDEA, RC2, RC4, RC5 i dalszych
+ 	 RC, gdyż są one objęte patentami.<BR>
+ 	<em class="wazne">NIE</em> polecam szyfrów: des-cbc, des, des-cfb, des-ofb,
+ 	 des-ecb ze względu na słabą siłę
+ 	 szyfrowania (klucz ma 56 bitów długości, co na dzisiejsze standardy jest o wiele za mało).<BR>
+ 	Wśród szyfrów może być wymieniony także <q>base64</q>, ale
+ 	 <em class="wazne">UWAGA: to nie jest szyfr!</em> To
+ 	 jest tylko rodzaj kodowania, jak alfabet Morse'a i <span class="b">każdy może to odczytać</span>.
+ 	 Jest to po prostu zamiana danych w postaci binarnej (z <q>krzaczkami</q>) właśnie
+ 	 na postać tekstową ASCII (normalne litery i znaki).
+	<BR><BR>
+	Odszyfrowanie odbywa się tak:<br>
+	<code>openssl enc -bf -a -in dane.txt.bf -d -out dane</code><br>
+	Opcja <CODE>-d</CODE> służy właśnie do odszyfrowywania.
+	<BR><BR>
+ 	</LI>
+</OL>
+
+<a name="szyfry08" id="szyfry08">Może się zdarzyć, że chcemy</a> tylko cyfrowo podpisać jakiś plik, aby na przykład umieścić go na swojej
+ stronie WWW i dać osobom go ściągającym możliwość weryfikacji, że rzeczywiście pochodzi od nas.<BR>
+Aby utworzyć taki podpis, wystarczy sama komenda podpisywania z punktu 1 lub 2 powyżej:<br>
+<code lang="en">openssl smime -sign -in dane.txt -inkey nasz_klucz_pryw.pem -signer nasz_cert_publ.pem -out dane.txt.sig</code>
+<br><br>Weryfikacja takiego podpisu:<br>
+<code lang="en">openssl smime -verify -in dane.txt.sig -CAfile cert_publ_podpisujacego.pem -signer cert_publ_podpisujacego.pem</code>
+<br><br>Jak widać, czasem trzeba powiedzieć programowi openssl, jakim certyfikatom ufamy -
+ w tym przypadku jest to certyfikat podpisujący, ale może być też nadrzędny.
+
+<BR><BR><BR><BR>
+Jeśli zamiast cyfrowego podpisu chcecie tylko otrzymać sumę kontrolną z jakiegoś pliku
+ (zwaną czasem <q>odciskiem palca</q>), to
+ najpierw sprawdźcie, jakie macie dostępne funkcje skrótu w swoim openssl:<br>
+<code lang="en">openssl list-message-digest-commands</code><br><br>
+Potem wystarczy wykonać na przykład<br>
+<code lang="en">openssl md5 dane.txt</code><br><br>
+i dostajemy:<br>
+<code>MD5(dane.txt)= 5bbd1174b345c17e9dac39e0da0002cd</code><br>
+<em class="wazne">NIE</em> polecam funkcji skrótu
+	<acronym title="Message Digest 2" lang="en">MD2</acronym>,
+	MD4, MD5 i <acronym title="Secure Hash Algorithm 1" lang="en">SHA1</acronym>, gdyż
+	odkryto w nich pewne słabości.
+
+
+
+
+
+
+
+
+
+
+<!--  ===================================================================================== -->
+
+<BR><BR>
+<BR><BR>
+<HR>
+<h2 class="nag" lang="en"
+><a name="pgp" id="pgp">Pretty Good Privacy (PGP) / GNU Privacy Guard (GPG)</a></h2>
+<BR>
+<a href="#dane" hreflang="pl" class="bezdruk">(przeskocz do szyfrowania plików)</a>
+<BR><BR>
+
+<A HREF="http://www.pgp.com" lang="en" hreflang="en">Pretty Good Privacy</A> i jego darmowy i wolny odpowiednik -
+<A HREF="http://www.gnupg.org" lang="en" hreflang="en">GNU Privacy Guard</A> - GPG
+(wersja dla <span lang="en">Windows</span>:
+ <A HREF="http://www.gpg4win.org" lang="en" hreflang="en">gpg4win.org</A>)
+również opierają się
+na parze kluczy: publicznym i prywatnym. Wszystkie zasady ochrony są
+takie same, jak wcześniej. Ale:
+ <UL>
+  <LI>Różni się  sposób wyrabiania kluczy.</LI>
+  <LI>Klucze wyrobione w standardzie PGP/<span lang="en">Open</span>PGP <em class="wazne">NIE</em>
+  	są zgodne z certyfikatami
+  	<Acronym title="Public Key Cryptography System" lang="en">PKCS</acronym>,
+	omówionymi wcześniej (z żadnym ich rodzajem, mimo iż na przykład tu i tu są klucze
+	<acronym title="Rivest-Shamir-Adleman" lang="en">RSA</acronym>)</LI>
+ </UL>
+
+Wyrabianie kluczy przy użyciu PGP:<BR>
+Jeśli macie program PGP dla <span lang="en">Windows</span> (jest też wersja całkowicie darmowa:
+<A HREF="http://www.pgp.com/downloads/freeware/freeware.html" lang="en" hreflang="en">PGP Freeware</A>),
+ to wszystko można zrobić przy użyciu myszy, a sam
+ program współpracuje z większością programów pocztowych i automatycznie podpisuje, sprawdza
+ i szyfruje wiadomości. Nie będę się więc zajmował dalszym jego opisem.<BR><BR>
+
+Jeśli korzystacie z różnych graficznych nakładek na gpg, to wyrobienie kluczy jest kwestią kilku
+ kliknięć, więc nie będę się tym zajmował (tym bardziej że takich interfejsów jest wiele). Pokażę za to,
+ jak wyrabiać klucze samym programem gpg:<BR><BR>
+Należy wydać polecenie
+<code>gpg --gen-key</code>,
+a GPG dalej nas sam poprowadzi. W zasadzie należy wybierać to, co jest domyślne (default),
+ czyli ciągle wciskać Enter.
+Jedynie można sobie wybrać dłuższy klucz (na przykład 2048 bitów) zamiast domyślnych 1024 bitów.<BR>
+Po zakończeniu tworzenia kluczy, możemy wyświetlić ich listę:
+<code>gpg --list-keys</code>
+<BR><BR>
+
+<span class="b">Klucz prywatny</span> - służy do odszyfrowywania odebranych wiadomości oraz
+ do cyfrowego podpisywania wysyłanych przez nas
+wiadomości. Dzięki temu odbiorca wie, że ich <em class="wazne">treść nie została zmieniona</em>
+ po drodze oraz że wiadomość rzeczywiście <em class="wazne">pochodzi od Was</em>.
+Musi więc być <em class="wazne">chroniony za wszelką cenę!</em><BR><BR>
+
+<span class="b">Klucz publiczny</span> - może być dowolnie rozdawany, gdyż to on umożliwia innym
+wysyłanie nam zaszyfrowanych wiadomości oraz sprawdzania cyfrowego podpisu w
+wiadomościach wysłanych przez nas. <em class="wazne">Musimy posiadać klucz publiczny
+ osoby, do której chcemy wysyłać zaszyfrowane wiadomości.</em>
+<BR><BR>
+
+Po wyrobieniu kluczy, należy dla bezpieczeństwa (na przykład aby móc je odzyskać w razie awarii)
+ wyeksportować swój klucz prywatny i publiczny:
+	<BR><a href="#szyfry09" class="bezdruk">(przeskocz eksport kluczy)</a><Br>
+<code lang="en">gpg --output klucz_gpg_pryw.asc --textmode --export-secret-keys --armor AABBCCDD</code><br>
+<code lang="en">gpg --output klucz_gpg_publ.asc --textmode --export --armor AABBCCDD</code><br><br>
+	  <a name="szyfry09" id="szyfry09">(w miejsce</a>
+ AABBCCDD należy wstawić numer swojego klucza uzyskany komendą <CODE>gpg --list-keys</code>).<BR>
+Tak przygotowany plik klucz_gpg_publ.asc, zawierający klucz publiczny, można rozsyłać pocztą i umieszczać na publicznych
+serwerach, stronach <acronym title="World Wide Web" lang="en">WWW</acronym> itp.,
+ by jak najwięcej osób miało do niego dostęp.
+<BR><BR>
+<em class="wazne">Plik klucz_gpg_pryw.asc zawiera wasz klucz prywatny, musi więc być
+ dobrze chroniony.</em><BR><BR>
+
+<em class="wazne">UWAGA:</em><BR>
+ Klucz prywatny należy zachować w kilku bezpiecznych miejscach (na przykład na płycie CD-R, którą potem
+starannie schowamy). <em class="wazne">NIGDY</em> nie należy umieszczać swoich kluczy prywatnych na
+żadnych publicznie dostępnych serwerach.<BR><BR>
+
+Większość roboty (import kluczy, sprawdzanie podpisów, szyfrowanie) będą wykonywać za nas
+programy pocztowe. Niektóre mają wbudowaną obsługę GPG (na przykład
+<A HREF="http://sylpheed.good-day.net/" lang="en" hreflang="en">Sylpheed</A>), do niektórych
+potrzebne są zewnętrzne moduły, które też będą automatycznie wykonywały robotę (na przykład pine-pgp do
+<A HREF="http://www.washington.edu/pine/" lang="en" hreflang="en"
+><acronym lang="en" title="Program for Internet News and E-mail">PINE</acronym>'a</A>, czy
+<A HREF="http://enigmail.mozdev.org" lang="en" hreflang="en">Enigmail</A> do
+<A HREF="http://www.thunderbird.pl" lang="en" hreflang="en">Mozilli Thunderbirda</A>).<BR><BR>
+
+ Aby móc uruchomić szyfrowaną korespondencję, należy wymienić się z odbiorcą kluczami publicznymi, na przykład
+<UL>
+ <LI>dostać osobiście od tej osoby (na dyskietce, płycie, ...)</LI>
+ <LI>poprosić go o wysłanie nam wiadomości z załącznikiem w postaci klucza w pliku .asc,
+     który sami zaimportujemy.</LI>
+ <LI>ściągnąć ze strony WWW tej osoby i zaimportować ręcznie:
+     <code>gpg --import plik_z_kluczem.asc</code></LI>
+ <LI>ściągnąć z jednego z serwerów kluczy (jeśli znamy numer klucza, a właściciel umieścił go na serwerze):
+     <code>gpg --keyserver wwwkeys.pgp.net --recv-keys AABBCCDD</code></LI>
+</UL>
+
+Od tej pory wasza korespondencja nie będzie mogła być przeczytana ani sfałszowana przez innych.
+<BR><BR>
+<BR><BR>
+
+Jeśli chcecie do kogoś ręcznie zaszyfrować jakiś plik, niekoniecznie wysyłając e-mail, możecie
+ to zrobić na jeden z następujących sposobów. Odbiorcę możecie podać z nazwiska, numeru klucza
+ lub adresu e-mail.
+<OL>
+ <LI>szyfrowanie kluczem publicznym odbiorcy i swoim (aby móc to potem rozszyfrować),
+  <span class="b">nierozsądne bez podpisu</span>:
+	<BR><a href="#szyfry10" class="bezdruk">(przeskocz szyfrowanie PGP bez podpisu)</a><Br>
+	<code>gpg -a -e -r odbiorca1 -r odbiorca2 dane.txt</code>
+     (jeden z odbiorców to Wy - podajecie swój e-mail lub numer klucza).<BR><br>
+	Potem dajecie odbiorcom plik dane.txt.asc, który można rozszyfrować tak:
+	<code>gpg dane.txt.asc</code>
+     Opcja <CODE>-a</CODE> powoduje, że w pliku wyjściowym będą tylko normalne znaki
+     <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>,
+      żadnych krzaczków.
+	Gdybyśmy nie podali <CODE>-a</CODE>, program gpg utworzyłby ten sam plik, ale w postaci binarnej:
+ 	dane.txt.gpg, zawierający krzaczki.<BR>
+     Opcja <CODE>-e</CODE> oznacza właśnie szyfrowanie (domyślne działanie gpg to rozszyfrowywanie).<BR>
+     Po opcji <CODE>-r</CODE> podajemy odbiorcę.<BR>
+     Dzięki opcji <CODE>-R odbiorca2</CODE> (nie pokazanej tutaj) pozwala ukryć informację,
+      że wiadomość została zaszyfrowana także do innych
+      osób (<CODE>odbiorca2</CODE>), niż główny odbiorca.<BR>
+     Dzięki opcji <CODE lang="en">--multifile</CODE> (nie pokazanej tutaj)
+      można szyfrować więcej niż jeden plik na raz.
+ 	Dotyczy to także dalszych punktów.<BR><BR>
+	</LI>
+
+ <LI><a name="szyfry10" id="szyfry10">szyfrowanie kluczem publicznym</a> odbiorcy i swoim oraz cyfrowe podpisanie danych:
+	<BR><a href="#szyfry11" class="bezdruk">(przeskocz ręczne szyfrowanie PGP z podpisem)</a><br>
+	<code>gpg -a -e -s -r odbiorca1 -r odbiorca2 dane.txt</code><br><br>
+	Rozszyfrowanie jak poprzednio, ale tutaj dodatkowo otrzymacie informację o podpisie.<BR>
+	Opcja <CODE>-s</CODE> włącza cyfrowe podpisywanie danych. Upewni to odbiorcę, że
+	 <span class="b">wiadomość nie została sfałszowana</span>.<BR><BR>
+	</LI>
+
+ <LI><a name="szyfry11" id="szyfry11">szyfrowanie na hasło</a> (szyfrem symetrycznym)
+	<br><a href="#szyfry12" class="bezdruk">(przeskocz szyfrowanie PGP na hasło)</a><br>
+ 	Najpierw sprawdzamy, jakie szyfry symetryczne obsługuje nasz program gpg:
+ 	<code>gpg --version</code>
+ 	(oglądamy listę <q>Symetryczne</q> lub <q lang="en">Cipher</q>, w zależności od
+ 	 wersji językowej programu).<BR>
+ 	Potem wybieramy jeden z nich, na przykład <span lang="en">Blowfish</span>. Szyfrowanie odbywa się tak:<br>
+ 	<code>gpg -a --cipher-algo blowfish -c dane.txt</code><br><br>
+ 	Opcja <CODE>-c</CODE> włącza szyfrowanie algorytmem symetrycznym.<BR>
+ 	Opcja <CODE lang="en">--cipher-algo</CODE> pozwala wybrać algorytm szyfrowania.<BR>
+ 	Dla lepszego zabezpieczenia, <span class="b">można połączyć ten sposób z powyższymi</span>.
+ 	 Dostaniemy wtedy plik, który można odszyfrować zarówno hasłem, jak i kluczem.
+ 	</LI>
+ </OL>
+<a name="szyfry12" id="szyfry12">Często widać na stronach WWW</a>, że obok różnych plików do ściągnięcia,
+ są ich podpisy cyfrowe w osobnych plikach. Zrobienie takiego pliku nie jest trudne:<br>
+ <code>gpg -a -b dane.txt</code><Br><br>
+Opcja <CODE>-b</CODE> powoduje właśnie utworzenie takiego oddzielnego pliku dane.txt.asc
+ z podpisem dla pliku dane.txt.
+ <em class="wazne">Sam plik dane.txt nie jest szyfrowany!</em><BR>
+Gdybyśmy nie podali <CODE>-a</CODE>, program gpg utworzyłby ten sam plik z podpisem, ale w
+ postaci binarnej: dane.txt.sig, zawierający krzaczki.<BR><BR>
+Sprawdzenie takich podpisów jest też łatwe:
+
+	<BR><a href="#szyfry13" class="bezdruk">(przeskocz weryfikację dobrego podpisu)</a>
+<PRE title="prawidłowa weryfikacja podpisu">gpg --verify dane.txt.asc
+gpg: Signature made sob 25 mar 2006 14:27:21 CET using DSA key ID 1C56DA1E
+gpg: Good signature from <q>Bogdan Drozdowski &lt;xxxx@yy.pl&gt;</q></PRE>
+	  <a name="szyfry13" id="szyfry13">Tutaj podpis</a>
+jest prawidłowy (słowo <CODE>Good</CODE>). Oznacza to, że plik nie uległ zmianom
+ od chwili jego podpisania.<BR><BR>
+ Gdyby ktoś go specjalnie zmienił (lub na przykład wystąpił błąd w transmisji), podpis będzie
+ nieprawidłowy (słowo <CODE>BAD</CODE>):
+
+	<BR><a href="#szyfry14" class="bezdruk">(przeskocz weryfikację złego podpisu)</a>
+<PRE title="nieprawidłowa weryfikacja podpisu">gpg --verify dane.txt.asc
+gpg: Signature made sob 25 mar 2006 14:27:21 CET using DSA key ID 1C56DA1E
+gpg: BAD signature from <q>Bogdan Drozdowski &lt;xxxx@yy.pl&gt;</q></PRE>
+
+
+<BR><BR><BR><BR>
+	  <a name="szyfry14" id="szyfry14">Jeśli</a>
+zamiast cyfrowego podpisu chcecie tylko otrzymać sumę kontrolną z jakiegoś pliku
+ (zwaną czasem <q>odciskiem palca</q>), to
+ najpierw sprawdźcie, jakie macie dostępne funkcje skrótu w swoim gpg:
+<code>gpg --version</code>
+ 	(oglądamy listę <q>Skrótów</q> lub <q lang="en">Hash</q>, w zależności od wersji
+ 	językowej programu).<BR>
+
+Potem wystarczy wykonać na przykład<Br>
+<code>gpg --print-md sha512 dane.txt</code><br><br>
+i dostajemy:
+	<BR><a href="#szyfry15" class="bezdruk">(przeskocz przykład sumy kontrolnej)</a>
+<PRE title="przykład sumy kontrolnej SHA-512">dane.txt: DB1B46EE C66D6574 ABE6FC48 7EA40F63 B148DAB8 9F9F7142 BDC5E9F6
+          55B2924B 71D5C017 04945C48 0EEC28CC E0A7F41B 2BBAEB5A 7DADC7FD
+          E0B47FCE 3529F58B</PRE>
+<a name="szyfry15" id="szyfry15"><em class="wazne">NIE</em> polecam funkcji</a> skrótu
+<acronym title="Message Digest 5" lang="en">MD5</acronym> i
+ <acronym title="Secure Hash Algorithm 1" lang="en">SHA1</acronym>, gdyż odkryto w nich pewne słabości.
+
+
+
+<!--  ===================================================================================== -->
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="dane" id="dane">Szyfrowanie danych na dysku</a></h2>
+<BR>
+<a href="#trans" hreflang="pl" class="bezdruk">(przeskocz do zabezpieczania transmisji)</a>
+<BR><BR>
+Nawet jeśli nie musicie szyfrować poczty, to często jest potrzeba zaszyfrowania
+ samych danych na dysku (informacji poufnych, ściągniętej niezaszyfrowanej poczty, historii
+ przeglądanych stron internetowych, treści prowadzonych rozmów).
+ Jest na to wiele sposobów.
+<ol>
+ <li>Szyfrowanie na hasło.<br><br>
+ Powyżej podałem dwa
+ sposoby szyfrowania na hasło. Niestety, jeśli chcemy szyfrować w ten sposób wiele
+ plików, to te czynności stają się nudne, czasochłonne i łatwo się pomylić. Najwygodniej
+ jest na przykład spakować wszystkie poufne pliki w jedno archiwum. Jeśli wybierzemy format ZIP
+ lub <a href="http://www.7-zip.org/" hreflang="en">7zip</a>,
+ szyfrowanie można włączyć już w czasie pakowania. Inne spakowane archiwa można ręcznie
+ zaszyfrować na hasło jednym z podanych sposobów. Dzięki temu hasło jest wpisywane tylko raz.<br>
+ Ma to jednak pewną wadę: po skorzystaniu z plików należy je ponownie spakować i usunąć z
+ dysku. Jak wiemy, samo usunięcie pliku nie wystarcza, gdyż tak naprawdę jest usuwana informacja
+ o samym istnieniu pliku, zaś jego <em class="wazne">zawartość nadal pozostaje na dysku</em>.
+ Taką zawartość można
+ odzyskać nawet po 2-3 zamazaniach. Dlatego niezbędne jest <em class="wazne">bezpieczne usuwanie
+ plików</em> (jednym z wielu dostępnych darmowych programów, na przykład <code>shred</code> w Linuksie)
+ i zamazanie wolnego miejsca na dysku raz na jakiś czas.
+
+ <br><br></li>
+ <li>Szyfrowanie partycji, całego dysku twardego lub urządzeń wymiennych.<br><br>
+ Zamiast ciągle pakować i rozpakowywać archiwum z tajnymi plikami, wygodniejsze może być
+  założenie sobie szyfrowanej partycji dysku twardego (lub nawet całego dysku) lub
+  całego urządzenia przenośnego (na przykład dysk wymienny na USB). Po podaniu hasła takie urządzenie
+  byłoby widoczne w systemie jak normalny dysk twardy, z pełną możliwością kopiowania, zapisywania
+  i usuwania danych.<br>
+ Pod Linuksem są co najmniej dwa narzędzia oferujące taką funkcjonalność: <code>losetup</code> oraz
+  <code>cryptsetup-luks</code>, ale ja zalecam otwarty program <a href="http://www.truecrypt.org/"
+  hreflang="en" lang="en">TrueCrypt</a>, który działa pod Linuksem i Windows, a jest dość
+  łatwy w obsłudze - pod Windows ma nawet interfejs graficzny, pod Linuksem wystarczy
+  uruchomić <code>truecrypt --create</code>, a program dalej poprowadzi użytkownika.<br><br>
+   Pod Linuksem stworzone
+  pliki TrueCrypt montować należy poprzez <code>truecrypt -u plikTrueCrypt katalogMontowania</code>,
+  zaś sam program truecrypt powinien móc być uruchamiany z prawami administratora przez
+  zwykłego użytkownika. W starszych wersjach programu wystarczyło ustawić bit suid komendami
+  wydanymi <span class="b">jako root</span>:<Br>
+  <code>chown root.root /ścieżka/do/truecrypt</code><br>
+  <code>chmod +s /ścieżka/do/truecrypt</code><br>
+  <code>chmod o+x /ścieżka/do/truecrypt</code><br>
+  <br>
+  Nowsze wersje jednak bardziej dbają o bezpieczeństwo i bit suid już jest zabroniony. Zamiast tego,
+  TrueCrypt powinien móc sam się uruchomić używając komendy suid. Aby na to zezwolić,
+  <span class="b">jako root</span> wydajemy komendę <code>visudo</code>. Otwiera ona plik
+  /etc/sudoers w trybie edycji i sprawdzania składni przy wyjściu (bardzo ważne).
+  Należy dodać następujące linijki:
+  <pre>
+User_Alias         TrueCrypt = nazwa_uzytkownika1, nazwa_uzytkownika2, ...
+Defaults:TrueCrypt !authenticate
+TrueCrypt          localhost = (root) /usr/bin/truecrypt</pre>
+
+  Wpisując oczywiście prawidłowe nazwy użytkowników i ścieżkę do TrueCrypt.
+  <br><br>
+  Niestety, moduł jądra musi być w /usr/share/truecrypt/kernel, chyba że zmienimy to w kodzie programu.
+  Na szczęście zawsze można zrobić z tego dowiązanie symboliczne do innego katalogu, więc to nie
+   jest duży problem.<br><br>
+
+  <span class="b">Po skończeniu pracy szyfrowaną partycję w Linuksie należy odmontować poleceniem
+   <code>truecrypt -d katalogMontowania</code></span>
+
+  <br><br>
+
+ Jeszcze jedna uwaga: <em class="wazne">nie wolno normalnie przenosić plików na
+  zaszyfrowaną partycję</em>. Przeniesienie plików może spowodować ich skopiowanie, po czym
+  normalne usunięcie na dysku źródłowym (dzięki czemu można byłoby je odzyskać).
+  Należy zamiast tego <em class="wazne">skopiować</em>
+  te pliki, po czym <em class="wazne">bezpiecznie je usunąć</em> z dysku źródłowego.
+
+   <br><br>
+   Trochę informacji o szyfrowaniu partycji jest też w dokumencie o
+   <a href="https://wiki.torproject.org/noreply/TheOnionRouter/OperationalSecurity"
+   hreflang="en">zabezpieczaniu serwera Tor</a>. O samym programie Tor czytaj
+	<a href="#trans" hreflang="pl">poniżej</a>, w sekcji o zabezpieczaniu transmisji.
+
+
+  <br><br></li>
+
+ <li>Szyfrowanie pliku lub partycji wymiany (<span lang="en">swap</span>).<br><br>
+  Moglibyście spytać, po co to. Załóżmy, że właśnie macie uruchomiony program pracujący na
+   którymś z poufnych plików. Za chwilę uruchomicie inny duży program (pakiet biurowy,
+   przeglądarkę, ...). Spowoduje to, że na wszystkie uruchomione programy nie wystarczy
+   pamięci w komputerze. System operacyjny w takiej sytuacji przeniesie część waszego
+   ważnego programu (a pewnie i część owych poufnych danych) na dysk, do pliku wymiany, co jest
+   zupełnie normalnym działaniem. Teraz poufne dane leżą niezaszyfrowane na dysku i każdy może
+   je odczytać. Za
+   jakiś czas te dane zostaną stamtąd usunięte (może dopiero po kolejnym włączeniu
+   komputera?), ale nie jest to usuwanie bezpieczne. Oryginalne dane dalej mogą sobie być
+   na szyfrowanej partycji, ale w niezaszyfrowanej postaci można je odzyskać z dysku.
+   <br><br> Jak się przed tym bronić? Założyć szyfrowaną pamięć wymiany.<br><br>
+
+   <ul>
+   <li><span lang="en">Windows</span>:
+      przeczytaj odpowiednią sekcję dokumentu o
+        <a href="https://wiki.torproject.org/noreply/TheOnionRouter/OperationalSecurity"
+   	hreflang="en">zabezpieczaniu serwera Tor</a>. O samym programie Tor czytaj poniżej, w sekcji o
+   	zabezpieczaniu transmisji.
+	<br><br></li>
+
+   <li><span lang="en">OS X</span>:
+      przeczytaj odpowiednią sekcję dokumentu o
+        <a href="https://wiki.torproject.org/noreply/TheOnionRouter/OperationalSecurity"
+   	hreflang="en">zabezpieczaniu serwera Tor</a>. O samym programie Tor czytaj poniżej, w sekcji o
+   	zabezpieczaniu transmisji.
+	<br><br></li>
+
+   <li>OpenBSD: w opcjach systemowych /etc/sysctl.conf ustaw
+   	<code lang="en">vm.swapencrypt.enable=1</code>.
+        Przeczytaj też odpowiednią sekcję dokumentu o
+        <a href="https://wiki.torproject.org/noreply/TheOnionRouter/OperationalSecurity"
+   	hreflang="en">zabezpieczaniu serwera Tor</a>. O samym programie Tor czytaj poniżej, w sekcji o
+   	zabezpieczaniu transmisji.
+   	<br><br></li>
+
+   <li><a href="http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/swap-encrypting.html"
+   	hreflang="en" lang="en">Szyfrowana pamięć wymiany we FreeBSD</a>.
+        Przeczytaj też odpowiednią sekcję dokumentu o
+        <a href="https://wiki.torproject.org/noreply/TheOnionRouter/OperationalSecurity"
+   	hreflang="en">zabezpieczaniu serwera Tor</a>. O samym programie Tor czytaj poniżej, w sekcji o
+   	zabezpieczaniu transmisji.
+   	<br><br></li>
+
+   <li>Linux: skorzystać z programu <code>losetup</code>, <code>cryptsetup-luks</code> lub ze
+    skryptów <a href="http://www.flyn.org/projects/cryptoswap/index.html" hreflang="en"
+    lang="en">CryptoSwap</a>.<br><br>
+     Przykładowe wykorzystanie cryptsetup: w pliku startowym
+    zawierającym uruchamianie pamięci wymiany (na przykład /etc/rc.sysinit), tuż PRZED linią uruchamiającą
+    pamięć wymiany (linia z komendą <span class="b" lang="en">swapon</span>), dopiszcie:<br>
+    <code lang="en">cryptsetup -c blowfish -d /dev/urandom create swap /dev/hdXY</code><br>
+    <code lang="en">mkswap /dev/mapper/swap > /dev/null</code><br>
+    zamieniając, rzecz jasna, /dev/hdXY na Waszą partycję wymiany lub nazwę pliku wymiany.
+    Po tych zmianach należy otworzyć plik /etc/fstab i zmienić urządzenie wymiany, na przykład z<Br>
+    <code lang="en">/dev/hdXY      swap       swap    defaults        0 0</code><br>
+    na<br>
+    <code lang="en">/dev/mapper/swap    swap      swap    defaults        0 0</code><br>
+    W pliku uruchamianym przy zamykaniu systemu i odpowiedzialnym za wyłączenie pamięci wymiany
+    (na przykład /etc/rc.d/init.d/halt), tuż PO linii wyłączającej pamięć wymiany (linia z komendą
+    <span class="b" lang="en">swapoff</span>) należy dopisać:
+    <code lang="en">cryptsetup remove swap</code><br>
+    Po ponownym uruchomieniu systemu pamięć wymiany będzie szyfrowana wybranym algorytmem i za
+    każdym razem innym, losowym kluczem.<Br>
+    <br>
+    Dla bezpieczeństwa można aktualną partycję wymiany zamazać poleceniem <code>shred</code>
+    (najlepiej robić to, gdy jest nieużywana, na przykład gdy system został uruchomiony tylko w trybie
+    tekstowym lub po komendzie <span class="b">telinit 3</span>):<br>
+    <code lang="en">swapoff /dev/hdXY</code><br>
+    <code lang="en">shred /dev/hdXY</code><br>
+    Oczywiście, po tej operacji nie ma już partycji wymiany, więc najlepiej wykonać ją już po
+    powyższych zmianach w plikach systemowych, po czym ponownie uruchomić system.
+    <br><br>
+    Przeczytaj też odpowiednią sekcję dokumentu o
+        <a href="https://wiki.torproject.org/noreply/TheOnionRouter/OperationalSecurity"
+   	hreflang="en">zabezpieczaniu serwera Tor</a>. O samym programie Tor czytaj poniżej, w sekcji o
+   	zabezpieczaniu transmisji.
+    </li>
+   </ul>
+
+ </li>
+</ol>
+
+
+
+
+<!--  ===================================================================================== -->
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="trans" id="trans">Zabezpieczanie transmisji</a></h2>
+<BR>
+<a href="#jakdziala" hreflang="pl" class="bezdruk">(przeskocz do odnośników do algorytmów)</a>
+<BR><BR>
+
+ Szyfrowanie danych na dysku nic nie da, jeśli są one wysyłane przez sieć w postaci jawnej. Nie
+mówię tutaj o poczcie, którą po lekturze poprzednich sekcji umiemy już szyfrować. Mówię tu
+o takich sprawach jak: hasła do poczty i na inne strony WWW, rozmowy w komunikatorze, oraz same
+odwiedzane strony internetowe. Jeśli połączenie jest nieszyfrowane, każdy może zobaczyć Wasze hasła,
+przeczytać treść rozmów i dowiedzieć się, jakie strony oglądacie. Jak się przed tym bronić?
+Należy szyfrować wszelkie wysyłane dane. Zobaczmy, co można zrobić w tej kwestii.
+
+<ol>
+ <li>Przeglądanie WWW (w tym poczty).<Br><br>
+
+   Jeśli serwer, z którym się łączycie, ma obsługę
+    <acronym title="Secure Sockets Layer" lang="en">SSL</acronym>/
+    <acronym title="Transport Layer Security" lang="en">TLS</acronym>, to od tej pory używajcie bezpiecznych
+    połączeń, wpisując HTTPS zamiast HTTP w pasku adresu w przeglądarce. Protokołu SSL/TLS należy
+    bezwzględnie korzystać w czasie przeglądania stron swojego banku oraz (jeśli możliwe) poczty.<br>
+   Aby sprawdzić, czy serwer to obsługuje, wpisz HTTPS zamiast HTTP w polu adresu i sprawdź, czy
+    przeglądarka się połączy normalnie.
+   <br><br></li>
+
+ <li>Poczta w programach pocztowych<br><br>
+
+   Dobre skrzynki pocztowe (na przykład o2.pl) oferują połączenia szyfrowane POP3+SSL/TLS (port 995/110)
+    i SMTP+SSL/TLS (port 25). Należy bezwzględnie włączyć je w swoim programie pocztowym. Połączenie
+    SSL jest często nazywane <q>bezpiecznym połączeniem</q>, a TLS <q>bezpiecznym uwierzytelnianiem
+    (hasła)</q>.<br>
+   Jeśli serwer pocztowy tego nie obsługuje, można rozważyć przesiadkę na inny. Jeśli skrzynka to
+    obsługuje, a program nie, należy koniecznie zmienić program na bardziej bezpieczny. Polecam
+    <a href="http://www.thunderbird.pl/" hreflang="pl">Mozilla Thunderbird</a>.
+   <br><br></li>
+
+ <li>Komunikator<br><br>
+
+   Jeśli używasz popularnego <q>słoneczka</q>, to wiedz, że wprowadzenie szyfrowania
+    jest w trakcie... już od dłuższego czasu.
+    Stan wprowadzenia ani stopień zabezpieczenia są nieznane. Szyfrowanie od odbiorcy do nadawcy
+    można wprowadzić, ale jest to sprzeczne z regulaminem. Pomyśl o zmianie komunikatora i czytaj dalej.
+   <br><br>
+   Jeśli używasz Tlenu, możesz czuć się połowicznie bezpieczny. Twoje rozmowy są szyfrowane na
+    drodze od Ciebie do serwera i od serwera do odbiorcy wiadomości. Na serwerze można je jednak
+    zobaczyć w postaci jawnej. Ale i tak znacznie lepiej niż słonko. Tlen jest z rodziny Jabbera
+    (czytaj niżej), ale portal o2.pl zdecydował się samolubnie go zamknąć i rozszerzać,
+    nie dzieląc się osiągnięciami ze społecznością, od której otrzymał Jabbera. Zamknięcie protokołu
+    zawsze wprowadza pewną niepewność.
+   <br><br>
+   Jeśli używasz <A HREF="http://www.jabberpl.org" hreflang="pl">Jabbera</A>, możesz czuć się
+    jeszcze bezpieczniejszy. Protokół Jabbera jest międzynarodowy, otwarty i ma wbudowane zabezpieczenia.
+    Twoje rozmowy są szyfrowane na drodze od Ciebie do serwera i od serwera do odbiorcy wiadomości.
+    Na serwerze można je jednak zobaczyć w postaci jawnej.<br>
+    Jabber ma jednak wspaniałą cechę: wbudowaną obsługę PGP - tego samego, którego wcześniej się
+    uczyliśmy w celu zabezpieczenia poczty. Po włączeniu SSL i PGP Twoje rozmowy są szyfrowane
+    na drodze do serwera jednym kluczem, na drodze od serwera do odbiorcy - innym i na drodze od
+    nadawcy do odbiorcy - kluczem PGP. Jeśli wiadomość musi być przechowana na serwerze, to jest
+    tam zaszyfrowana kluczem PGP i niemożliwa do odczytania. <Br>
+    <span class="b">Jabber z włączonymi SSL i PGP gwarantuje największe bezpieczeństwo rozmów</span>.
+   <br><br></li>
+
+ <li>Anonimowość<br><br>
+
+   Czasem samo szyfrowanie przesyłanych treści nie wystarcza. Przeglądarka i tak zdradzi, z jakim
+    serwerem chcemy się połączyć oraz nasz adres IP, a komunikator zdradzi nasz adres IP. Czasem sama
+    wiedza o tym, z jakimi stronami WWW się łączymy pozwala wyciągnąć o nas wnioski (w którym banku
+    mamy konto, na którym serwerze skrzynkę, na które forum piszemy). Na szczęście i przed tym można
+    się bronić.<br>
+    Rozwiązaniem są różne programy anonimizujące nasze działania w sieci. Jednym z takich programów
+    jest darmowy i otwarty Tor (<a href="https://www.torproject.org/" hreflang="pl"
+    >torproject.org</a>), wspierany przez
+    <span lang="en">Electronic Frontier Foundation</span>, która broni praw człowieka w sieci. Zasada
+    działania jest prosta: zamiast łączyć się bezpośrednio z serwerem docelowym, nasze programy
+    najpierw łączą się z zainstalowanym u nas Torem, a ten przez sieć serwerów na całym świecie
+    przekierowuje nasz ruch do serwera docelowego. Cały ruch, aż od ostatniego węzła do serwera
+    docelowego, jest szyfrowany (jeśli łączysz się przez SSL lub TLS, cały ruch jest szyfrowany).
+    Serwerowi docelowemu wydaje się, że łączysz się z innego adresu niż naprawdę. I o to chodzi.
+    Instalacja Tora jest prosta, konfiguracja programów, by go używały - też. Polecam; strona
+    projektu jest po polsku.
+   <br><br></li>
+
+</ol>
+
+
+<!--  ===================================================================================== -->
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="jakdziala" id="jakdziala">Jak to wszystko naprawdę działa</a></h2>
+<BR>
+O tym, czym są te dziwne nazwy (MD5, SHA, RSA, DSA, El-Gamal, PKCS), możecie się dowiedzieć
+na przykład stąd:
+<UL>
+ <LI>Polski leksykon bezpieczeństwa: <A HREF="http://ipsec.pl/leksykon/" hreflang="pl">IPSec.pl</A>
+ <LI>Dokument <q>Najczęściej zadawane pytania</q> firmy
+	<A HREF="http://www.rsasecurity.com/rsalabs/node.asp?id=2152" lang="en"
+ 	 hreflang="en">RSA Security</A> (po angielsku).</LI>
+ <LI><A HREF="http://www.cacr.math.uwaterloo.ca/hac/"
+	 hreflang="en">Podręcznik Kryptografii Stosowanej</A> (po angielsku).</LI>
+</UL>
+
+<Br><br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

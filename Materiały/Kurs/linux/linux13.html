@@ -1,0 +1,556 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 13 - Operacje bitowe </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux12.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux14.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, and, or, xor, shl, shr,
+	shld, shrd, sal, bt, bts, btc, btr, test, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Mon, Oct 29 2012 17:22:20 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 13 - Operacje na bitach, czyli to,
+	w czym asembler błyszczy najbardziej</h1></div>
+
+<P>
+W tej części poznamy ważną grupę instrukcji - operacje na bitach. Te właśnie instrukcje
+odróżniają asemblera od innych języków, gdzie rzadko pojawia się możliwość działania na
+tych najmniejszych jednostkach informacji (odpowiednie operatory istnieją w językach
+C i <span lang="en">Pascal</span>, ale inne języki, jak na przykład Fortran 77, są tego pozbawione).<BR>
+Mimo iż o wszystkich instrukcjach opisanych w tej części już wspomniałem przy okazji
+omawiania podstawowych rozkazów procesora, to instrukcje bitowe są ważne i zasługują na
+oddzielny rozdział, poświęcony w całości tylko dla nich.
+</P>
+<P>
+Zdawać by się mogło, że z takim jednym, maleńkim bitem niewiele da się zrobić: można go
+wyczyścić (wyzerować), ustawić (wstawić do niego 1) lub odwrócić jego bieżącą wartość.
+Ale te operacje mają duże zastosowania i dlatego ich poznanie jest niezbędne. Jeśli sobie
+przypomnicie, to używaliśmy już wielokrotnie takich instrukcji jak
+<code><span lang="en">AND</span></code> czy <code>XOR</code>.
+ Teraz przyszedł czas, aby poznać je bliżej.</P>
+<HR>
+
+
+
+
+<h2 class="nag">Instrukcja NOT</h2>
+	<BR><a href="#linux1301" tabindex="1" class="bezdruk">(przeskocz NOT)</a>
+<P>
+Instrukcja <code>NOT</code> (logiczna negacja - to <em class="wazne">NIE</em> jest to samo,
+co zmiana znaku liczby!) jest najprostszą z czterech podstawowych operacji logicznych
+i dlatego to od niej rozpocznę wstęp do instrukcji bitowych.
+</P>
+<P><code>NOT</code> jest instrukcją jednoargumentową, a jej działanie wygląda tak:</P>
+<PRE title="działanie NOT">
+	NOT 0 = 1
+	NOT 1 = 0</PRE>
+
+<P>Używamy tej instrukcji wtedy, gdy chcemy naraz odwrócić wszystkie bity w zmiennej lub rejestrze.
+Na przykład, jeśli AX zawiera 0101 0011 0000 1111 (530Fh), to po wykonaniu <code>NOT AX</code>
+w rejestrze tym znajdzie się wartość 1010 1100 1111 0000 (ACF0h). Dodanie obu wartości
+powinno dać FFFFh.</P>
+<P><code>NOT</code> może mieć zastosowanie tam, gdzie wartość logiczna <q>fałsz</q> ma przyporządkowaną wartość
+zero, a <q>prawda</q> - wartość FFFFh, gdyż <code>NOT</code> w tym przypadku dokładnie przekłada <q>prawdę</q>
+na <q>fałsz</q>.</P>
+
+
+
+
+
+
+
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="linux1301" id="linux1301">Instrukcja <span lang="en">AND</span></a></h2>
+	<BR><a href="#linux1302" class="bezdruk">(przeskocz <span lang="en">AND</span>)</a>
+
+
+<P>
+Instrukcji <code><span lang="en">AND</span></code> (logicznej koniunkcji) najprościej
+używać do wyzerowania bitów. Tabelka działania <code>AND</code> wygląda tak:</P>
+<PRE title="działanie AND">
+	0 AND 0 = 0
+	0 AND 1 = 0
+	1 AND 0 = 0
+	1 AND 1 = 1</PRE>
+
+<P>No ale jakie to może mieć zastosowanie?
+<BR>
+ Powiedzmy teraz, że chcemy sprawdzić, czy bit
+numer 4 (numerację będę podawał od zera) rejestru AX jest równy 1, czy 0. Tutaj
+nie wystarczy proste
+porównanie <code>CMP</code>, gdyż reszta rejestru może zawierać nie wiadomo co. Z pomocą przychodzi nam
+właśnie instrukcja <code><span lang="en">AND</span></code>. Poniżej pseudo-przykład:</P>
+<PRE>	and	ax, 0000 0000 0001 0000b	; (and ax, 16)</PRE>
+
+<P>Teraz, jeśli bit numer 4 (odpowiadający wartości 2^4=16) był równy 1, to cały AX przyjmie
+wartość 16, jeśli zaś był równy zero, to cały AX będzie zerem. Na nasze szczęście, instrukcja
+<code>AND</code> ustawia odpowiednio flagi procesora, więc rozwiązaniem naszego problemiku będzie kod:</P>
+<PRE>
+	and	ax, 16
+	jz	bit_4_byl_zerem
+	;jnz	bit_4_nie_byl_zerem</PRE>
+
+<P>A jakieś zastosowanie praktyczne?<BR>
+Już podaję: zamiana małych liter na wielkie. W kodzie
+ <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+ litery małe od wielkich różnią się
+tylko tym, że mają ustawiony bit numer 5. Tak więc po wykonaniu:</P>
+<PRE>
+	mov	al, &quot;a&quot;
+	and	al, 5fh		; 5fh = 0101 1111 - czyścimy bit 5
+				; (i 7 przy okazji)</PRE>
+
+<P>w rejestrze AL będzie kod wielkiej litery A.<BR>
+Inne zastosowanie znajdziecie w moim <a href="spkr_tut_linux.html" hreflang="pl">kursie programowania
+głośniczka</a>:</P>
+<PRE>
+	in	al, 61h
+	and	al, not 3		; zerujemy bity 0 i 1
+					; NASM: and al,~3
+	out	61h, al</PRE>
+
+<P>W tym kodzie instrukcja <code><span lang="en">AND</span></code> posłużyła nam do wyczyszczenia bitów 0 i 1
+ (NOT 3 = NOT 0000 0011 = 1111 1100).</P>
+<P>
+Jak zauważyliście, instrukcja <code><span lang="en">AND</span></code> niszczy zawartość rejestru,
+oprócz interesujących nas bitów. Jeśli zależy Wam na zachowaniu rejestru, użyjcie instrukcji
+<code>TEST</code>. Działa ona identycznie jak <code><span lang="en">AND</span></code>, ale nie
+zapisuje wyniku działania. Po co nam więc taka instrukcja? Otóż, wynik nie jest
+zapisywany, ale <code>TEST</code> ustawia dla nas flagi identycznie jak <code><span lang="en">AND</span></code>.
+ Pierwszy kod przepisany z instrukcją <code>TEST</code> będzie wyglądał tak:</P>
+<PRE>
+	test	ax, 16
+	jz	bit_4_byl_zerem
+	;jnz	bit_4_nie_byl_zerem</PRE>
+
+<P>Teraz nasz program będzie ciągle działać prawidłowo, ale tym razem zawartość rejestru
+AX została zachowana.<BR>
+Jest jeszcze jedno ciekawe zastosowanie instrukcji <code>TEST</code>:</P>
+<PRE>	test	ax, ax</PRE>
+<P>I co to ma niby robić? Wykonuje &nbsp;<code><span lang="en">AND</span> AX, AX</code> ,
+ nigdzie nie zapisuje wyniku i tylko ustawia flagi.
+<BR>
+No właśnie! Ustawia flagi, w tym flagę zera ZF. To, co widzicie powyżej to
+ <em class="wazne">najwydajniejszy</em>
+sposób na to, aby sprawdzić czy wartość rejestru nie jest zerem.</P>
+
+
+
+
+
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="linux1302" id="linux1302">Instrukcja OR</a></h2>
+
+	<BR><a href="#linux1303" class="bezdruk">(przeskocz OR)</a>
+
+
+<P>
+Instrukcja <code>OR</code> (logiczna alternatywa) w prosty sposób służy do ustawiania bitów
+ (wpisywania do nich 1).
+<BR>Tabelka działania wygląda następująco:</P>
+<PRE title="działanie OR">
+	0 OR 0 = 0
+	0 OR 1 = 1
+	1 OR 0 = 1
+	1 OR 1 = 1</PRE>
+
+<P>Jeśli na przykład chcemy, aby 2 najmłodsze bity rejestru BX były się równe 1, a nie chcemy naruszać
+innych bitów (czyli <code>MOV</code> jest wykluczone), możemy to zrobić tak:</P>
+<PRE>	or	bx, 0000 0000 0000 0011		; (or bx, 3)</PRE>
+<P>Zastosowanie tego jest proste. Podam 2 przykłady. Pierwszy z nich jest wyjęty z mojej procedury
+wytwarzającej dźwięk w głośniczku (i kursu poświęconego temu zagadnieniu):</P>
+<PRE>
+	in	al, 61h
+	or	al, 3				; ustawiamy bity 0 i 1
+	out	61h, al</PRE>
+
+<P>Przykład drugi jest odwróceniem operacji <code>AND</code> na znakach ASCII:</P>
+<PRE>
+	mov	al, &quot;A&quot;
+	or	al, 20h			; 20h = 0010 0000 - ustawiamy bit 5</PRE>
+
+<P>teraz w AL powinien być kod małej literki a.
+<BR>
+Instrukcja <code>OR</code> nie ma swojego odpowiednika, jakim jest <code>TEST</code> dla <code>AND</code>.
+Ale za to ma inne ciekawe zastosowanie - można nią sprawdzić, czy 2 rejestry naraz nie są zerami (to jest
+<em class="wazne">najlepszy</em> sposób - bez żadnych <code>CMP</code>, <code>JNZ/JZ</code> itp.):</P>
+<PRE>	or	ax, bx</PRE>
+<P>Podobnie, jak w instrukcji <code>AND</code>, flaga zera będzie ustawiona, gdy wynik operacji jest zerem - a
+to może się zdarzyć tylko wtedy, gdy AX i BX są <em class="wazne">jednocześnie</em> zerami.
+<BR> Zauważcie, że nie można do tego celu użyć instrukcji <code>AND</code>. Dlaczego? Podam
+przykład: niech AX=1 i BX = 8. AX i BX nie są oczywiście równe zero, ale:
+<PRE>
+		0000 0000 0000 0001	(=AX)
+	AND	0000 0000 0000 1000	(=BX)
+		=
+		0000 0000 0000 0000</PRE>
+
+<P>Dlatego zawsze należy przemyśleć efekt działania instrukcji.</P>
+
+
+
+
+
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="linux1303" id="linux1303">Instrukcja XOR</a></h2>
+
+	<BR><a href="#linux1304" class="bezdruk">(przeskocz XOR)</a>
+
+<P>
+Instrukcji <code>XOR</code> (<span lang="en">eXclusive OR</span>, logiczna alternatywa wykluczająca)
+ używa się do zmiany stanu określonego bitu z 0 na 1 i odwrotnie.
+<BR>
+Działanie XOR jest określone tak:</P>
+<PRE title="działanie XOR">
+	0 XOR 0 = 0
+	0 XOR 1 = 1
+	1 XOR 0 = 1
+	1 XOR 1 = 0</PRE>
+
+<P>Zauważmy także, że dla dowolnych a i b mamy:<BR>
+(a XOR b) XOR b = a<BR>
+a XOR 0 = a<BR>
+a XOR -1 = NOT a (-1 = FF w bajcie, FFFF w słowie i FFFFFFFF w dwordzie)<BR>
+a XOR a = 0<BR>
+Z tej ostatniej równości wynika natychmiast, że wyXORorwanie rejestru z samym sobą zawsze go
+wyzeruje. W ten sposób otrzymujemy jeden z dwóch <em class="wazne">najwydajniejszych</em> sposobów na
+wyzerowanie rejestru:</P>
+<PRE>	xor	rej, rej</PRE>
+
+<P>Drugi sposób to <code><span lang="en">SUB</span> rej,rej</code>.</P>
+<P>
+Teraz przykład: chcemy, aby wartość rejestru AX stała się równa
+1 gdy rejestr był wyzerowany, a zerem, gdy była w tym rejestrze jedynka. Oto, jak możemy to
+zrobić:</P>
+<PRE>
+		cmp	ax, 1
+		je	wyzeruj
+		mov	ax, 1
+		jmp	koniec
+	wyzeruj:
+		mov	ax, 0
+	koniec:</PRE>
+
+<P>Ale wersja optymalna wygląda tak:</P>
+<PRE>	xor	ax, 1</PRE>
+
+<P>gdyż mamy:</P>
+<PRE>
+	wartość AX:	0000 0000 0000 0001		0000 0000 0000 0000
+		XOR	0000 0000 0000 0001		0000 0000 0000 0001
+		=
+	nowy AX:	0000 0000 0000 0000		0000 0000 0000 0001</PRE>
+
+<P>Jak widać, jest to o wiele prostsze i wydajniejsze rozwiązanie. Dlatego właśnie dobrze jest,
+gdy pozna się instrukcje logiczne.</P>
+
+
+
+
+
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="linux1304" id="linux1304">Instrukcje przesuwania bitów</a></h2>
+
+	<BR><a href="#linux1305" class="bezdruk">(przeskocz instrukcje przesuwania)</a>
+
+<P>
+Instrukcje przesuwania bitów (<q lang="en">shift</q>) przemieszczają bity, nie zmieniając ich wzajemnego
+położenia (przesuwają <q>grupowo</q>). To wyjaśnienie może się wydawać bardzo pokrętne, ale
+spokojnie - zaraz wszystko się wyjaśni.<BR>
+Na początek powiem, że jest kilka takich instrukcji (które też były podane w rozdziale
+o podstawowych instrukcjach procesora):</P>
+<UL>
+ <LI><code>SHL</code> - <span lang="en">shift left (shift logical left)</span> = przesunięcie (logicznie) w lewo</LI>
+ <LI><code>SAL</code> - <span lang="en">shift arithmetic left</span> = przesunięcie (arytmetycznie) w lewo</LI>
+ <LI><code>SHR</code> - <span lang="en">shift logical right</span> = przesunięcie (logiczne) w prawo</LI>
+ <LI><code>SAR</code> - <span lang="en">shift arithmetic right</span> = przesunięcie (arytmetyczne)</LI>
+ <LI><code>SHLD/SHRD</code> = przesunięcia logiczne w lewo/prawo o podwójnej precyzji</LI>
+</UL>
+<P>Działanie każdej z tych instrukcji pokażę na przykładzie.<BR>
+Niech na początku AX = 1010 0101 1010 0101 (A5A5h).
+</P>
+<P>
+<code>SHL</code> i równoważna <code>SAL</code> działa tak (zakładając, że przesuwamy o jeden):
+najstarszy bit jest we fladze CF, każdy inny bit wchodzi na miejsce bitu starszego o 1, a do bitu zerowego
+ wkładane jest zero.<br>
+Po wykonaniu <code>SHL AX,3</code> wartość AX będzie więc wynosić 0010 1101 0010 1000 (2D28h), gdyż
+wszystkie bity przesunęliśmy o 3 miejsca w lewo, oraz CF=1
+(bo jako ostatnia z rejestru wyleciała jedynka).</P>
+
+
+<P>
+Instrukcja <code>SHR</code> działa w drugą stronę niż <code>SHL</code>: bit zerowy jest umieszczany we fladze CF,
+każdy inny bit wchodzi na miejsce bitu młodszego o 1, a do najstarszego bitu wkładane jest zero.<br>
+Dlatego teraz po wykonaniu <code>SHR AX,1</code> w rejestrze AX będzie 0001 0110 1001 0100 (1694h),
+bo poprzednie bity AX przesunęliśmy o 1 miejsce w prawo, oraz CF=0.</P>
+<P>
+<code>SAR</code> różni się od <code>SHR</code> nie tylko nazwą, ale też działaniem.
+Słowo <q>arytmetyczne</q> w nazwie NIE jest tu bez znaczenia. Gdy <code>SAR</code> działa na
+liczbach ze znakiem, to zachowuje ich znak (bit7), czyli wykonuje to samo, co <code>SHR</code>,
+ale zamiast wkładać zero do najstarszego bitu, wstawia tam jego bieżącą wartość.<br>
+Z poprzedniego przykładu mamy, że AL = 94h = 1001 0100. Gdy teraz wykonamy <code>SAR AL,2</code> to jako wynik
+otrzymamy 1110 0101 (E5h), bo wszystkie bity poszły o 2 miejsca w prawo o bit 7 został
+zachowany, i CF=0.
+</P>
+
+<P>
+<code>SHLD</code> i <code>SHRD</code> wykonują to samo, co <code>SHL</code> i <code>SHR</code>,
+ale na dwóch rejestrach naraz (no, prawie).
+Na przykład wykonanie &nbsp;<code>SHLD EAX,EBX,3</code> spowoduje że 3 najstarsze bity
+ EAX zostaną wyrzucone
+(i CF=ostatni z wyrzuconych) oraz 3 najstarsze bity EBX przejdą na nowo powstałe miejsca w
+3 najmłodszych bitach EAX. Ale uwaga: EBX pozostaje <em class="wazne">niezmieniony</em> !
+ I to jest właśnie przyczyna użycia słów <q>no prawie</q>.
+</P>
+
+<P>
+Ale nie sposób powiedzieć o <code>SHL</code> i <code>SHR</code> bez podania najbardziej popularnego
+zastosowania: <span class="b">szybkie mnożenie i dzielenie</span>.<BR>
+Jak można mnożyć i dzielić tylko przesuwając bity, pytacie?<BR>
+Otóż, sprawa jest bardzo prosta. Wpiszcie do AX jedynkę i wykonajcie kilka razy SHL AX,1 za
+każdym razem sprawdzając zawartość AX. Jak zauważycie, w AX będą kolejno 1,2,4,8,16,... Czyli
+za każdym razem zawartość AX się podwaja.<BR>
+Ogólnie, &nbsp;<code>SHL rej,n</code> mnoży zawartość rejestru przez 2^n.
+ Na przykład &nbsp;<code>SHL AX,4</code> przemnoży AX
+przez 2^4 = 16.<BR>
+Ale co zrobić, gdy chcemy mnożyć przez coś innego niż 2^n?<BR>
+Odpowiedź jest równie prosta, na przykład AX * 10 = (AX*8) + (AX*2) - z tym się chyba zgodzicie. A od tego
+już tylko 1 krok do</P>
+<PRE>
+	mov	bx, ax
+	shl	ax, 3		; AX = AX*8
+	shl	bx, 1		; BX = BX*2 = AX*2
+	add	ax, bx		; AX = AX*10</PRE>
+
+<P>Ale niekoniecznie musimy dodawać wyniki. Zauważcie, że AX * 15 = (AX*8) + (AX*4) + (AX*2) + AX.
+Trzeba byłoby wykonać 3 <code>SHL</code> i 3 <code>ADD</code>. Ale my skorzystamy z innego rozwiązania:
+AX * 15 = (AX*16) - AX. Już tylko 1 <code>SHL</code> i 1 <code>SUB</code>. Stąd mamy:</P>
+<PRE>
+	mov	bx, ax
+	shl	ax, 4		; AX = AX*16
+	sub	ax, bx</PRE>
+
+<P>
+Dokładnie w ten sam sposób działa dzielenie (tylko oczywiście przy dzieleniu używamy <code>SHR/SAR</code>
+i niestety szybko możemy dzielić tylko przez potęgi dwójki).
+Pilnujcie tylko, aby używać tej właściwej instrukcji! Jak wiemy, 65534 = 0FFFEh = -2 .
+Teraz, oczywiście FFFE SHR 1 = 7FFFh = 32767 (=65534/2)  a FFFE SAR 1 = FFFF = -1 (= -2/2).
+Widać różnicę, prawda? Pamiętajcie, że SAR patrzy na znak i go zachowuje.
+</P>
+<P>
+Używanie <code>SHL</code> dla mnożenia i (zwłaszcza) <code>SHR</code> dla dzielenia może znacznie
+przyśpieszyć nasze programy, gdyż instrukcje <code>MUL</code> i <code>DIV</code> są dość wolne.</P>
+
+
+
+
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="linux1305" id="linux1305">Instrukcje rotacji bitów</a></h2>
+
+	<BR><a href="#linux1306" class="bezdruk">(przeskocz instrukcje rotacji)</a>
+
+
+<P>
+Teraz przedstawię kolejną grupę instrukcji bitowych - instrukcje rotacji bitów. W tej grupie
+są tylko 4 instrukcje:</P>
+<UL>
+ <LI><code>ROL</code> - <span lang="en">rotate left</span> = obrót w lewo.<br>
+ 	<P>Ta instrukcja robi tyle, co <code>SHL</code>, lecz zamiast do bitu zerowego wkładać zero, wkłada tam
+ 	bieżącą wartość najstarszego bitu (przy okazji zachowując go także we fladze CF).<br>
+ 	bit7 = bit6, ... , bit1 = bit0, bit0 = stary bit7
+ 	</P></LI>
+ <LI><code>RCL</code> - <span lang="en">rotate through carry left</span> = obrót w lewo z użyciem flagi CF.
+ 	<P>Ta instrukcja jest podobna do <code>ROL</code> z jedną różnicą: wartość wstawiana do najmłodszego bitu
+ 	jest brana z flagi CF, a nie od razu z najstarszego bitu. Po wzięciu bieżącej wartości
+ 	CF, najstarszy bit jest do niej zapisywany.<br>
+ 	<span lang="en">carry flag</span> CF = bit7, bit7 = bit6, ... , bit1 = bit0, bit0 = stara CF
+ 	</P></LI>
+ <LI><code>ROR</code> - <span lang="en">rotate right</span> = obrót w prawo.
+ 	<P>Ta instrukcja robi tyle, co <code>SHR</code>, lecz zamiast do najstarszego bitu wkładać zero,
+	wkłada tam bieżącą wartość najmłodszego bitu (przy okazji zachowując go także we fladze CF).<br>
+ 	bit0 = bit1, ... , bit6 = bit7, bit7 = stary bit0
+ 	</P></LI>
+ <LI><code>RCR</code> - <span lang="en">rotate through carry right</span> = obrót w prawo z użyciem flagi CF.
+ 	<P>Ta instrukcja jest podobna do <code>ROR</code> z jedną różnicą: wartość wstawiana do najstarszego bitu
+ 	jest brana z flagi CF, a nie od razu z najmłodszego bitu. Po wzięciu bieżącej wartości
+ 	CF, najmłodszy bit jest do niej zapisywany.<br>
+ 	CF = bit0, bit0 = bit1, ... , bit6 = bit7, bit7 = stara CF
+ 	</P></LI>
+</UL>
+<P>Schematyczne działanie tych instrukcji na bajtach widać na tych rysunkach:</P>
+	<BR><a href="#linux1306_2" class="bezdruk">(przeskocz rysunki)</a>
+<PRE class="asciiart">
+	ROL:
+			+--&gt;-------------&gt;--------------&gt;--+
+			|				   |
+		CF &lt;-	7 &lt;- 6 &lt;- 5 &lt;- 4 &lt;- 3 &lt;- 2 &lt;- 1 &lt;- 0
+
+	RCL:
+			+--&gt;-----------&gt; CF &gt;-----------&gt;--+
+			|				   |
+			7 &lt;- 6 &lt;- 5 &lt;- 4 &lt;- 3 &lt;- 2 &lt;- 1 &lt;- 0
+
+	ROR:
+			+--&lt;-------------&lt;--------------&lt;--+
+			|				   |
+			7 -&gt; 6 -&gt; 5 -&gt; 4 -&gt; 3 -&gt; 2 -&gt; 1 -&gt; 0   -&gt; CF
+
+	RCR:
+			+--&lt;-----------&lt; CF &lt;-----------&lt;--+
+			|				   |
+			7 -&gt; 6 -&gt; 5 -&gt; 4 -&gt; 3 -&gt; 2 -&gt; 1 -&gt; 0</PRE>
+
+<P><a name="linux1306_2" id="linux1306_2">W przypadku <code>ROL</code> i <code>ROR</code></a>,
+ to <em class="wazne">ostatni</em> wyjęty z jednej strony
+ a włożony z drugiej strony bit
+zostaje też zapisany do flagi CF.<BR>
+<code>RCR</code> i <code>RCL</code> działają tak, że bit, który ma zostać wstawiony, jest pobierany z CF, a
+wypchnięty bit ląduje w CF, a nie od razu na nowym miejscu.
+</P>
+<P>No to kilka przykładów:</P>
+<PRE>
+	0011 1100  ROL  2  =  1111 0000  (tak samo jak SHL)
+	0011 1100  ROL  3  =  1110 0001
+
+	1111 0000  ROR  1  =  0111 1000  (tak samo jak SHR)
+	1010 0011  ROR  5  =  0001 1101</PRE>
+
+<P>Zastosowanie tych instrukcji znalazłem jedno: generowanie chaosu w rejestrach...<BR>
+Po co to mi? Na przykład generatory liczb pseudo-losowych z mojej biblioteki korzystają z
+tych właśnie instrukcji (a także z kilku poprzednich, na przykład <code>XOR</code>).</P>
+
+
+
+
+
+
+
+<BR><BR>
+<HR>
+<h2 class="nag"><a name="linux1306" id="linux1306">Instrukcje testowania i szukania bitów</a></h2>
+
+	<BR><a href="#linux1307" class="bezdruk">(przeskocz instrukcje BT*)</a>
+
+
+<P>
+Ostatnia już grupa rozkazów procesora to instrukcje testowania i szukania bitów. W tej grupie
+znajdują się:</P>
+<UL>
+ <LI><code>BT</code> - <span lang="en">Bit Test</span></LI>
+ <LI><code>BTC</code> - <span lang="en">Bit Test and Complement</span></LI>
+ <LI><code>BTR</code> - <span lang="en">Bit Test and Reset</span></LI>
+ <LI><code>BTS</code> - <span lang="en">Bit Test and Set</span></LI>
+ <LI><code>BSF</code> - <span lang="en">Bit Scan Forward</span></LI>
+ <LI><code>BSR</code> - <span lang="en">Bit Scan Reverse</span></LI>
+</UL>
+<P>Teraz po kolei omówię działanie każdej z nich.</P>
+<P>
+Instrukcje <code>BT*</code> przyjmują 2 argumenty: miejsce, gdzie mają znaleźć dany bit i numer tego bitu,
+a zwracają wartość tego bitu we fladze CF. Ponadto, <code>BTS</code> ustawia znaleziony bit na 1, <code>BTR</code>
+czyści znaleziony bit a <code>BTC</code> odwraca znaleziony bit.<BR>
+Kilka przykładów:</P>
+<PRE>
+	bt	eax, 21		; umieść 21. bit EAX w CF
+	jc	bit_jest_1
+	...
+	bts	cl, 2		; umieść 2. bit CL w CF i ustaw go
+	jnc	bit_2_byl_zerem
+	...
+	btc	dh, 5		; umieść 5. bit DH w CF i odwróć go
+	jc	bit_5_byl_jeden	</PRE>
+
+<P>Instrukcje <span lang="en">Bit Scan</span> przyjmują 2 argumenty: pierwszy z nich to rejestr, w którym będzie
+umieszczona pozycja (numer od zera począwszy) pierwszego bitu, którego wartość
+jest równa 1 znalezionego w drugim argumencie instrukcji. Dodatkowo, <code>BSF</code> szuka tego pierwszego
+bitu zaczynając od bitu numer 0, a <code>BSR</code> od najstarszego (numer 7, 15 lub 31 w zależności od
+rozmiaru drugiego argumentu).
+</P><P>
+Teraz szybki przykładzik:</P>
+<PRE>
+	mov	ax, 1010000b
+	bsf	bx, ax
+	bsr	cx, ax</PRE>
+
+<P>Po wykonaniu powyższych instrukcji w BX powinno być 4, a w CX - 6 (bity liczymy od zera).</P>
+
+<BR><hr>
+
+<P>
+<a name="linux1307" id="linux1307">Jak pewnie zauważyliście, w kilku miejscach</a>
+ w tym tekście wyraźnie podkreśliłem słowa
+<q>najwydajniejszy</q> i im podobne. Chciałem w ten sposób uzmysłowić Wam, że operacje logiczne
+/ binarne są bardzo ważną grupą instrukcji. Używanie ich, najlepiej wraz z instrukcją LEA
+służącą do szybkich rachunków, może kilkakrotnie (lub nawet kilkunastokrotnie) przyśpieszyć
+najważniejsze części Waszych programów (na przykład intensywne obliczeniowo pętle o milionach
+powtórzeń - patrz na przykład program <q>L_mag.asm</q> z 8. części tego kursu).</P>
+<P>
+Dlatego zachęcam Was do dobrego opanowania instrukcji binarnych - po prostu umożliwia to
+pisanie programów o takiej wydajności, o której inni mogą tylko pomarzyć...
+</P>
+<P>Po szczegółowy opis wszystkich instrukcji odsyłam, jak zwykle do :
+<A class="intel_link" href="http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html" hreflang="en">Intela</A>
+i <A class="amd_link" href="http://developer.amd.com/Resources/documentation/guides/Pages/default.aspx" hreflang="en"><acronym title="Advanced Micro Devices" lang="en">AMD</acronym></A>
+
+</P>
+<P><A HREF="http://graphics.stanford.edu/~seander/bithacks.html" hreflang="en"
+	>Ciekawe operacje na bitach</a> (w języku C).</P>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux12.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux14.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>W jednej komendzie policz:
+  <OL class="alfa">
+   <LI>iloraz z dzielenia EDI przez 4</LI>
+   <LI>resztę z dzielenia EDI przez 4</LI>
+   <LI>największą liczbę mniejszą lub równą EDI dzielącą sie przez 4</LI>
+  </OL>
+	Wskazówka: 4 = 2^2 oraz możliwe reszty z dzielenia przez 4 to
+	0, 1, 2 i 3 i zajmują one co najwyżej 2 bity.<BR><BR></LI>
+
+ <LI>W jednej komendzie:
+  <OL class="alfa">
+   <LI>ustaw bity 0, 11, 4 i 7 rejestru CX, nie ruszając pozostałych</LI>
+   <LI>wyczyść bity 9, 2, 7 i 25 rejestru ESI, nie ruszając pozostałych</LI>
+   <LI>przełącz (zmień wartość na odwrotną) bity 16, 4, 21, 1 i 10 rejestru EAX, nie ruszając pozostałych</LI>
+   <LI>spraw, by wartość rejestru AL=18h zmieniła się na 80h, bez instrukcji MOV</LI>
+   <LI>spraw, by wartość rejestru AL=18h zmieniła się na 81h, bez instrukcji MOV</LI>
+   <LI>przełącz bit 23 rejestru EDX nie ruszając pozostałych, a jego starą wartość umieść we fladze CF</LI>
+  </OL></LI>
+
+</OL>
+
+</BODY></HTML>

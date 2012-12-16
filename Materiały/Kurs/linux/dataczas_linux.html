@@ -1,0 +1,432 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Data i czas </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm">
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm">
+
+<link rel="alternate" type="text/html" href="dataczas_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Pobieranie i ustawiadnie daty oraz godziny w języku asembler pod Linuksem">
+<META NAME="Keywords" CONTENT="assembler, asm, asembler, linux, linuks, data, czas, timestamp,
+	date, time, GMT, UTC">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:57 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Pobieranie i ustawianie daty oraz godziny pod Linuksem</h1>
+<P>
+Bieżąca data i godzina w systemie Linux jest przechowywana w postaci tzw. znacznika czasu.
+ Jest to liczba oznaczająca liczbę sekund, które upłynęły od pierwszego dnia stycznia roku 1970, od
+ północy czasu <acronym title="Universal Time Coordinated" lang="en">UTC</acronym>
+  (<acronym title="Greenwich Mean Time" lang="en">GMT</acronym>). Znacznik czasu pobierany
+  jest funkcją <span class="b">sys_time</span> (numer 13), a nowy czas można ustawić za pomocą
+  funkcji <span class="b">sys_stime</span> (numer 25).<br>
+ Jeśli nie chcemy korzystać z żadnych bibliotek, to ta forma jest dość niewygodna w użyciu.
+ Dlatego przedstawię tu sposoby przerabiania znacznika czasu na formę tradycyjną i odwrotnie.</P>
+<P>
+Artykuł ten opracowałem na podstawie kodu źródłowego linuksowej biblioteki języka C (glibc),
+ konkretnie - na podstawie pliku glibc/time/offtime.c.</P>
+
+
+
+
+
+<br>
+<hr>
+<h2 class="nag">Zmiana znacznika czasu na formę tradycyjną</h2>
+	<BR><a href="#dataczas_tr2ts" class="bezdruk" tabindex="1">(przeskocz do konwersji w drugą stronę)</a>
+
+<ol>
+ <li>dzielimy znacznik przez liczbę sekund przypadającą na dzień (60*60*24), zachowujemy iloraz
+ 	jako liczbę dni oraz resztę z tego dzielenia</li>
+ <li>do reszty dodajemy przesunięcie naszego czasu od GMT, w sekundach (60*60 w czasie zimowym,
+ 	2*60*60 w czasie letnim)</li>
+ <li>jeśli reszta jest mniejsza od zera, to dodajemy do niej liczbę sekund przypadających na dzień,
+ 	aż stanie się większa od zera, za każdym razem zmniejszając liczbę dni z pierwszego kroku</li>
+ <li>jeśli reszta jest większa od liczby sekund dnia, to odejmujemy do niej liczbę sekund przypadających na dzień,
+ 	aż stanie się mniejsza od tej liczby, za każdym razem zwiększając liczbę dni z pierwszego kroku</li>
+ <li>dzielimy resztę przez liczbę sekund przypadającą na godzinę. Iloraz zachowujemy jako obliczoną
+ 	godzinę, resztę zapisujemy do zmiennej, którą dalej nazywamy <q>resztą</q></li>
+ <li>resztę z poprzedniego kroku dzielimy przez liczbę sekund w minucie. Iloraz zachowujemy jako liczbę
+ 	minut bieżącego czasu, resztę - jako liczbę sekund</li>
+ <li>do liczby dni dodajemy 4 (jako że pierwszy stycznia 1970 był czwartkiem), a wynik dzielimy przez 7.
+ 	Resztę (jeśli jest ujemna, dodajemy 7) z tego dzielenia zachowujemy jako
+ 	dzień tygodnia (0 oznacza niedzielę)</li>
+ <li>do zmiennej Y wstawiamy 1970</li>
+ <li>w pętli wykonuj działania:
+  <ol class="alfa">
+   <li>sprawdź, czy liczba dni jest mniejsza od zera lub większa od liczby dni w roku Y. Jeśli nie
+   	zachodzi ani to, ani to, wyjdź z pętli.<br>
+   	W tym kroku należy sprawdzić, czy Y jest przestępny. Każdy rok, który dzieli się przez 4, lecz nie dzieli się
+   	przez 100 jest przestępny. Dodatkowo, każdy rok, który dzieli się przez 400, jest przestępny.</li>
+   <li>do nowej zmiennej YG wstaw sumę Y oraz ilorazu z dzielenia liczby dni przez 365. Jeśli reszta z dzielenia
+   	liczby dni przez 365 była ujemna, od YG odejmij jeden.</li>
+   <li>od liczby dni odejmij różnicę między YG a Y pomnożoną przez 365</li>
+   <li>od liczby dni odejmij wynik procedury DODATEK (omówiona później), wykonanej na liczbie YG-1</li>
+   <li>do liczby dni dodaj wynik procedury DODATEK (omówiona później), wykonanej na liczbie Y-1</li>
+   <li>do Y wstaw YG</li>
+  </ol></li>
+ <li>do numeru dnia w roku wstaw bieżącą wartość liczby dni</li>
+ <li>sprawdź, w którym miesiącu znajduje się dzień o tym numerze i zapisz ten miesiąc. Od liczby
+ 	dni odejmij sumaryczną liczbę dni we wszystkich poprzednich miesiącach.</li>
+ <li>do dnia miesiąca wstaw bieżącą liczbę dni powiększoną o 1</li>
+</ol>
+<P>Procedura DODATEK składa się z kroków:</P>
+<ol>
+ <li>podziel podany rok przez 4 i zachowaj wynik. Jeśli reszta wyszła mniejsza od zera, od wyniku
+ 	odejmij 1</li>
+ <li>podziel podany rok przez 100 i zachowaj wynik. Jeśli reszta wyszła mniejsza od zera, od wyniku
+ 	odejmij 1</li>
+ <li>podziel podany rok przez 400 i zachowaj wynik. Jeśli reszta wyszła mniejsza od zera, od wyniku
+ 	odejmij 1</li>
+ <li>od pierwszego wyniku odejmij drugi, po czym dodaj trzeci, a całość zwróć jako wynik procedury</li>
+</ol>
+
+<P>
+Cały ten skomplikowany algorytm jest ukazany w tym oto programie (składnia FASM):</P>
+	<BR><a href="#dataczas_tr2ts" class="bezdruk">(przeskocz program)</a>
+<pre title="Program konwertujący znacznik czasu na datę">
+; Program wyliczający bieżącą datę i godziną na podstawie bieżącego
+;	znacznika czasu. Program NIC NIE WYŚWIETLA.
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+;   fasm dataczas.fasm
+
+format ELF executable
+segment executable
+entry main
+
+SEK_NA_GODZ	= (60 * 60)		; liczba sekund w godzinie
+SEK_NA_DZIEN	= (SEK_NA_GODZ * 24)	; liczba sekund w dobie
+LETNI		= 1			; 0, gdy zimowy, 1 gdy letni
+PRZES_GMT	= 1*SEK_NA_GODZ + LETNI*SEK_NA_GODZ  ; przesunięcie od GMT
+
+main:
+	mov	eax, 13
+	xor	ebx, ebx
+	int	80h	; pobierz aktualny czas w sekundach
+	mov	[czas], eax
+
+	mov	ebx, SEK_NA_DZIEN
+	xor	edx, edx
+	idiv	ebx	; liczba sekund / liczba sekund w dniu = liczba dni
+
+	add	edx, PRZES_GMT	; dodaj strefę czasową
+
+	; jeśli reszta sekund &lt; 0, dodajemy do niej liczbę sekund dnia,
+	; ale równocześnie zmniejszamy liczbę dni (EAX)
+spr_reszte:
+	cmp	edx, 0
+	jge	reszta_ok
+
+	add	edx, SEK_NA_DZIEN
+	sub	eax, 1
+
+	jmp	spr_reszte
+
+reszta_ok:
+
+	; jeśli reszta sekund &gt; liczba sekund w dniu, odejmujemy od niej
+	; liczbę sekund dnia, ale równocześnie zwiększamy liczbę dni (EAX)
+spr_reszte2:
+	cmp	edx, SEK_NA_DZIEN
+	jl	reszta_ok2
+
+	sub	edx, SEK_NA_DZIEN
+	add	eax, 1
+
+	jmp	spr_reszte2
+
+reszta_ok2:
+
+	mov	[l_dni], eax
+	mov	[reszta], edx
+
+	mov	eax, edx	; EAX = reszta
+	mov	ebx, SEK_NA_GODZ
+	xor	edx, edx
+	idiv	ebx	; EAX = numer godziny, reszta - minuty+sekundy
+
+	mov	[godz], al	; zachowujemy godzinę
+	mov	[reszta], edx	; i nową resztę
+
+	mov	eax, edx
+	mov	ecx, 60
+	xor	edx, edx
+	idiv	ecx		; nową resztę dzielimy przez 60
+
+	mov	[min], al	; iloraz to liczba minut
+	mov	[sek], dl	; a reszta - liczba sekund
+
+	; znajdujemy dzień tygodnia
+	mov	eax, [l_dni]
+	add	eax, 4	; 1970-1-1 to czwartek
+	mov	ebx, 7
+	xor	edx, edx
+	idiv	ebx	; EAX = dzień tygodnia
+
+	cmp	dl, 0
+	jge	dzient_ok
+	add	dl, 7	; dodajemy 7, jeśli był mniejszy od zera
+dzient_ok:
+	mov	[dzient], dl
+
+
+	; początek pętli z punktu 9
+spr_dni:
+	mov	eax, [y]
+	call	czy_przest	; ECX = 0, gdy Y jest przestępny.
+
+	cmp	dword [l_dni], 0
+	jl	zmien_dni	; sprawdzamy, czy liczba dni &lt; 0
+
+	mov	esi, 365
+	test	ecx, ecx
+	jnz	.przest_ok
+	add	esi, 1		; dodajemy 1 dzień w roku przestępnym
+.przest_ok:
+
+	cmp	[l_dni], esi
+	jl	koniec_spr_dni	; sprawdzamy, czy liczba dni &gt;= 365/366
+
+zmien_dni:
+
+	mov	esi, 365
+	mov	eax, [l_dni]
+	xor	edx, edx
+	idiv	esi		; EAX = liczba dni/365
+	mov	ecx, eax	; zachowujemy do ECX
+	cmp	edx, 0
+	jge	.edx_ok1
+	sub	ecx, 1		; jeśli reszta &lt; 0, to odejmujemy 1
+.edx_ok1:
+	add	ecx, [y]	; ECX = liczba dni/365 + Y +1 lub +0
+	mov	[yg], ecx	; zachowaj do YG
+
+	sub	ecx, [y]
+	imul	ecx, ecx, 365	; ECX = (YG-Y)*365
+
+	push	ecx
+	mov	eax, [yg]
+	sub	eax, 1
+	call	dodatek		; wylicz DODATEK na YG-1 i zapisz w [przest]
+	pop	ecx
+	add	ecx, [przest]	; ECX = (YG-Y)*365+DODATEK(YG-1)
+
+	push	ecx
+	mov	eax, [y]
+	sub	eax, 1
+	call	dodatek		; wylicz DODATEK na Y-1 i zapisz w [przest]
+	pop	ecx
+	sub	ecx, [przest]	; ECX=(YG-Y)*365+DODATEK(YG-1)-DODATEK(Y-1)
+
+	sub	[l_dni], ecx	; odejmij całość na raz od liczby dni
+
+	mov	eax, [yg]
+	mov	[y], eax	; do Y wstaw YG
+
+	jmp	spr_dni		; i na początek pętli
+
+koniec_spr_dni:
+	mov	eax, [y]
+	;sub	eax, 1900
+	mov	[rok], ax	; zapisz wyliczony rok
+	call	czy_przest	; ECX = 0, gdy przestępny
+
+	mov	eax, [l_dni]
+	mov	[dzienr], ax	; zapisz numer dnia w roku
+
+	; sprawdzimy, do którego miesiąca należy wyliczony numer dnia
+	xor	esi, esi	; zakładamy rok nieprzestępny
+	mov	ebx, 2		; zaczynamy od pierwszego miesiąca
+	test	ecx, ecx
+	jnz	.nie_przest
+	add	esi, 13*2	;jeśli przestępny,bierzemy drugą grupę liczb
+.nie_przest:
+	; szukamy miesiąca. EAX = numer dnia w roku
+	cmp	ax, [dni1+esi+ebx]  ; porównujemy numer dnia z sumą dni aż
+				; do NASTĘPNEGO miesiąca
+	jbe	mies_juz	; jeśli już mniejszy, przerywamy
+	add	ebx, 2		; sprawdzamy kolejny miesiąc
+	jmp	.nie_przest
+
+mies_juz:
+		; aby dostać numer dnia w miesiącu, odejmujemy od numeru dnia
+		;sumę liczb dni we wszystkich POPRZEDNICH miesiącach, stąd -2
+	sub	ax, [dni1+esi+ebx-2]
+	inc	al	; i dodajemy jeden, żeby nie liczyć od zera
+	mov	[dzien], al	; zapisujemy dzień miesiąca
+
+	shr	ebx, 1	; numer znalezionego miesiąca dzielimy przez 2, bo
+			; są 2 bajty na miesiąc
+	mov	[mies], bl	; i zachowujemy
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h	; koniec programu
+
+
+dodatek:
+; oblicza DODATEK dla roku podanego w EAX
+	push	eax
+	push	ebx
+	push	ecx
+	push	edx
+	push	esi
+	push	edi
+
+	mov	esi, 4
+	mov	edi, 100
+	mov	ebx, 400
+	and	eax, 0ffffh
+
+	push	eax
+	xor	edx, edx
+	idiv	esi		; dziel EAX przez 4
+	mov	ecx, eax	; zachowaj wynik
+	cmp	edx, 0		; sprawdź resztę
+	jge	.edx_ok1
+	sub	ecx, 1		; jeśli reszta &lt; 0, od wyniku odejmij 1
+.edx_ok1:
+
+	pop	eax
+	push	eax
+	xor	edx, edx
+	idiv	edi		; dziel EAX przez 100
+	sub	ecx, eax	; odejmij od bieżącego wyniku
+	cmp	edx, 0		; sprawdź resztę
+	jge	.edx_ok2
+	add	ecx, 1		; jeśli reszta &lt; 0, od wyniku odejmij 1
+.edx_ok2:
+
+	pop	eax
+	xor	edx, edx
+	idiv	ebx		; dziel EAX przez 400
+	add	ecx, eax	; dodaj do bieżącego wyniku
+	cmp	edx, 0		; sprawdź resztę
+	jge	.edx_ok3
+	sub	ecx, 1		; jeśli reszta &lt; 0, od wyniku odejmij 1
+.edx_ok3:
+
+	mov	[przest], ecx	; zachowaj wynik
+
+	pop	edi
+	pop	esi
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+	ret
+
+; zwraca 0 w ECX, gdy rok podany w EAX jest przestępny, 1 - gdy nie jest
+czy_przest:
+	push	eax
+	push	ebx
+	push	edx
+
+	xor	ecx, ecx
+
+	push	eax
+	xor	edx, edx
+	mov	ebx, 4
+	idiv	ebx		; dziel EAX przez 4
+	pop	eax
+	test	edx, edx
+	jnz	.nie_jest	; reszta różna od zera oznacza, że się nie
+				; dzieli, czyli nie może być przestępny
+
+	; będąc tu wiemy, że rok dzieli się przez 4
+	push	eax
+	xor	edx, edx
+	mov	ebx, 100
+	idiv	ebx		; dziel EAX przez 100
+	pop	eax
+	test	edx, edx
+	jnz	.jest		; reszta różna od zera oznacza, że się nie
+				; dzieli przez 100, a dzielił się przez 4,
+				; czyli jest przestępny
+
+
+	; będąc tu wiemy, że rok dzieli się przez 4 i przez 100
+	push	eax
+	xor	edx, edx
+	mov	ebx, 400
+	idiv	ebx		; dziel EAX przez 400
+	pop	eax
+	test	edx, edx
+	jz	.jest		; reszta równa zero oznacza, że się dzieli
+				; przez 400, czyli jest przestępny
+
+.nie_jest:
+	mov	ecx, 1
+
+.jest:
+	pop	edx
+	pop	ebx
+	pop	eax
+	ret
+
+
+segment readable writeable
+
+l_dni	dd	0	; wyliczona liczba dni
+reszta	dd	0	; reszta z dzieleń
+y	dd	1970	; początkowa wartość Y
+yg	dd	0	; zmienna YG
+przest	dd	0	; dodatek
+czas	dd	0	; znacznik czasu
+
+rok	dw	0	; bieżący rok
+mies	db	0	; bieżący miesiąc
+dzien	db	0	; bieżący dzień miesiąca
+dzient	db	0	; bieżący dzień tygodnia
+dzienr	dw	0	; bieżący dzień roku
+
+godz	db	0	; bieżąca godzina
+min	db	0	; bieżąca minuta
+sek	db	0	; bieżąca sekunda
+
+; liczby dni poprzedzających każdy miesiąc w roku zwykłym i przestępnym
+dni1	dw	0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365
+	dw	0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366</pre>
+
+
+
+<br>
+<hr>
+<h2 class="nag"><a name="dataczas_tr2ts" id="dataczas_tr2ts">Zmiana formy
+	tradycyjnej na znacznik czasu</a></h2>
+<P>
+Ten algorytm jest o wiele prostszy. Mianowicie:<br>
+Znacznik czasu = SEKUNDY + MINUTY*60 + GODZINY*60*60 + DZIEŃ_ROKU*60*60*24 + LATA_OD_1970*60*60*24*365
+	+ LATA_PRZESTĘPNE_OD_1970*60*60*24</P>
+<P>Wystarczy jedynie obliczyć, którym dniem w roku jest bieżący dzień (znając dzień miesiąca, korzystamy
+ z tablicy w powyższym programie i do określonej liczby dodajemy bieżący numer dnia) oraz ile
+ było lat przestępnych od roku 1970 do bieżącego (według znanych reguł, wystarczy w pętli dla każdego
+ roku uruchomić procedurę czy_przest z poprzedniego programu).</P>
+<P>Zauważcie, że tyle, ile było lat przestępnych, tyle dodajemy <span class="b">dni</span>, nie
+ całych lat.</P>
+
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+</BODY></HTML>

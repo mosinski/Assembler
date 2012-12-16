@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: opis syscall (7) </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="syscall64_6.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="przer80h_7.html"
+	hreflang="pl" lang="pl" title="Funkcje x86-32: 301-349">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kursy programowania w assemblerze - opis syscall">
+<META NAME="Keywords" CONTENT="Assembler, asembler, kurs, nauka, linux, syscall, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Sun, Sep 16 2012 12:57:59 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Opis funkcji systemowych <span lang="en">syscall</span>: 301-312</h1>
+
+<P>
+Jeśli jakaś funkcja zakończy się błędem, w RAX zwracana jest wartość ujemna z przedziału
+od -4096 do -1 włącznie.</P>
+<P>
+Z drugiej strony, opisy funkcji na stronach manuala mówią, że zwracane jest -1,
+a wartość błędu jest zapisywana do zmiennej errno z biblioteki GLIBC. Dzieje się tak
+tylko w przypadku, gdy korzystamy z interfejsu języka C (czyli deklarujemy i
+uruchamiamy zewnętrzne funkcje odpowiadające wywołaniom systemowym i linkujemy
+nasz program z biblioteką języka C), a nie bezpośrednio z wywołań systemowych (czyli
+<span lang="en">syscall</span>).
+</P>
+<P>
+Najbardziej aktualne informacje o funkcjach systemowych można znaleźć zazwyczaj
+w sekcji 2 (lub 3) manuala, na przykład <code class="b">man 2 open</code>.
+</P>
+<P>
+Najnowsze wersje jądra można znaleźć na <A HREF="http://www.kernel.org" hreflang="en"
+>www.kernel.org</A>, a pliki z listą funkcji i ich numerów są pod ścieżkami:
+</P>
+<ul>
+ <li>arch/x86/include/asm/unistd_64.h (w starszych wersjach kodów)</li>
+ <li>arch/x86/syscalls/syscall_64.tbl (w wersjach bieżących)</li>
+</ul>
+
+<P>
+Najnowsze wersje stron manuala można znaleźć tu: <A HREF="http://www.kernel.org/pub/linux/docs/man-pages/"
+	>www.kernel.org/pub/linux/docs/man-pages</A>.
+</P>
+<P>
+Napis ASCIIZ oznacza łańcuch znaków
+ <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+ zakończony znakiem/bajtem Zerowym.
+</P>
+<P>
+Jeśli potrzeba, przy każdej funkcji jest odnośnik do opisu argumentów i innych
+ <A HREF="dodatk80.html" hreflang="pl" tabindex="1">dodatkowych informacji</a>: typów danych,
+ wartości błędów, możliwych wartości parametrów itp.
+</P>
+
+<TABLE summary="Ta tabela opisuje funkcje od 301 do 312 linuksowego wywołania systemowego syscall">
+<CAPTION> Podstawowe funkcje <span lang="en">syscall</span>: 301-312</CAPTION>
+<thead>
+<TR><TH style="WIDTH:5%;" id="rax">Numer/ RAX</TH>
+	<TH style="WIDTH:20%;" id="opis">Opis</TH>
+	<TH id="arg">Argumenty</TH><TH style="WIDTH:30%;" id="ret">Zwraca</TH></TR>
+
+</thead><tbody>
+
+<TR class="c">  <TD headers="rax"><a name="x64f301">301</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_fanotify_mark</span> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f302">302</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_prlimit64</span> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f303">303</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_name_to_handle_at</span> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f304">304</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_open_by_handle_at</span> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f305">305</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_clock_adjtime</span> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f306">306</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_syncfs</span> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f307">307</a><br> </td>
+	<TD headers="opis"> Wyślij wiele wiadomości z gniazda (<span lang="en">sys_sendmmsg</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego gniazda<BR>
+		RSI = adres tablicy struktur <A HREF="dodatk80.html#mmsghdr">mmsghdr</A>,
+			z których brać dane do wysłania<BR>
+		RDX = liczba struktur mmsghdr spod [RSI]<BR>
+		R10 = 0 lub zORowane <a href="dodatk80.html#sendto_fl"
+			hreflang="pl">flagi funkcji sendmsg</a> </td>
+	<TD headers="ret"> RAX = liczba wysłanych wiadomości<BR>RAX = błąd funkcji sendmsg <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f308">308</a><br> </td>
+	<TD headers="opis"> Powiąż wątek z przestrzenią nazw (<span lang="en">sys_setns</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor jednego z plików w /proc/[pid]/ns/ <BR>
+	        RSI = 0 (oznaczające dowolny typ przestrzeni nazw lub jeden z
+			<A HREF="dodatk80.html#setns_nstype">typów przestrzeni nazw</A>) <br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EBADF, EINVAL, ENOMEM, EPERM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f309">309</a><br> </td>
+	<TD headers="opis"> Pobierz procesor, na którym działa wątek (<span lang="en">sys_getcpu</span>) <br> </td>
+	<TD headers="arg"> RDI = 0 lub adres zmiennej, która otrzyma numer procesora<BR>
+		RSI = 0 lub adres zmiennej, która otrzyma numer węzła NUMA<BR>
+		RDX = adres struktury <A HREF="dodatk80.html#getcpu_cache">getcpu_cache</a>, która służyła
+			jako pamięć podręczna dla tej funkcji; nieużywane<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f310">310</a><br> </td>
+	<TD headers="opis"> Czytaj dane innego procesu (<span lang="en">sys_process_vm_readv</span>) <br> </td>
+	<TD headers="arg"> RDI = PID procesu<BR>
+		RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A> na odczytane dane<BR>
+		RDX = liczba struktur w [RSI]<BR>
+		R10 = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A> z adresami danych do odczytania<BR>
+		R8 = liczba struktur w [R10]<BR>
+		R9 = flagi (nieużwyane, ustawić na zero)<br> </td>
+	<TD headers="ret"> RAX = liczba odczytanych bajtów<BR>RAX = błąd EINVAL, EFAULT, ENOMEM, EPERM, ESRCH <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f311">311</a><br> </td>
+	<TD headers="opis"> Zapisz dane w innym procesie (<span lang="en">sys_process_vm_writev</span>) <br> </td>
+	<TD headers="arg"> RDI = PID procesu<BR>
+		RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A> na dane do zapisania<BR>
+		RDX = liczba struktur w [RSI]<BR>
+		R10 = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A> z adresami miejsc do zapisania<BR>
+		R8 = liczba struktur w [R10]<BR>
+		R9 = flagi (nieużwyane, ustawić na zero)<br> </td>
+	<TD headers="ret"> RAX = liczba zapisanych bajtów<BR>RAX = błąd EINVAL, EFAULT, ENOMEM, EPERM, ESRCH <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f312">312</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_kcmp</span> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+
+</TABLE>
+
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="syscall64_6.html">Poprzednia część</a> (Alt+3)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

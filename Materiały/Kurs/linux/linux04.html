@@ -1,0 +1,797 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 4 - Pierwsze programy </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux03.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux05.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, flagi, _pisz_ch, ile_pier, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="Kwrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:57 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 4 - Pierwsze programy, czyli przełamywanie pierwszych lodów</h1></div>
+
+<P>
+Znamy już rejestry, trochę instrukcji i zasad. No ale teoria jest niczym bez praktyki. Dlatego
+w tej części przedstawię kilka względnie prostych programów, które powinny rozbudzić wyobraźnię
+tworzenia.
+</P>
+<P>
+Ten program spyta się użytkownika o imię i przywita się z nim:</P>
+	<BR><a href="#linux0401_1" tabindex="1" class="bezdruk">(przeskocz program pytający o imię)</a>
+<PRE>
+	; Program witający się z użytkownikiem po imieniu
+	;
+	; Autor: Bogdan D.
+	; kontakt: bogdandr (at) op (dot) pl
+	;
+	; kompilacja:
+	; nasm -f elf czesc.asm
+	; ld -s -o czesc czesc.o
+	;
+	; kompilacja FASM:
+	; fasm czesc.asm czesc
+
+	; dla FASMa:
+	;format ELF executable
+	;entry _start
+
+	;segment readable executable		; początek sekcji kodu
+
+	; dla NASMa:
+	section .text		; początek sekcji kodu
+	global _start	; _start będzie symbolem globalnym,
+			; od którego zacznie się wykonywanie programu
+
+	_start:
+		mov	eax, 4		; zapis do pliku
+		mov	ebx, 1		; na ekran
+		mov	ecx, jak_masz	; napis do wyświetlenia: pytanie
+		mov	edx, jak_masz_dl	; długość napisu
+		int	80h		; wyświetlamy
+
+		mov	eax, 3		; czytanie z pliku
+		mov	ebx, 0		; z klawiatury
+		mov	ecx, imie	; dokąd czytać?
+		mov	edx, imie_dl	; ile bajtów czytać?
+		int	80h		; wczytujemy
+
+
+		mov	eax, 4		; zapis do pliku
+		mov	ebx, 1		; na ekran
+		mov	ecx, czesc	; napis do wyświetlenia: &quot;cześć&quot;
+		mov	edx, czesc_dl	; długość napisu
+		int	80h		; wyświetlamy
+
+		mov	eax, 4		; zapis do pliku
+		mov	ebx, 1		; na ekran
+		mov	ecx, imie	; napis do wyświetlenia: imię
+		mov	edx, imie_dl	; długość napisu
+		int	80h		; wyświetlamy
+
+		mov	eax, 1
+		xor	ebx, ebx
+		int	80h
+
+	; dla FASMa:
+	;segment readable writeable		; początek sekcji danych
+
+	section .data		; początek sekcji danych
+
+	jak_masz	db	&quot;Jak masz na imie? &quot;
+	; FASM: znak równości zamiast EQU
+	jak_masz_dl	equ	$ - jak_masz
+
+	; rezerwuj 20 bajtów o wartości początkowej zero, na imię
+	imie:		times 20 db 0
+	; FASM: znak równości zamiast EQU
+	imie_dl		equ	$ - imie
+
+	czesc		db	&quot;Czesc &quot;
+	; FASM: znak równości zamiast EQU
+	czesc_dl	equ	$ - czesc</pre>
+
+
+
+
+<hr>
+<P>
+<a name="linux0401_1" id="linux0401_1">Następny program</a> wypisuje na ekranie rejestr flag w postaci dwójkowej.
+</P>
+	<BR><a href="#linux0401" class="bezdruk">(przeskocz program wypisujący flagi)</a>
+<PRE title="Program wypisujący flagi">
+; Program wypisujący flagi w postaci dwójkowej
+;
+; Autor: Bogdan D.
+; kontakt: bogdandr (at) op (dot) pl
+;
+; kompilacja:
+; nasm -f elf flagi.asm
+; ld -s -o flagi flagi.o
+;
+; kompilacja FASM:
+; fasm flagi.asm flagi
+
+
+;format ELF executable		; dla FASMa
+; entry _start			; dla FASMa
+
+; segment readable executable	; dla FASMa
+
+section .text		; tu zaczyna się segment kodu,
+			; nie jest to potrzebne
+
+global _start		; nazwa punktu rozpoczęcia programu.
+			; FASM: usunąć tę linijkę
+
+;CPU 386		; będziemy tu używać rejestrów 32-bitowych.
+			; Nie jest to potrzebne, gdyż
+			; NASM domyślnie włącza wszystkie
+			; możliwe instrukcje.
+
+_start:				; etykieta początku programu
+
+	pushfd			; 32 bity flag idą na stos
+
+	pop	esi		; flagi ze stosu do ESI
+
+	mov	eax, &quot;0&quot;
+	mov	ebx, nasze_flagi; EBX = adres bufora dla wartości flag
+	xor	edi, edi	; EDI = 0
+
+	mov	cx, 32		; tyle bitów i tyle razy trzeba
+				; przejść przez pętlę
+
+petla:				; etykieta oznaczająca początek pętli.
+
+	and	al, &quot;0&quot;	; upewniamy się, że AL zawiera tylko
+				; 30h=&quot;0&quot;, co zaraz się
+				; może zmienić. Dokładniej,
+				; czyścimy bity 0-3,
+				; z których bit 0 może się zaraz zmienić
+
+	shl	esi, 1		; Przesuwamy bity w ESI o 1 w lewo.
+				; 31 bit ESI idzie do CF
+
+	adc	al, 0		; ADC - add with carry. Do AL dodaj
+				; 0 + wartość CF.
+				; jeśli CF (czyli 31 bit ESI) = 1,
+				; to AL := AL+1,
+				; inaczej AL bez zmian
+
+	mov	[ebx+edi], al	; zapisz AL w buforze
+	add	edi, 1
+
+	loop	petla		; przejdź na początek pętli,
+				; jeśli nie skończyliśmy
+
+	mov	eax, 4		; funkcja zapisywania do pliku/na ekran
+	mov	ebx, 1		; 1 = ekran
+	mov	ecx, nasze_flagi
+	mov	edx, 32		; długość tekstu
+	int	80h		; wypisz na ekran
+
+        mov     byte [nasze_flagi],0ah
+        mov     eax, 4          ; funkcja zapisywania do pliku/na ekran
+        mov     ebx, 1          ; 1 = ekran
+        mov     ecx, nasze_flagi
+        mov     edx, 1          ; długość tekstu
+        int     80h             ; wypisz na ekran przejście do nowej linii
+
+	mov	eax, 1
+	int	80h		; wyjście z programu
+
+; FASM: segment readable writeable
+section .data			; dane już nie mogą być w sekcji kodu, gdyż
+				; w Linuksie sekcja kodu programu jest
+				; chroniona przed zapisem
+
+nasze_flagi:	times	32	db &quot;0&quot;		; &quot;0&quot; = 30h</PRE>
+
+<P>Kompilujemy go następująco (wszystkie programy będziemy tak kompilować, chyba że powiem inaczej):</P>
+<PRE>
+	nasm -f elf flagi.asm
+	ld -s -o flagi flagi.o</PRE>
+
+<P>lub:</P>
+<PRE>	fasm flagi.asm flagi</PRE>
+
+<P><a name="linux0401" id="linux0401">Nie ma w tym programie wielkiej filozofii</a>.
+ Nie powinno być trudno go zrozumieć.</P>
+
+<hr>
+<P>Teraz krótki programik, którego jedynym celem jest wyświetlenie na ekranie cyfr od 0 do 9,
+każda w osobnej linii:</P>
+	<BR><a href="#linux0402" class="bezdruk">(przeskocz program wypisujący cyfry)</a>
+<PRE title="program wypisujący cyfry">
+; Program wypisuje na ekranie cyfry od 0 do 9
+;
+; kompilacja NASM:
+; nasm -f elf cyfry.asm
+; ld -s -o cyfry cyfry.o
+
+
+section .text
+
+global _start
+
+; definiujemy stałe (NASM):
+
+%define		lf	10		; Line Feed
+%define	stdout	1	; standardowe urządzenie wyjścia (zwykle ekran)
+%define		sys_write 4		; funkcja pisania do pliku
+
+;
+; kompilacja FASM:
+; fasm cyfry.asm cyfry
+;
+; format ELF executable		; dla FASMa
+; entry _start
+; segment readable executable
+
+; definiujemy stałe (FASM):
+; lf = 10
+; stdout = 1
+; sys_write = 4
+
+
+
+_start:
+
+	mov	eax, 0			; pierwsza wypisywana cyfra
+
+wyswietlaj:
+	call	_pisz_ld		; uruchom procedurę wyświetlania
+					; liczby będącej w EAX
+	call	_nwln			; uruchom procedurę, która
+					; przechodzi do nowej linii
+	add	eax, 1			; zwiększamy cyfrę
+	cmp	eax, 10			; sprawdzamy, czy ciągle EAX &lt; 10
+	jb	wyswietlaj		; jeśli EAX &lt; 10, to
+					; wyświetlamy cyfrę
+
+	mov	eax, 1			; funkcja wyjścia z programu
+	xor	ebx, ebx		; kod wyjścia = 0
+	int	80h			; wychodzimy
+
+
+
+; następujące procedury (wyświetlanie liczby i przechodzenie
+; do nowego wiersza) nie są aż tak istotne, aby omawiać je
+; szczegółowo, gdyż w przyszłości będziemy używać tych samych
+; procedur, ale z biblioteki, a te wstawiłem tutaj dla
+; uproszczenia kompilacji programu.
+
+; Ogólny schemat działania tej procedury wygląda tak:
+; weźmy liczbę EAX=12345. Robimy tak:
+; 1. dzielimy EAX przez 10. reszta = EDX = DL = 5.
+; Zapisz do bufora. EAX = 1234 (iloraz)
+; 2. dzielimy EAX przez 10. reszta = DL = 4.
+; Zapisz do bufora. EAX=123 (iloraz)
+; 3. dzielimy EAX przez 10. reszta = DL = 3.
+; Zapisz do bufora. EAX=12
+; 4. dziel EAX przez 10. DL = 2. zapisz. iloraz = EAX = 1
+; 5. dziel EAX przez 10. DL = 1. zapisz. iloraz = EAX = 0.
+; Przerywamy pętlę.
+; Teraz w buforze są znaki: &quot;54321&quot;. Wystarczy wypisać wspak
+; i oryginalna liczba pojawia się na ekranie.
+
+_pisz_ld:
+
+; pisz32e
+; we: EAX=liczba bez znaku do wypisania
+
+	pushfd
+	push	ecx
+	push	edx
+	push	eax
+	push	esi
+
+	xor	esi, esi
+	mov	ecx, 10
+
+._pisz_ld_petla:
+	xor	edx, edx
+	div	ecx
+
+	or	dl, &quot;0&quot;
+	mov	[_pisz_bufor+esi], dl	; do bufora idą reszty z
+					; dzielenia przez 10,
+	inc	esi			; czyli cyfry wspak
+
+	test	eax, eax
+	jnz	._pisz_ld_petla
+
+._pisz_ld_wypis:
+	mov	al, [_pisz_bufor+esi-1]	; wypisujemy reszty wspak
+	call	_pisz_z
+
+	dec	esi
+	jnz	._pisz_ld_wypis
+
+	pop	esi
+	pop	eax
+	pop	edx
+	pop	ecx
+	popfd
+
+	ret
+
+
+_pisz_z:
+
+; pisz_z
+; we: AL=znak do wypisania
+
+	push	eax
+	push	ebx
+	push	ecx
+	push	edx
+
+	mov	[_pisz_bufor+39], al
+
+	mov	eax, sys_write		; funkcja zapisu do pliku
+	mov	ebx, stdout		; kierujemy na
+					; standardowe wyjście
+	lea	ecx, [_pisz_bufor+39]
+	mov	edx, 1
+	int	80h
+
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+
+	ret
+
+
+_nwln:
+
+;wyświetla znak końca linii (Linux)
+
+	push	eax
+
+	mov	al, lf
+	call	_pisz_z
+
+	pop	eax
+	ret
+
+
+section .data
+; FASM: segment readable writeable
+
+_pisz_bufor:	times	40	db 0	; miejsce na 40 cyferek</PRE>
+
+<P>
+<a name="linux0402" id="linux0402">Następny <q>twór</q> nie jest</a>
+ wolnostojącym programem, ale pewną procedurą. Pobiera ona informacje
+z rejestru AL i wypisuje, co trzeba. Oto ona:</P>
+	<BR><a href="#linux0403" class="bezdruk">(przeskocz procedurę _pisz_ch)</a>
+<PRE title="procedura _pisz_ch">
+; FASM: segment readable executable
+section .text
+
+_pisz_ch:
+
+;we: AL=cyfra heksadecymalna do wypisania 0...15
+; CF=1 jeśli błąd
+
+	push eax		; zachowaj modyfikowane rejestry: AX, Flagi
+	pushfd
+
+	cmp al,9		; Sprawdzamy dane wejściowe :
+				; AL jest w 0-9 czy w 10-15?
+	ja _ch_hex		; AL &lt; 9. Skok do &quot;_ch_hex&quot;
+	or al,&quot;0&quot;		; 0 &lt; AL &lt; 9. Or ustawia 2 bity,
+				; czyniąc z AL liczbę z
+				; przedziału 30h - 39h, czyli od &quot;0&quot; do &quot;9&quot;.
+				; Można było napisać
+				; &quot;add al,30h&quot;, ale zdecydowałem się
+				; na &quot;or&quot;, bo jest
+				; szybsze a efekt ten sam.
+
+	jmp short _ch_pz	; AL już poprawione. Skacz do miejsca,
+				; gdzie wypisujemy znak.
+
+_ch_hex:			; AL &gt; 9. Może będzie to cyfra hex,
+				; może nie.
+	cmp al,15		; AL &gt; 15?
+	ja _blad_ch		; jeśli tak, to mamy błąd
+	add al,&quot;A&quot;-10		; Duży skok myślowy. Ale wystarczy to
+				; rozbić na 2 kroki i
+				; wszystko staje się jasne. Najpierw
+				; odejmujemy 10 od AL.
+				; Zamiast liczby od 10 do 15 mamy już
+				; liczbę od 0 do 5. Teraz tę liczbę
+				; dodajemy do &quot;A&quot;, czyli kodu ASCII litery
+				; A, otrzymując znak od &quot;A&quot; do &quot;F&quot;
+
+_ch_pz:				; miejsce wypisywania znaków.
+	mov	[znak], al
+
+	mov	eax, 4		; funkcja wypisywania
+	mov	ebx, 1		; ekran
+	mov	ecx, znak
+	mov	edx, 1
+	int	80h
+
+
+	popfd			; zdejmij ze stosu flagi
+	clc			; CF := 0 dla zaznaczenia braku błędu
+				; (patrz opis procedury)
+	jmp short _ch_ok	; skok do wyjścia
+
+_blad_ch:			; sekcja obsługi błędu (AL &gt; 15)
+	popfd			; zdejmij ze stosu flagi
+	stc			; CF := 1 na znak błędu
+
+_ch_ok:				; miejsce wyjścia z procedury
+	pop eax			; zdejmij modyfikowane rejestry
+
+	ret			; return, powrót
+
+; FASM: segment readable writeable
+section .data
+
+znak	db	0</PRE>
+
+<P><a name="linux0403" id="linux0403">To chyba nie było zbyt trudne</a>, co?<BR>
+Szczegóły dotyczące pisania procedur (i bibliotek) znajdują się w moim
+<a href="bibl_tut_linux.html" hreflang="pl">artykule o pisaniu bibliotek</a>.</P>
+
+<P>
+Teraz pokażę pewien program, który wybrałem ze względu na dużą liczbę różnych instrukcji i
+sztuczek. Niestety, nie jest on krótki, ale wspólnie spróbujemy przez niego przejść.</P>
+	<BR><a href="#linux0404" class="bezdruk">(przeskocz program zliczający liczby pierwsze)</a>
+<PRE title="Program liczy liczby pierwsze">
+; Program liczy liczby pierwsze w przedziałach
+;   2-10, 2-100, 2-1000,... 2-100.000
+;
+; Autor: Bogdan D.
+; kontakt: bogdandr (at) op (dot) pl
+;
+; kompilacja:
+;
+; nasm -f elf ile_pier.asm
+; ld -s -o ile_pier ile_pier.o
+;
+; kompilacja FASM:
+; fasm ile_pier.asm ile_pier
+
+
+; format ELF executable		; tylko dla FASMa
+; entry _start
+
+; FASM: segment readable executable
+section .text
+
+global _start			; FASM: usunąć
+
+_start:				; początek...
+
+	xor ebx,ebx		; EBX = liczba, którą sprawdzamy,
+				; czy jest pierwsza. Zaczniemy od 3.
+				; Poniżej jest 3 razy &quot;inc&quot;
+				; (zwiększ o 1). Najpierw
+				; EBX = 0, bo &quot;xor rej,rej&quot; zeruje dany
+				; rejestr
+
+	xor edi,edi		; EDI = bieżący licznik liczb pierwszych
+
+	xor ecx,ecx		; ECX = stary licznik liczb
+				; (z poprzedniego przedziału)
+				; Chwilowo, oczywiście 0.
+
+	inc ebx			; EBX = 1
+	mov esi,10		; ESI = bieżący koniec przedziału.
+	inc edi			; EDI=1. uwzględniamy dwójkę, która
+				; jest liczbą pierwsza
+	inc ebx			; EBX=2, pierwsza liczba będzie = 3
+
+petla:				; pętla przedziału
+
+	cmp ebx,esi		; czy koniec przedziału?
+				; (ebx=liczba, esi=koniec przedziału)
+	jae pisz		; EBX &gt;= ESI - idź do sekcji
+				; wypisywania wyników
+
+	mov ebp,2		; EBP - liczby, przez które
+				; będziemy dzielić.
+				; pierwszy dzielnik = 2
+
+	inc ebx			; zwiększamy liczbę. EBX=3. Będzie
+				; to pierwsza sprawdzana
+
+spr:				; pętla sprawdzania pojedynczej liczby
+
+	mov eax,ebx		; EAX = sprawdzana liczba
+	xor edx,edx		; EDX = 0
+	div ebp			; EAX = EAX/EBP (EDX było=0),
+				; EDX=reszta z dzielenia
+
+	or edx,edx		; instrukcja OR tak jak wiele innych,
+				; ustawi flagę zera ZF na 1, gdy jej
+				; wynik był zerem. W tym przypadku
+				; pytamy: czy EDX jest zerem?
+
+	jz petla		; jeżeli dzieli się bez reszty
+				; (reszta=EDX=0),
+				; to nie jest liczbą pierwszą
+				; i należy zwiększyć liczbę
+				; sprawdzaną (inc ebx)
+
+	inc ebp			; zwiększamy dzielnik
+
+	cmp ebp,ebx		; dzielniki aż do liczby
+	jb spr			; liczba &gt; dzielnik - sprawdzaj
+				; dalej tę liczbę. Wiem, że
+				; można było sprawdzać tylko do
+				; SQRT(liczba) lub LICZBA/2, ale
+				; wydłużyłoby to program i brakowało
+				; mi już rejestrów...
+
+juz:				; przerobiliśmy wszystkie dzielniki,
+				; zawsze wychodziła reszta
+				; więc liczba badana jest pierwsza
+
+	inc edi			; zwiększamy licznik liczb znalezionych
+	jmp petla		; sprawdzaj kolejną liczbę aż
+				; do końca przedziału
+
+				; sekcja wypisywania informacji
+
+pisz:
+
+	push ebx		; zachowujemy modyfikowane
+				; a ważne rejestry
+	push ecx
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, przedzial
+	mov	edx, dlugosc_przedzial
+	int	80h		; wypisujemy informację o przedziale
+
+	mov	eax,esi		; EAX=ESI=koniec przedziału
+	call	_pisz_ld	; wypisz ten koniec (EAX)
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, dwuk
+	mov	edx, 1
+	int	80h		; wypisujemy dwukropek
+
+	pop ecx
+
+	add ecx,edi		; dodajemy poprzednią liczbę
+				; znalezionych liczb pierwszych
+	mov eax,ecx		; EAX = liczba liczb pierwszych
+				; od 2 do końca bieżącego przedziału
+
+	call _pisz_ld		; wypisujemy tę liczbę.
+
+	pop ebx
+
+	cmp esi,100000		; 10^5
+	jb dalej		; ESI &gt; 100.000? Tak - koniec,
+				; bo dalej liczy zbyt długo
+koniec:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, przedzial
+	mov	edx, 1
+	int	80h		; wypisujemy znak nowej linii
+
+
+	xor	ebx, ebx	; kod wyjścia = 0
+	mov	eax, 1
+	int	80h		; wyjście z programu
+
+dalej:
+
+	mov eax,esi		; EAX=ESI
+	shl eax,3		; EAX = EAX*8
+	shl esi,1		; ESI=ESI*2
+	add esi,eax		; ESI=ESI*2+EAX*8=ESI*2+ESI*8=ESI*10.
+				; Znacznie szybciej niż MUL
+
+	xor edi,edi		; bieżący licznik liczb
+
+	jmp petla		; robimy od początku...
+
+_pisz_ld:
+
+;we: EAX=liczba bez znaku do wypisania
+
+	push ebx
+	push ecx		; zachowujemy modyfikowane rejestry
+	push edx
+	push eax
+	push esi
+
+	xor esi,esi		; SI=0. Będzie wskaźnikiem w
+				; powyższy bufor.
+
+	mov ecx,10		; będziemy dzielić przez 10,
+				; aby uzyskiwać kolejne cyfry
+				; Reszty z dzielenia pójdą do
+				; bufora, potem będą wypisane
+				; wspak, bo pierwsza reszta
+				; jest przecież cyfrą jedności
+_pisz_ld_petla:
+	xor edx,edx		; EDX=0
+
+	div ecx			; EAX = EAX/ECX, EDX = reszta,
+				; która mieści się w DL, bo to
+				; jest tylko 1 cyfra dziesiętna.
+
+	or  dl, &quot;0&quot;
+
+	mov [_pisz_bufor+esi],dl	; Cyfra do bufora.
+
+	inc esi			; Zwiększ numer komórki w buforze,
+				; do której będziemy teraz pisać
+
+	or eax,eax		; EAX = 0 ?
+
+	jnz _pisz_ld_petla	; Jeśli nie (JNZ), to skok do
+				; początku pętli
+
+_pisz_ld_wypis:
+
+	mov	eax, 4
+	mov	ebx, 1
+	lea	ecx, [_pisz_bufor+esi-1]
+	mov	edx, 1
+	int	80h
+
+	dec esi			; zmniejsz wskaźnik do bufora.
+
+	jnz _pisz_ld_wypis	; Jeśli ten wskaźnik (ESI) nie
+				; jest zerem, wypisuj dalej
+
+	pop esi			; odzyskaj zachowane rejestry
+	pop eax
+	pop edx
+	pop ecx
+	pop ebx
+
+	ret                     ; powrót z procedury
+
+; FASM: segment readable writeable
+ section .data
+
+ _pisz_bufor: times 20 db 0       ; miejsce na cyfry dla procedury
+
+ przedzial       db      10,&quot;Przedzial 2-&quot;
+
+; FASM:  dlugosc_przedzial       =     $ - przedzial
+ dlugosc_przedzial       equ     $ - przedzial
+
+ dwuk            db      &quot;:&quot;</PRE>
+<hr>
+
+<P><a name="linux0404" id="linux0404">Kilka uwag o tym programie</a>:</P>
+<UL>
+ <LI>Czemu nie zrobiłem <CODE>mov ebx,2</CODE> a potem <CODE>inc ebx</CODE>,
+	 które musiało być w pętli?<BR>
+	<P>Bo xor ebx,ebx jest krótsze i szybsze.</P></LI>
+
+ <LI>Dobra. Więc czemu nie:
+	<PRE>
+	xor ebx,ebx
+	inc ebx
+	inc ebx	</PRE>
+	<P>Te instrukcje operują na tym samym rejestrze i każda musi poczekać, aż poprzednia się
+	zakończy. Współczesne procesory potrafią wykonywać niezależne czynności równolegle,
+	dlatego wcisnąłem w środek jeszcze kilka niezależnych instrukcji.</P></LI>
+
+ <LI>Ten program sprawdza za dużo dzielników. Nie można było sprawić, by sprawdzał tylko do na przykład
+	połowy sprawdzanej liczby?<BR>
+	<P>Można było. Używając zmiennych w pamięci. Niechętnie to robię, bo w porównaniu z
+	prędkością operacji procesora, pamięć jest wprost NIEWIARYGODNIE wolna. Zależało mi na
+	szybkości.</P></LI>
+
+ <LI> Czy nie prościej zamiast tych wszystkich <code>SHL</code> zapisać jedno
+	<code>MUL</code> lub <code>IMUL</code>?<BR>
+	<P>Jasne, że prościej. Przy okazji dobre kilka[naście] razy wolniej.</P></LI>
+
+ <LI>Dlaczego ciągle <CODE>xor rej,rej</CODE>?<BR>
+	<P>Szybsze niż <CODE>mov rej,0</CODE>, gdzie to zero musi być często zapisane 4 bajtami
+	zerowymi. Tak więc i krótsze. Oprócz tego, dzięki instrukcji <code>XOR</code>
+	lub <code>SUB</code> wykonanej na tym samym rejestrze, procesor wie, że ten rejestr
+	już jest pusty. Może to przyśpieszyć niektóre operacje.
+	</P></LI>
+
+ <LI>Dlaczego na niektórych etykietach są jakieś znaki podkreślenia z przodu?<BR>
+	<P>Niektóre procedury są żywcem wyjęte z mojej biblioteki, pisząc którą musiałem zadbać, by
+	przypadkowo nazwa jakieś mojej procedury nie była identyczna z nazwą jakiejś innej
+	napisanej w programie korzystającym z biblioteki.<BR>
+	Czy nie mogłem tego potem zmienić?<BR>
+	Jasne, że mogłem. Ale nie było takiej potrzeby.</P></LI>
+
+ <LI>Czemu <CODE>or rej,rej</CODE> a nie <CODE>cmp rej,0</CODE>?<BR>
+	<P>OR jest krótsze i szybsze. Można też używać <CODE>test rej,rej</CODE>, które nie zmienia
+	zawartości rejestru.</P></LI>
+
+ <LI>Czemu <CODE>or dl, &quot;0&quot;</CODE>?<BR>
+	<P>Bardziej czytelne niż <CODE>add/or dl,30h</CODE>. Chodzi o to, aby dodać kod ASCII zera. I można
+	to zrobić bardziej lub mniej czytelnie.</P></LI>
+
+ <LI>Co to w ogóle za instrukcja to <CODE>lea edx, [_pisz_bufor+si-1]</CODE> ?<BR>
+	<P><code>LEA</code> - <span lang="en">Load Effective Address</span>:
+	 do rejestru EDX wpisz adres (elementu, którego) adres
+	wynosi <q>_pisz_bufor+SI-1</q>. Tak więc od tej pory EDX = _pisz_bufor+SI-1, czyli wskazuje
+	na ostatnią cyfrę w naszym buforze. Czemu odjąłem 1? Jak widać w kodzie, po wpisaniu
+	cyfry do bufora, zwiększamy SI. Gdy nasza liczba już się skończy to SI pokazuje na
+	następne wolne miejsce po ostatniej cyfrze, a chcemy, aby pokazywał na ostatnią.
+	Stąd to minus jeden.
+	</P></LI>
+<!--
+ <LI>Po co te śmieszne gwiazdki i znaki "="?<BR>
+	<P>Gdy program się rozrasta, pozwalają utrzymać czytelność. Takich linijek używam do
+	oddzielania różnych procedur/sekcji kodu.
+	</P></LI>
+-->
+ <LI>Czemu FASM nie akceptuje EQU? <BR>
+	<P>FASM akceptuje EQU, tylko tutaj symbol był zdefiniowany po użyciu, co najwyraźniej
+	przeszkadza FASMowi. Postawienie znaku równości zamiast EQU naprawiło sprawę.
+	</P></LI>
+
+ <LI>Czemu jest dwukropek po etykiecie zmiennej?<BR>
+	<P>Po to, aby FASM przyjął dyrektywę <q lang="en">times</q>. Bez dwukropka nie chciał skompilować.
+	</P></LI>
+
+</UL>
+<P>Wiem, że ten program nie jest doskonały. Ale taki już po prostu napisałem...<BR>
+Nie martwcie się, jeśli czegoś od razu nie zrozumiecie. Naprawdę, z czasem samo przyjdzie.
+Ja też przecież nie umiałem wszystkiego od razu.</P>
+<P>
+Inny program do liczb pierwszych znajdziecie tu: <a href="asm/inni/prime.txt">prime.txt</a>.
+</P>
+<P>Następnym razem coś o ułamkach i koprocesorze.</P>
+
+<blockquote>Podstawowe prawo logiki:<BR>
+ Jeżeli wiesz, że nic nie wiesz, to nic nie wiesz.<BR>
+  Jeżeli wiesz, że nic nie wiesz, to coś wiesz.<BR>
+  Więc nie wiesz, że nic nie wiesz. </blockquote>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux03.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux05.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+
+(można korzystać z zamieszczonych tu procedur)
+<OL>
+ <LI>Napisz program, który na ekranie wyświetli liczby od 90 do 100.<BR><BR></LI>
+ <LI>Napisz program sprawdzający, czy dana liczba (umieścisz ją w kodzie, nie musi być
+	wczytywana znikąd) jest liczbą pierwszą.<BR><BR></LI>
+ <LI>Napisz program wypisujący dzielniki danej liczby (liczba też w kodzie).</LI>
+
+</OL>
+
+</BODY></HTML>

@@ -1,0 +1,463 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: opis syscall (1) </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Next"     hreflang="pl" lang="en" href="syscall64_2.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="przer80h_1.html"
+	hreflang="pl" lang="pl" title="Funkcje x86-32: 1-50">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kursy programowania w assemblerze - opis syscall">
+<META NAME="Keywords" CONTENT="Assembler, asembler, kurs, nauka, linux, syscall, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Sun, Sep 16 2012 12:57:59 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Opis funkcji systemowych <span lang="en">syscall</span>: 0-50</h1>
+
+<P>
+Jeśli jakaś funkcja zakończy się błędem, w RAX zwracana jest wartość ujemna z przedziału
+od -4096 do -1 włącznie.</P>
+<P>
+Z drugiej strony, opisy funkcji na stronach manuala mówią, że zwracane jest -1,
+a wartość błędu jest zapisywana do zmiennej errno z biblioteki GLIBC. Dzieje się tak
+tylko w przypadku, gdy korzystamy z interfejsu języka C (czyli deklarujemy i
+uruchamiamy zewnętrzne funkcje odpowiadające wywołaniom systemowym i linkujemy
+nasz program z biblioteką języka C), a nie bezpośrednio z wywołań systemowych (czyli
+<span lang="en">syscall</span>).
+</P>
+<P>
+Najbardziej aktualne informacje o funkcjach systemowych można znaleźć zazwyczaj
+w sekcji 2 (lub 3) manuala, na przykład <code class="b">man 2 open</code>.
+</P>
+<P>
+Najnowsze wersje jądra można znaleźć na <A HREF="http://www.kernel.org" hreflang="en"
+>www.kernel.org</A>, a pliki z listą funkcji i ich numerów są pod ścieżkami:
+</P>
+<ul>
+ <li>arch/x86/include/asm/unistd_64.h (w starszych wersjach kodów)</li>
+ <li>arch/x86/syscalls/syscall_64.tbl (w wersjach bieżących)</li>
+</ul>
+
+<P>
+Najnowsze wersje stron manuala można znaleźć tu: <A HREF="http://www.kernel.org/pub/linux/docs/man-pages/"
+	>www.kernel.org/pub/linux/docs/man-pages</A>.
+</P>
+<P>
+Napis ASCIIZ oznacza łańcuch znaków
+ <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+ zakończony znakiem/bajtem Zerowym.
+</P>
+<P>
+Jeśli potrzeba, przy każdej funkcji jest odnośnik do opisu argumentów i innych
+ <A HREF="dodatk80.html" hreflang="pl" tabindex="1">dodatkowych informacji</a>: typów danych,
+ wartości błędów, możliwych wartości parametrów itp.
+</P>
+
+<TABLE summary="Ta tabela opisuje funkcje od 0 do 50 linuksowego wywołania systemowego syscall">
+<CAPTION> Podstawowe funkcje <span lang="en">syscall</span>: 0-50 </CAPTION>
+<thead>
+<TR><TH style="WIDTH:5%;" id="rax">Numer/ RAX</TH>
+	<TH style="WIDTH:20%;" id="opis">Opis</TH>
+	<TH id="arg">Argumenty</TH><TH style="WIDTH:30%;" id="ret">Zwraca</TH></TR>
+
+</thead><tbody>
+<TR class="c">  <TD headers="rax"><a name="x64f0">0</a><br> </td>
+	<TD headers="opis"> Czytanie z pliku (<span lang="en">sys_read</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<BR>
+		RSI = adres bufora docelowego<BR>
+		RDX = liczba bajtów do przeczytania<br> </td>
+	<TD headers="ret">RAX=liczba przeczytanych bajtów<BR>RAX = błąd EAGAIN, EBADF, EFAULT, EINTR, EINVAL, EIO, EISDIR<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f1">1</a><br> </td>
+	<TD headers="opis"> Zapis do pliku (<span lang="en">sys_write</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<BR>
+		RSI = adres bufora źródłowego<BR>
+		RDX = liczba bajtów do zapisania<br> </td>
+	<TD headers="ret">RAX=liczba zapisanych bajtów<BR>RAX = błąd EAGAIN, EBADF, EFAULT, EINTR, EINVAL, EIO, ENOSPC, EPIPE<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f2">2</a><br> </td>
+	<TD headers="opis"> Otwarcie pliku (<span lang="en">sys_open</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku ASCIIZ<BR>
+		RSI = <A HREF="dodatk80.html#bity_dostepu">bity dostępu</A><BR>
+		RDX = <A HREF="dodatk80.html#tryb">prawa dostępu / tryb</a> <br> </td>
+	<TD headers="ret">RAX=deskryptor pliku<BR>RAX = błąd EACCES, EEXIST, EFAULT, EISDIR, ELOOP, EMFILE, ENAMETOOLONG, ENFILE,
+		ENOENT, ENODEV, ENODIR, ENOMEM, ENOSPC, ENXIO, EROFS, ETXTBSY<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f3">3</a><br> </td>
+	<TD headers="opis"> Zamknięcie pliku (<span lang="en">sys_close</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<br> </td>
+	<TD headers="ret">RAX = 0<BR>RAX = błąd EBADF, EINTR, EIO<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f4">4</a><br> </td>
+	<TD headers="opis"> Pobierz status pliku (<span lang="en">sys_stat</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku ASCIIZ. Jeśli plik jest linkiem, to zwracany jest
+			status obiektu docelowego.<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#stat">stat</a> <br> </td>
+	<TD headers="ret">RAX = 0<BR> RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f5">5</a><br> </td>
+	<TD headers="opis"> Pobierz status pliku (<span lang="en">sys_fstat</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor otwartego pliku<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#stat">stat</a> <br> </td>
+	<TD headers="ret">RAX = 0<BR> RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f6">6</a><br> </td>
+	<TD headers="opis"> Pobierz status pliku (<span lang="en">sys_lstat</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku ASCIIZ. Jeśli plik jest linkiem, to zwracany
+			 jest status linku, a nie obiektu docelowego.<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#stat">stat</a> <br> </td>
+	<TD headers="ret">RAX = 0<BR> RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f7">7</a><br> </td>
+	<TD headers="opis"> Czekaj na zdarzenia na deskryptorze (<span lang="en">sys_poll</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres tablicy struktur <A HREF="dodatk80.html#pollfd">pollfd</A><BR>
+		RSI = liczba struktur pollfd w tablicy<BR>
+		RDX = max. czas na oczekiwanie w milisekundach (-1 = nieskończoność)<br> </td>
+	<TD headers="ret"> RAX = liczba odpowiednich deskryptorów<BR>RAX = 0, gdy czas upłynął<BR>RAX = błąd EFAULT, EINTR, EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f8">8</a><br> </td>
+	<TD headers="opis"> Zmiana bieżącej pozycji w pliku (<span lang="en">sys_lseek</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<BR>
+		RSI = liczba bajtów, o którą chcemy się przesunąć<BR>
+		RDX = <A HREF="dodatk80.html#przesun">odkąd zaczynamy ruch</A> <br> </td>
+	<TD headers="ret">RAX = nowa pozycja względem początku pliku<BR>RAX = błąd EBADF, EINVAL, EISPIPE<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f9">9</a><br> </td>
+	<TD headers="opis"> Mapuj plik/urządzenie do pamięci (<span lang="en">sys_mmap</span>)   <br> </td>
+	<TD headers="arg">-- zgodne z <span class="b">man 2 mmap</span>--<BR>
+		RDI = proponowany adres początkowy<BR>
+		RSI = długość mapowanego obszaru<BR>
+		RDX = <A HREF="dodatk80.html#mmap_ochrona">ochrona</A><BR>
+		R10 = <A HREF="dodatk80.html#mmap_flagi">flagi mapowania</A><BR>
+		R8 = deskryptor mapowanego pliku, jeśli mapowanie nie jest anonimowe<BR>
+		R9 = offset początku mapowanych danych w pliku<br> </td>
+	<TD headers="ret"> RAX = rzeczywisty adres mapowania<BR>RAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f10">10</a><br> </td>
+	<TD headers="opis"> Kontrola dostępu do obszaru pamięci (<span lang="en">sys_mprotect</span>)   <br> </td>
+	<TD headers="arg">RDI = adres obszaru pamięci (wyrównany do granicy strony)<BR>
+	        RSI = długość tego obszaru w bajtach (względem strony pamięci)<BR>
+		RDX = bity włączające <A HREF="dodatk80.html#mmap_ochrona">ochronę</A>
+		<br> </td>
+	<TD headers="ret"> RAX=0 <BR>RAX = błąd EACCES, ENOMEM, EINVAL, EFAULT<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f11">11</a><br> </td>
+	<TD headers="opis"> Odmapuj plik/urządzenie z pamięci (<span lang="en">sys_munmap</span>)   <br> </td>
+	<TD headers="arg">RDI = adres początkowy obszaru<BR>
+		RSI = liczba bajtów<br> </td>
+	<TD headers="ret">RAX = 0<BR>RAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f12">12</a><br> </td>
+	<TD headers="opis"> Alokacja i dealokacja pamięci (<span lang="en">sys_brk</span>)  <br> </td>
+	<TD headers="arg">RDI = 0, aby poznać aktualny najwyższy adres sekcji .bss<BR>
+		RDI = (wirtualny) adres nowego wierzchołka .bss, powyżej spodu sekcji danych i poniżej bibliotek<br> </td>
+	<TD headers="ret">RAX = nowy najwyższy adres<BR>RAX = błąd ENOMEM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f13">13</a><br> </td>
+	<TD headers="opis"> Pobierz i zmień procedurę obsługi sygnału (<span lang="en">sys_rt_sigaction</span>)  <br> </td>
+	<TD headers="arg"> RDI = numer sygnału<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#sigaction">sigaction</A> opisującą bieżącą procedurę<BR>
+		RDX = adres struktury <A HREF="dodatk80.html#sigaction">sigaction</A> opisującą starą procedurę<br>
+		R10 = rozmiar struktury <A HREF="dodatk80.html#sigaction">sigset_t</A><br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX=błąd EINVAL, EFAULT<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f14">14</a><br> </td>
+	<TD headers="opis"> Pobierz i zmień blokowane sygnały (<span lang="en">sys_rt_sigprocmask</span>)  <br> </td>
+	<TD headers="arg">RDI = <A HREF="dodatk80.html#procmask">działanie</a><br>
+		RSI = adres zestawu sygnałów (tablicy 32 DWORDów)<br>
+		RDX = adres zestawu sygnałów, który otrzyma starą maskę sygnałów<br>
+		R10 = rozmiar struktury <A HREF="dodatk80.html#sigaction">sigset_t</A><br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX=błąd EINVAL, EFAULT<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f15">15</a><br> </td>
+	<TD headers="opis"> Powrót z procedury obsługi sygnału (<span lang="en">sys_rt_sigreturn</span>)  <br> </td>
+	<TD headers="arg"> -- <span class="b">funkcja wewnętrzna, nie używać</span>--<BR>
+		 RDI = parametr zależny od architektury</td>
+	<TD headers="ret">nigdy nie powraca<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f16">16</a><br> </td>
+	<TD headers="opis"> Manipulacja urządzeniem znakowym (<span lang="en">sys_ioctl</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<BR>
+		RSI = kod komendy (man 2 ioctl_list)<BR>
+		RDX = adres zapisywalnego obszaru danych lub innej struktury, zależy od komendy<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EBADF, EFAULT, EINVAL, ENOTTY<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f17">17</a><br> </td>
+	<TD headers="opis"> Czytaj z danej pozycji w pliku (<span lang="en">sys_pread</span>/<span lang="en">sys_pread64</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor otwartego pliku<BR>
+		RSI = adres bufora, który otrzyma dane<BR>
+		RDX = liczba bajtów do odczytania<BR>
+		R10 = pozycja, z której zacząć czytanie<br> </td>
+	<TD headers="ret">RAX = liczba przeczytanych bajtów (wskaźnik pozycji w pliku pozostaje bez zmian)<BR>RAX = błąd (jak w <span lang="en">sys_read</span>) <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f18">18</a><br> </td>
+	<TD headers="opis"> Zapisuj na danej pozycji w pliku (<span lang="en">sys_pwrite</span>/<span lang="en">sys_pwrite64</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor otwartego pliku<BR>
+		RSI = adres bufora, z którego pobierać dane do zapisania<BR>
+		RDX = liczba bajtów do zapisania<BR>
+		R10 = pozycja, od której zacząć zapisywanie<br> </td>
+	<TD headers="ret">RAX = liczba zapisanych bajtów (wskaźnik pozycji w pliku pozostaje bez zmian)<BR>RAX = błąd (jak w <span lang="en">sys_read</span>) <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f19">19</a><br> </td>
+	<TD headers="opis"> Czytaj wektor (<span lang="en">sys_readv</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego obiektu, z którego będą czytane dane<BR>
+	        RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A><BR>
+		RDX = liczba struktur iovec, do których będą czytane dane<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EWOULDBLOCK, EBADF, EINTR, EINVAL, ENOLCK<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f20">20</a><br> </td>
+	<TD headers="opis"> Zapisz wektor (<span lang="en">sys_writev</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego obiektu, do którego będą zapisane dane<BR>
+	        RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A><BR>
+		RDX = liczba struktur iovec, z których będą czytane dane do zapisania<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EWOULDBLOCK, EBADF, EINTR, EINVAL, ENOLCK<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f21">21</a><br> </td>
+	<TD headers="opis"> Sprawdź uprawnienia dostępu do pliku (<span lang="en">sys_access</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku ASCIIZ<BR>
+		RSI = <A HREF="dodatk80.html#tryb">prawa dostępu / tryb</A> (wartości R_OK, W_OK, X_OK)<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd - każdy związany z systemem plików i plikami<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f22">22</a><br> </td>
+	<TD headers="opis"> Utwórz potok (<span lang="en">sys_pipe</span>)  <br> </td>
+	<TD headers="arg">RDI = adres tablicy dwóch DWORDów<br> </td>
+	<TD headers="ret">RAX = 0 i pod [RDI]: deskryptor odczytu z potoku fd(0) pod [RDI], deskryptor zapisu do potoku
+		fd(1) pod [RDI+4]<BR>RAX = błąd EFAULT, EMFILE, ENFILE<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f23">23</a><br> </td>
+	<TD headers="opis"> Oczekiwanie zmiany stanu deskryptora(ów) (<span lang="en">sys_select</span>)   <br> </td>
+	<TD headers="arg"> RDI = najwyższy numer spośród deskryptorów + 1<BR>
+		RSI = adres tablicy deskryptorów sprawdzanych, czy można z nich czytać<BR>
+		RDX = adres tablicy deskryptorów sprawdzanych, czy można do nich pisać<BR>
+		R10 = adres tablicy deskryptorów sprawdzanych, czy nie wystąpił u nich wyjątek<BR>
+		R8 = adres struktury <A HREF="dodatk80.html#timeval">timeval</A> zawierającą
+			maksymalny czas oczekiwania<BR> <br> </td>
+	<TD headers="ret"> RAX = całkowita liczba deskryptorów, która pozostała w tablicach<BR>
+		RAX = 0, gdy skończył się czas<BR>
+		RAX = wystąpił błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f24">24</a><br> </td>
+	<TD headers="opis"> Oddanie procesora innym procesom (<span lang="en">sys_sched_yield</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd.<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f25">25</a><br> </td>
+	<TD headers="opis"> Przemapuj adres wirtualny (<span lang="en">sys_mremap</span>)  <br> </td>
+	<TD headers="arg"> RDI = stary adres<BR>
+		RSI = rozmiar obszaru do przemapowania<BR>
+		RDX = żądany rozmiar<BR>
+		R10 = zero lub <A HREF="dodatk80.html#mremap_flagi">flagi przemapowania</A><BR>
+		R8 = nowy adres, jeśli dano flagę MREMAP_FIXED<br> </td>
+	<TD headers="ret"> RAX = wskaźnik do nowego obszaru<BR>RAX = sygnał lub błąd EFAULT, EAGAIN, ENOMEM, EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f26">26</a><br> </td>
+	<TD headers="opis"> Synchronizuj mapowany plik z pamięcią (<span lang="en">sys_msync</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres do zrzucenia na dysk (zostaną zrzucone zmodyfikowane strony pamięci
+		zawierającej ten adres i co najwyżej RSI-1 zmienionych następnych)<BR>
+	        RSI = liczba bajtów/rozmiar obszaru do zrzucenia na dysk<BR>
+		RDX = 0 lub zORowane <A HREF="dodatk80.html#msync">flagi</A> <br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EBUSY, EIO, ENOMEM, EINVAL, ENOLCK<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f27">27</a><br> </td>
+	<TD headers="opis"> Pobierz informację, czy strony pamięci są w rdzeniu procesu (<span lang="en">sys_mincore</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres początkowy sprawdzanych bajtów<BR>
+ 		RSI = liczba sprawdzanych bajtów<BR>
+		RDX = adres tablicy bajtów zdolnej pomieścić tyle bajtów, ile stron pamięci jest sprawdzanych. Najmłodszy bit w każdym bajcie
+			będzie mówił o tym, czy dana strona pamięci jest obecna (=1), czy zrzucona na dysk (=0)<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EAGAIN, EINVAL, EFAULT, ENOMEM <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f28">28</a><br> </td>
+	<TD headers="opis"> Porada dla jądra o użyciu pamięci (<span lang="en">sys_madvise</span>, <span lang="en">sys_madvise1</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres początkowy bajtów, których dotoczy porada<BR>
+ 		RSI = liczba tych bajtów<BR>
+		RDX = <A HREF="dodatk80.html#madvise">porada</a> <br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EAGAIN, EINVAL, EFAULT, ENOMEM <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f29">29</a><br> </td>
+	<TD headers="opis"> Alokuj współdzielony segment pamięci (<span lang="en">sys_shmget</span>) <br> </td>
+	<TD headers="arg"> RDI = klucz opisujący segment pamięci<BR>
+ 		RSI = długość segmentu<BR>
+		RDX = <A HREF="dodatk80.html#shmfl">flagi shmget</a> <br> </td>
+	<TD headers="ret"> RAX = identyfikator segmentu <BR>RAX = błąd EACCES, EEXIST, EINVAL, ENFILE, ENOENT, ENOMEM, ENOSPC, EPERM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f30">30</a><br> </td>
+	<TD headers="opis"> Podłącz współdzielony segment pamięci (<span lang="en">sys_shmat</span>) <br> </td>
+	<TD headers="arg"> RDI = identyfikator segmentu pamięci<BR>
+ 		RSI = adres podłączenia segmentu do pamięci procesu lub 0<BR>
+		RDX = <A HREF="dodatk80.html#shmatfl">flagi shmat</a> </td>
+	<TD headers="ret"> RAX = adres podłączonego segmentu <BR>RAX = błąd EACCES, EINVAL, ENOMEM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f31">31</a><br> </td>
+	<TD headers="opis"> Kontrola współdzielonej pamięci (<span lang="en">sys_shmctl</span>)  <br> </td>
+	<TD headers="arg"> RDI = identyfikator segmentu pamięci<BR>
+ 		RSI = <A HREF="dodatk80.html#shmctl">rozkaz</a><BR>
+		RDX = adres struktury <A HREF="dodatk80.html#shmid_ds">shmid_ds</a> </td>
+	<TD headers="ret"> RAX = wartość odpowiednia dla rozkazu <BR>RAX = błąd EACCES, EINVAL, EFAULT, EIDRM, ENOMEM, EOVERFLOW, EPERM <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f32">32</a><br> </td>
+	<TD headers="opis"> Zduplikuj deskryptor pliku (<span lang="en">sys_dup</span>)  <br> </td>
+	<TD headers="arg">RDI = stary deskryptor<br> </td>
+	<TD headers="ret">RAX = nowy deskryptor<BR>RAX = błąd EBADF, EMFILE<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f33">33</a><br> </td>
+	<TD headers="opis"> Zamień deskryptor zduplikowanym deskryptorem pliku (<span lang="en">sys_dup2</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor do zduplikowania<BR>
+		RSI = deskryptor, do którego powinien być przyznany duplikat<br> </td>
+	<TD headers="ret">RAX = zduplikowany deskryptor<BR>RAX = błąd EBADF, EMFILE, EBUSY, EINTR<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f34">34</a><br> </td>
+	<TD headers="opis"> Pauza - śpij aż do otrzymania sygnału (<span lang="en">sys_pause</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret">wraca tylko po sygnale, o ile procedura jego obsługi ma powrót.
+		RAX = EINTR po sygnale<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f35">35</a><br> </td>
+	<TD headers="opis"> Pauza w wykonywaniu programu (<span lang="en">sys_nanosleep</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres struktury <A HREF="dodatk80.html#timespec">timespec</A><BR>
+		RSI = NULL lub adres modyfikowalnej struktury <A HREF="dodatk80.html#timespec">timespec</A>, która otrzyma resztkę
+			czasu, która została<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = sygnał lub błąd EINTR, EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f36">36</a><br> </td>
+	<TD headers="opis"> Pobierz wartość czasomierza (<span lang="en">sys_getitimer</span>)  <br> </td>
+	<TD headers="arg">RDI = <A HREF="dodatk80.html#itimer">numer czasomierza</A><BR>
+		RSI = adres struktury <A HREF="dodatk80.html#itimerval">itimerval</A>,
+			która otrzyma wartość czasomierza<BR>
+	<TD headers="ret">RAX = 0<BR>RAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f37">37</a><br> </td>
+	<TD headers="opis"> Alarm - wysłanie sygnału SIGALARM (<span lang="en">sys_alarm</span>)  <br> </td>
+	<TD headers="arg">RDI = sekundy<br> </td>
+	<TD headers="ret">RAX = 0 lub liczba sekund do wykonania poprzednich alarmów<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f38">38</a><br> </td>
+	<TD headers="opis"> Ustaw wartość czasomierza (<span lang="en">sys_setitimer</span>)  <br> </td>
+	<TD headers="arg">RDI = <A HREF="dodatk80.html#itimer">numer czasomierza</A><BR>
+		RSI = adres struktury <A HREF="dodatk80.html#itimerval">itimerval</A>
+			zawierającej nową wartość czasomierza<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#itimerval">itimerval</A>,
+			która otrzyma starą wartość czasomierza<br> </td>
+	<TD headers="ret">RAX = 0<BR>RAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f39">39</a><br> </td>
+	<TD headers="opis"> Pobierz identyfikator bieżącego procesu (<span lang="en">sys_getpid</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret"> RAX = PID bieżącego procesu <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f40">40</a><br> </td>
+	<TD headers="opis"> Kopiuj dane między deskryptorami plików (<span lang="en">sys_sendfile</span>, <span lang="en">sys_sendfile64</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku wyjściowego, otwartego do zapisu<BR>
+		RSI = deskryptor pliku wejściowego<BR>
+		RDX = adres 64-bitowej zmiennej - numeru bajtu w pliku źródłowym, od którego zacząć kopiować<BR>
+		R10 = liczba bajtów do skopiowania<br> </td>
+	<TD headers="ret">RAX = liczba zapisanych bajtów<BR>RAX = błąd EBADF, EAGAIN, EINVAL, ENOMEM, EIO, EFAULT<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f41">41</a><br> </td>
+	<TD headers="opis"> Tworzenie gniazda (<span lang="en">sys_socket</span>) <br> </td>
+	<TD headers="arg">RDI = <A HREF="dodatk80.html#socket_dom">domena tworzonego gniazda</a><BR>
+		RSI = <A HREF="dodatk80.html#socket_typ">typ tworzonego gniazda</a><BR>
+		RDX = protokół dla tworzonego gniazda (zwykle 0, patrz: <span class="b">man 5 protocols,
+			man 3 getprotoent</span>)<br> </td>
+	<TD headers="ret"> RAX = deskryptor nowego gniazda<BR>RAX = błąd EINVAL, EACCES, EAFNOSUPPORT, EMFILE, ENFILE, ENOBUFS/ENOMEM, EPROTONOSUPPORT<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f42">42</a><br> </td>
+	<TD headers="opis"> Połączenie gniazda (<span lang="en">sys_connect</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor gniazda<BR>
+		RSI = adres struktury sockaddr (zależnej od protokołu), opisującej adres, z którym się łączymy<BR>
+		RDX = wielkość struktury, na którą wskazuje RSI<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EACCES, EPERM, EADDRINUSE, EAFNOSUPPORT, EAGAIN, EALREADY, EBADF, ECONNREFUSED,
+			EFAULT, EINPROGRESS, EINTR, EISCONN, ENETUNREACH, ENOTSOCK, ETIMEDOUT <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f43">43</a><br> </td>
+	<TD headers="opis"> Przyjmowanie połączenia na gnieździe (<span lang="en">sys_accept</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor gniazda<BR>
+		RSI = adres struktury sockaddr (zależnej od protokołu), która otrzyma adres, z którego
+			połączono się do tego gniazda<BR>
+		RDX = adres zmiennej (32-bitowej), która otrzyma wielkość struktury, na którą wskazuje RSI </td>
+	<TD headers="ret"> RAX = deskryptor gniazda do połączonego klienta<BR>RAX = błąd EAGAIN/EWOULDBLOCK,
+			EBADF, ECONNABORTED, EFAULT, EINTR, EINVAL, EMFILE, ENFILE, ENOBUFS, ENOMEM, ENOTSOCK, EOPNOTSUPP, EPROTO, EPERM <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f44">44</a><br> </td>
+	<TD headers="opis"> Wysyłanie danych gniazdem (<span lang="en">sys_sendto</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor gniazda<BR>
+		RSI = adres bufora z danymi do wysłania<BR>
+		RDX = liczba bajtów z bufora do wysłania<br>
+		R10 = <A HREF="dodatk80.html#sendto_fl">flagi sendto</a><br>
+		R8 = adres struktury sockaddr (zależnej od protokołu), opisującej adres, do którego wysłać dane.
+			Ignorowane dla gniazd opartych o połączenie<br>
+		R9 = wielkość struktury, na którą wskazuje R8. Ignorowane dla gniazd opartych o połączenie<br> </td>
+	<TD headers="ret"> RAX = liczba wysłanych znaków <BR>RAX = błąd EACCES, EAGAIN, EWOULDBLOCK, EBADF, ECONNRESET, EDESTADDRREQ,
+			EFAULT, EINTR, EINVAL, EISCONN, EMSGSIZE, ENOBUFS, ENOMEM, ENOTCONN, ENOTSOCK, EOPNOTSUPP, EPIPE <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f45">45</a><br> </td>
+	<TD headers="opis"> Odbieranie danych gniazdem (<span lang="en">sys_recvfrom</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor gniazda<BR>
+		RSI = adres bufora na odebrane dane<BR>
+		RDX = liczba bajtów w buforze<br>
+		R10 = <A HREF="dodatk80.html#sendto_fl">flagi recvfrom</a><br>
+		R8 = adres struktury sockaddr (zależnej od protokołu), która otrzyma adres, z którego
+			otrzymano dane. Może być 0.<br>
+		R9 = adres zmiennej (32-bitowej), która otrzyma wielkość struktury, na którą wskazuje R8. Może być 0. </td>
+	<TD headers="ret"> RAX = liczba odebranych znaków <BR>RAX = błąd EAGAIN, EWOULDBLOCK, EBADF, ECONNREFUSED, EFAULT,
+			EINTR, EINVAL, ENOMEM, ENOTCONN, ENOTSOCK <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f46">46</a><br> </td>
+	<TD headers="opis"> Wysyłanie wiadomości gniazdem (<span lang="en">sys_sendmsg</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor gniazda<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#sendmsghdr">msghdr</a> opisującej wiadomość <BR>
+		RDX = <A HREF="dodatk80.html#sendto_fl">flagi sendmsg</a> (te same, co dla sendto) </td>
+	<TD headers="ret"> RAX = liczba wysłanych znaków <BR>RAX = błąd EACCES, EAGAIN, EWOULDBLOCK, EBADF, ECONNRESET, EDESTADDRREQ,
+			EFAULT, EINTR, EINVAL, EISCONN, EMSGSIZE, ENOBUFS, ENOMEM, ENOTCONN, ENOTSOCK, EOPNOTSUPP, EPIPE <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f47">47</a><br> </td>
+	<TD headers="opis"> Odbieranie wiadomości gniazdem (<span lang="en">sys_recvmsg</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor gniazda<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#sendmsghdr">msghdr</a> opisującej wiadomość <BR>
+		RDX = <A HREF="dodatk80.html#sendto_fl">flagi recvmsg</a> (te same, co dla recvfrom) </td>
+	<TD headers="ret"> RAX = liczba odebranych znaków <BR>RAX = błąd EAGAIN, EWOULDBLOCK, EBADF, ECONNREFUSED, EFAULT,
+			EINTR, EINVAL, ENOMEM, ENOTCONN, ENOTSOCK <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f48">48</a><br> </td>
+	<TD headers="opis"> Zamknięcie części połączenia (<span lang="en">sys_shutdown</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor gniazda<BR>
+		RSI = sposób zamknięcia (SHUT_RD=0 blokuje odczyty, SHUT_WR=1 blokuje zapisy, SHUT_RDWR=2
+			blokuje odczyty i zapisy) </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EBADF, ENOTCONN, ENOTSOCK <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f49">49</a><br> </td>
+	<TD headers="opis"> Przypisanie gniazda do adresu (<span lang="en">sys_bind</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor gniazda<BR>
+		RSI = adres struktury sockaddr (zależnej od protokołu), opisującej adres, do którego chcemy przypisać gniazdo<BR>
+		RDX = wielkość struktury, na którą wskazuje RSI </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EACCES, EADDRINUSE, EBADF, EINVAL, ENOTSOCK, EADDRNOTAVAIL, EFAULT,
+			ELOOP, ENAMETOOLONG, ENOENT, ENOMEM, ENOTDIR, EROFS <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f50">50</a><br> </td>
+	<TD headers="opis"> Oczekiwanie na połączenia na gnieździe (<span lang="en">sys_listen</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor gniazda<BR>
+		RSI = maksymalna liczba połączeń oczekujących </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EADDRINUSE, EBADF, ENOTSOCK, EOPNOTSUPP <hr> <br> </td></TR>
+
+</TABLE>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="4" hreflang="pl" href="syscall64_2.html">Kolejna część</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

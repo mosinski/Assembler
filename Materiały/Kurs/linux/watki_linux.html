@@ -1,0 +1,291 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Programy wielowątkowe </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="watki_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Pisanie programów wielowątkowych pod Linuksem">
+<META NAME="Keywords" CONTENT="asm, assembler, asembler, linux, linuks, wątki, thread">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 18:00:01 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Pisanie programów wielowątkowych pod Linuksem</h1>
+
+<P>
+Asembler, jak wszystkie inne strukturalne języki programowania pozwala pisać
+ programy, w których ścieżka wykonywanych instrukcji jest tylko jedna. Mogą
+ być rozwidlenia i pętle, ale zawsze wykonuje się tylko jedna rzecz na raz.</P>
+<P>
+Wątki pozwalają na uruchomienie wielu niezależnych ścieżek, które będą wykonywane
+ równolegle. Daje to duże możliwości programom, które wykonują kilka czynności
+ na raz (na przykład czytanie z jednego pliku i zapisywanie przetworzonych danych do
+ drugiego). Zysk jest też w programach sieciowych, a zwłaszcza serwerach. Po
+ dodaniu obsługi wątków możliwe jest połączenie więcej niż jednego klienta w
+ danej chwili. Ale przejdźmy wreszcie do szczegółów.</P>
+<P>
+Najpierw omówię trzy funkcje z biblioteki języka C (ściśle mówiąc, z biblioteki pthreads),
+które pozwolą nam zarządzać wątkami.</P>
+<OL>
+ <LI><span lang="en">pthread_create</span> - tworzenie nowego wątku.
+ 	<P>Funkcja ta przyjmuje 4 argumenty. Od lewej (ostatni wkładany na stos) są to:</P>
+  <UL>
+   <LI>adres zmiennej typu DWORD, która otrzyma identyfikator nowego wątku.</LI>
+   <LI>atrybuty nowego wątku, jeśli chcemy coś specjalnego. Zero oznacza domyślne argumenty.</LI>
+   <LI>adres funkcji wątku. Funkcja ta otrzyma na stosie adres dodatkowych danych,
+   	które można przekazać do wątku.</LI>
+   <LI>adres dodatkowych danych, które chcemy przekazać do wątku.</LI>
+  </UL><BR></LI>
+
+ <LI><span lang="en">pthread_exit</span> - zakończenie bieżącego wątku
+ 	<P>Funkcja ta kończy bieżący wątek. Wartość podana jako jedyny jej argument (adres danych)
+ 	może być wykorzystana przez wątki podłączone (<span lang="en">pthread_join</span>) do tego wątku.
+ 	Po zakończeniu wszystkich wątków, program kończy działanie z kodem 0.
+ 	</P></LI>
+
+ <LI><span lang="en">pthread_yield</span> - oddanie czasu procesora innym wątkom lub procesom
+ 	<P>Oczywiście, system operacyjny sam też przydziela czas procesora poszczególnym wątkom,
+ 	ale wywołując tę funkcję możemy powiedzieć, by skrócił czas przeznaczony dla tego
+ 	wątku i dał go innym. Przydaje się, gdy bieżący wątek
+ 	chwilowo skończył pracę (na przykład zabrakło danych itp.). Funkcja nie przyjmuje
+ 	żadnych argumentów.</P></LI>
+</OL>
+<P>Poniżej przedstawiam króciutki program, który pokaże, jak to wszystko działa. Program ma jeden
+ raz wyświetlić napis pierwszy w funkcji głównej i 5 razy napis drugi w funkcji wątku.</P>
+
+	<BR><a href="#watki_linux01" class="bezdruk" tabindex="1">(przeskocz program)</a>
+<PRE>
+; Przykładowy program wielowątkowy w asemblerze
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+; nasm -O999 -f elf -o watki.o watki.asm
+; gcc -o watki watki.o -lpthread
+
+section	.text
+global	main
+
+; deklaracje funkcji zewnętrznych
+extern	pthread_create
+extern	pthread_exit
+
+main:
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, napis1
+	mov	edx, napis1_dl
+	int	80h			; wyświetlamy napis pierwszy
+
+	push	dword 0			; dodatkowe dane
+	push	dword watek		; adres funkcji do uruchomienia
+	push	dword 0			; atrybuty
+	push	dword id_watku		; gdzie zapisać ID
+	call	pthread_create		; utworzenie nowego wątku
+
+; Nie należy wychodzić z programu funkcją sys_exit (EAX=1), gdyż
+; zakończyłoby to wszystkie wątki programu. Zamiast tego, zamykamy tylko
+; wątek główny.
+	push	dword 0
+	call	pthread_exit		; zakończenie bieżącego wątku
+
+watek:
+
+	mov	dword [t1+timespec.tv_nsec], 0
+	mov	dword [t1+timespec.tv_sec], 5		; 5 sekund
+
+	mov	esi, 5			; napis drugi wyświetlimy 5 razy
+.petla:
+	mov     eax, 162		; sys_nanosleep
+	mov     ebx, t1			; adres struktury mówiącej,
+					; ile chcemy czekać
+	mov     ecx, 0
+	int     80h			; robimy przerwę...
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, napis2
+	mov	edx, napis2_dl
+	int	80h			; wyświetl napis drugi
+
+	dec	esi
+	jnz	.petla			; wykonuj pętlę, jeśli ESI != 0
+
+	push	dword 0
+	call	pthread_exit		; zakończenie bieżącego wątku
+
+section .data
+
+napis1		db	&quot;Funkcja glowna.&quot;, 10
+napis1_dl	equ	$ - napis1
+
+napis2		db	&quot;Watek.&quot;, 10
+napis2_dl	equ	$ - napis2
+
+struc timespec
+	.tv_sec:	resd 1
+	.tv_nsec:	resd 1
+endstruc
+
+t1 		istruc timespec
+
+id_watku	dd	0	; zmienna, która otrzyma ID nowego wątku</PRE>
+
+<P><a name="watki_linux01" id="watki_linux01">Ale wątki w programie</a> to nie tylko same zyski.
+ Największym problemem w programach wielowątkowych jest <em class="wazne">synchronizacja wątków</em>.</P>
+ <P>
+  Po co synchronizować? Po to, żeby program nie sprawiał problemów, gdy dwa
+ lub więcej wątków odczytuje i zapisuje tę samą zmienną globalną (na przykład bufor danych).</P>
+ <P>Co zrobić, by na przykład
+ wątek czytający przetwarzał dane dopiero wtedy, gdy inny wątek dostarczy te dane? Możliwości jest kilka:</P>
+ <UL>
+  <LI>flaga - zmienna globalna.
+  	<P>Na przykład ustalmy, że jeśli flaga jest równa zero, to bufor może
+  	być dowolnie używany (do zapisu i odczytu). Jeśli flaga jest równa na przykład jeden, to nie wolno
+  	wykonywać operacji na buforze (bo inny wątek już to robi) - należy poczekać, aż flaga będzie
+  	równa zero.</P>
+  	<P>Zaletą tego rozwiązania jest prostota jego utworzenia. Popatrzcie:</P>
+  	<PRE>
+	flaga	db	0
+	...
+	watek:
+	...
+	sprawdz_flage:
+		cmp	byte [flaga], 1
+		je	sprawdz_flage
+		mov	byte [flaga], 1
+	...	; tutaj nasze operacje
+		mov	byte [flaga], 0</PRE>
+  </LI>
+  <LI>mutex - poczytajcie <A HREF="http://pl.wikipedia.org/wiki/Mutex" hreflang="pl"
+  	>pl.wikipedia.org/wiki/Mutex</A></LI>
+  <LI>semafor ustawiający wątki w kolejkę do danego zasobu. Poczytajcie
+  	<A HREF="http://pl.wikipedia.org/wiki/Semafor_%28informatyka%29" hreflang="pl"
+  	>pl.wikipedia.org/wiki/Semafor_(informatyka)</A></LI>
+ </UL>
+
+<P>Jak widać, pisanie programów wielowątkowych nie jest takie trudne, warto więc się tego nauczyć.
+ Tym bardziej, że zyski są większe (napisanie po jednej funkcji na każde oddzielne zadanie),
+ niż wysiłek (synchronizacja).</P>
+
+
+
+
+
+
+
+<Hr>
+<h2 class="nag"><a name="watki_int80h" id="watki_int80h">Wielowątkowość z przerwaniem 80h</a></h2>
+
+<P>
+Oczywiście, aby pisać programy wielowątkowe, nie musicie korzystać z żadnej biblioteki.
+ Odpowiednie mechanizmy posiada sam interfejs systemu - przerwanie int 80h.</P>
+<P>Skorzystam tutaj
+ z funkcji <span class="b">sys_fork</span> (numer 2). Jej jedynym argumentem jest adres struktury
+ zawierającej wartości rejestrów dla nowego procesu, ale ten argument jest opcjonalny i może
+ być zerem. Funkcja <span class="b">fork</span> zwraca wartość mniejszą od zera, gdy wystąpił błąd,
+ zwraca zero w procesie
+ potomnym, zaś wartość większą od zera (PID nowego procesu) - w procesie rodzica. Proces potomny
+ zaczyna działanie tuż po wywołaniu funkcji <span class="b">fork</span>, czyli rodzic po wykonaniu
+ funkcji fork i potomek
+ zaczynają wykonywać dokładnie te same instrukcje. Procesy te można skierować na różne ścieżki,
+ sprawdzając wartość zwróconą przez fork w EAX.</P>
+<P>
+Oto krótki przykład w składni FASMa:</P>
+
+<pre title="Przykład fork">
+format ELF executable
+entry _start
+segment executable
+
+_start:
+	mov	eax, 2		; funkcja fork
+	xor	ebx, ebx
+	int	80h		; wywołanie
+
+	cmp	eax, 0
+	jl	.koniec		; EAX &lt; 0 oznacza błąd
+
+	; poniższe instrukcje wykona zarówno rodzic, jak i potomek:
+
+	cmp	eax, 0
+	jg	.rodzic		; EAX &gt; 0 oznacza, że jesteśmy w
+				; procesie rodzica
+
+	; tutaj ani EAX &lt; 0, ani EAX &gt; 0, więc EAX=0, czyli
+	; jesteśmy w procesie potomka
+	; kod poniżej (wyświetlenie i czekanie) wykona tylko potomek
+
+	mov	dword [t1.tv_nsec], 0
+	mov	dword [t1.tv_sec], 5	; tyle sekund przerwy będziemy robić
+					; między wyświetlaniem napisów
+
+.petla:
+	mov	eax, 4		; funkcja zapisywania do pliku
+	mov	ebx, 1		; standardowe wyjście
+	mov	ecx, napis2	; co wypisać
+	mov	edx, napis2_dl	; długość napisu
+	int	80h
+
+	mov     eax, 162	; funkcja sys_nanosleep
+	mov     ebx, t1		; tyle czekać
+	mov     ecx, 0		;ewentualny adres drugiej struktury timespec
+	int     80h		;  robimy przerwę...
+
+	jmp	.petla		; i od nowa....
+
+	; kod poniżej (wyświetlenie i wyjście) wykona tylko rodzic
+.rodzic:
+
+	mov	eax, 4		; funkcja zapisywania do pliku
+	mov	ebx, 1		; standardowe wyjście
+	mov	ecx, napis1	; co wypisać
+	mov	edx, napis1_dl	; długość napisu
+	int	80h
+
+.koniec:
+	mov	eax, 1		; funkcja wyjścia z programu
+	xor	ebx, ebx
+	int	80h
+
+segment readable writeable
+
+napis1		db	"Rodzic", 10
+napis1_dl	=	$ - napis1
+napis2		db	"Potomek", 10
+napis2_dl	=	$ - napis1
+
+struc timespec			; definicja struktury timespec
+				; (tylko jako typ danych)
+{
+	.tv_sec:	rd 1
+	.tv_nsec:	rd 1
+}
+
+t1 timespec		; tworzymy zmienną t1 jako całą strukturę</pre>
+
+
+
+
+<br><br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

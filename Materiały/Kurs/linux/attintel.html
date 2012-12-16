@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Różnice składni AT&amp;T i Intel </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Różnice składni AT&amp;T i Intel">
+<META NAME="Keywords" CONTENT="AT&amp;T, Intel, składnia, asm, assembler, asembler">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:56 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Różnice składni AT&amp;T i Intel</h1>
+<br><br>
+
+<TABLE summary="Ta tabela przedstawia najważniejsze różnice między składniami
+	Intela a AT&amp;T">
+<caption>Różnice między składnią Intela a AT&amp;T</caption>
+<TR><TH style="WIDTH:20%" id="typ">Cecha</TH> <TH style="WIDTH:40%" id="intel"> Intel </TH>
+	<TH id="att"> AT&amp;T </TH> </TR>
+
+<TR class="c"> <TD headers="typ"> Liczby w instrukcjach<br> (z wyjątkiem adresów) </TD>
+	<TD headers="intel"> 12345678<Br> </TD>
+	<TD headers="att"> <span class="b">$</span>12345678<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> Rejestry<br> </TD>
+	<TD headers="intel"> eax, ebx, cs, cr0, dr0, tr6, st(0)/st0<br> </TD>
+	<TD headers="att"> <span class="b">%</span>eax, <span class="b">%</span>ebx, <span class="b">%</span>
+	cs, <span class="b">%</span>cr0, <span class="b">%</span>db0, <span class="b">%</span>tr6,
+	 <span class="b">%</span>st(0)<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> Adresy bezwzględne w skokach<br> </TD>
+	<TD headers="intel"> 12345678<br> </TD>
+	<TD headers="att"> *12345678<BR> brak gwiazdki oznacza adres względem bieżącego EIP<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> Kolejność argumentów w instrukcjach<br> </TD>
+	<TD headers="intel"> mov eax, ebx <BR> imul ebx, eax, 69<br> </TD>
+	<TD headers="att"> movl %ebx, %eax <BR> imul $69, %eax, %ebx<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> Przyrostki rozmiarowe<br> </TD>
+
+ 	<TD headers="intel"> mov al, <span class="b"><span lang="en">byte</span> ptr</span> [abcd]<BR> mov bx,
+ 	 <span class="b"><span lang="en">word</span> ptr</span> [efgh]<BR>
+ 	  mov ecx, <span class="b"><span lang="en">dword</span> ptr</span> [ijkl]<BR>
+ 	  mov eax, 1<BR> int 80h<hr> </TD>
+
+ 	<TD headers="att"> mov<span class="b">b</span> abcd, %al<BR> mov<span class="b">w</span> efgh, %bx<BR>
+ 	 mov<span class="b">l</span> ijkl, %ecx<BR> mov<span class="b">l</span> $1, %eax<BR>
+ 	 int $0x80<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> Skoki pod dany adres<br> </TD>
+	<TD headers="intel"> jmp/call far seg:off<br> </TD>
+ 	<TD headers="att"> <span class="b">l</span>jmp/<span class="b">l</span>call $seg, $off<hr> </td> </TR>
+
+<TR class="c"> <TD headers="typ"> Instrukcje powrotu<br> </TD>
+	<TD headers="intel"> ret<span class="b">f</span> n <BR> ret n<br> </TD>
+	<TD headers="att"> <span class="b">l</span>ret $n <BR> ret $n<hr></TD> </TR>
+
+<TR class="c"> <TD headers="typ"> Rozszerzanie wartości do większych rozmiarów<br> </TD>
+	<TD headers="intel"> movsx ax, bl<BR> movzx eax, bl<BR> movsx eax, bx<BR>cbw<BR>cwde<BR>cwd<BR>cdq<hr> </TD>
+	<TD headers="att"> movs<span class="b">bw</span> %bl, %ax<BR> movz<span class="b">bl</span> %bl, %eax<BR>
+  		movs<span class="b">wl</span> %bx, %eax<BR>cbtw
+		<BR>cwtl<BR>cwtd<BR>cltd<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> Adresowanie złożone<br> </TD>
+	<TD headers="intel"> seg : [baza + index*skala + liczba]<BR>[ebp-4]<BR>[cos+eax*2]<BR>
+		gs : gdzies<BR> mov eax, [ecx]<BR> sub eax, [ebx+ecx*4-20h] <BR> call [eax*4 + zmienna]<hr>  </TD>
+	<TD headers="att"> %seg : liczba(%baza, %index, skala)<BR>-4(%ebp)<BR>cos(,%eax,2)<BR>
+		%gs : gdzies<BR> movl (%ecx), %eax<BR> subl -0x20(%ebx,%ecx,0x4), %eax <BR>
+	 	call <span class="b">*</span>zmienna(,%eax,4)<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> Adresowanie pojedynczych zmiennych<br> </TD>
+	<TD headers="intel"> mov al, byte [costam]<br> </TD>
+	<TD headers="att"> movb costam(,1), %al <BR> movb costam, %al<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> Pobieranie adresu zmiennych<br> </TD>
+	<TD headers="intel"> mov eax, offset costam &nbsp;&nbsp;&nbsp;&nbsp; (TASM, MASM) <BR>
+ 		mov eax, costam &nbsp;&nbsp;&nbsp;&nbsp; (NASM, FASM)<br> </TD>
+	<TD headers="att"> movl <span class="b">$</span>costam, %eax<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> Przyrostki instrukcji FPU<br> </TD>
+ <TD headers="intel"> fld <span class="b"><span lang="en">dword</span></span> [a] <BR>
+ 	fld <span class="b"><span lang="en">qword</span></span> [b] <BR>
+ 	fld <span class="b"><span lang="en">tbyte/tword</span></span> [c] <BR>
+ 	fild <span class="b"><span lang="en">qword</span></span> [d] <BR>
+ 	fild <span class="b"><span lang="en">dword</span></span> [e] <BR>
+ 	fild <span class="b"><span lang="en">word</span></span> [f]<hr> </TD>
+ <TD headers="att"> fld<span class="b">s</span> a <BR> fld<span class="b">l</span> b <BR>
+ 	fld<span class="b">t</span> c <BR> fild<span class="b">q</span> d <BR>
+ 	fild<span class="b">l</span> e <BR> fild<span class="b">s</span> f<hr> </TD> </TR>
+
+
+
+</TABLE>
+<P>
+Polecam też (po angielsku) porównanie składni AT&amp;T ze składnią Intela oraz wstęp do wstawek
+ asemblerowych (w GCC) na
+<A HREF="http://www.delorie.com/djgpp/doc/brennan/brennan_att_inline_djgpp.html" hreflang="en"
+tabindex="1">stronach DJGPP</A>, <a hreflang="en"
+ href="http://gcc.gnu.org/onlinedocs/gcc-4.1.1/gcc/">podręcznik GCC</a> (sekcje: 5.34 i 5.35),
+oraz (w języku polskim)
+<A HREF="http://www.cs.put.poznan.pl/adanilecki/inline_asm/index.php" hreflang="pl"
+	>stronę pana Danileckiego</A>.</P>
+
+<br><br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

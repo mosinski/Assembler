@@ -1,0 +1,482 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Skankody i kody ASCII </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm">
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Skankody i kody ASCII klawiszy">
+<META NAME="Keywords" CONTENT="klawiatura, skankody, scan codes, asm, assembler, asembler, ASCII">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:59 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Skankody i kody
+   	<acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+   	klawiszy</h1>
+
+
+<P>Informacje te pochodzą z
+<a href="http://www.delorie.com/djgpp/doc/rbinter/it/06/0.html" hreflang="en"
+	><span lang="en">Ralf Brown's Interrupt List</span></a> oraz
+ ze znakomitej książki <q lang="en">Art of Assembly Language Programming</q>
+(wersja dla <acronym lang="en" title="Disk Operating System">DOS</acronym>-a)
+ autorstwa Randalla <span lang="en">Hyde</span>'a. Książkę można za darmo ściągnąć z
+<A HREF="http://webster.cs.ucr.edu" hreflang="en">Webstera</A></P>
+
+	<BR><a href="#ascii" tabindex="1" class="bezdruk">(przeskocz skankody)</a>
+
+<TABLE summary="Ta tablica przedstawia kody ASCII i skankody poszczególnych klawiszy.">
+<CAPTION> Skankody (<span lang="en">scan codes</span>) wysyłane przez klawiaturę </CAPTION>
+<thead>
+<TR><TH id="kl1">Klawisz</TH> <TH id="nac1">Naciśnięcie</TH> <TH id="zwo1">Zwolnienie</TH>
+    <TH id="kl2">Kl</TH> <TH id="nac2">Nac</TH> <TH id="zwo2">Zwol</TH>
+    <TH id="kl3">Kl</TH> <TH id="nac3">Nac</TH> <TH id="zwo3">Zwol</TH>
+    <TH id="kl4">Kl</TH> <TH id="nac4">Nac</TH> <TH id="zwo4">Zwol</TH>      </TR>
+</thead>
+<tbody>
+<TR class="c">
+     <TD headers="kl1"> Esc   </TD> <TD headers="nac1"> 01 </TD> <TD headers="zwo1"> 81<Br> </TD>
+     <TD headers="kl1"> ] }   </TD> <TD headers="nac1"> 1B </TD> <TD headers="zwo1"> 9B<Br> </TD>
+     <TD headers="kl1"> . &gt;</TD> <TD headers="nac1"> 34 </TD> <TD headers="zwo1"> B4<Br> </TD>
+     <TD headers="kl1"> END   </TD> <TD headers="nac1"> 4F </TD> <TD headers="zwo1"> CF<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> 1 !   </TD> <TD headers="nac1"> 02 </TD> <TD headers="zwo1"> 82<Br> </TD>
+     <TD headers="kl1"> ENTER </TD> <TD headers="nac1"> 1C </TD> <TD headers="zwo1"> 9C<Br> </TD>
+     <TD headers="kl1"> / ?   </TD> <TD headers="nac1"> 35 </TD> <TD headers="zwo1"> B5<Br> </TD>
+     <TD headers="kl1"> DÓŁ   </TD> <TD headers="nac1"> 50 </TD> <TD headers="zwo1"> D0<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> 2 @   </TD> <TD headers="nac1"> 03 </TD> <TD headers="zwo1"> 83<Br> </TD>
+     <TD headers="kl1"> Ctrl  </TD> <TD headers="nac1"> 1D </TD> <TD headers="zwo1"> 9D<Br> </TD>
+     <TD headers="kl1"> P<span lang="en">Shift</span></TD> <TD headers="nac1"> 36 </TD> <TD headers="zwo1"> B6<Br> </TD>
+     <TD headers="kl1"> PGDN  </TD> <TD headers="nac1"> 51 </TD> <TD headers="zwo1"> D1<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> 3 #   </TD> <TD headers="nac1"> 04 </TD> <TD headers="zwo1"> 84<Br> </TD>
+     <TD headers="kl1"> A     </TD> <TD headers="nac1"> 1E </TD> <TD headers="zwo1"> 9E<Br> </TD>
+     <TD headers="kl1" class="numpad"> * (num)</TD> <TD headers="nac1"> 37 </TD> <TD headers="zwo1"> B7<Br> </TD>
+     <TD headers="kl1"> INS   </TD> <TD headers="nac1"> 52 </TD> <TD headers="zwo1"> D2<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> 4 $   </TD> <TD headers="nac1"> 05 </TD> <TD headers="zwo1"> 85<Br> </TD>
+     <TD headers="kl1"> S     </TD> <TD headers="nac1"> 1F </TD> <TD headers="zwo1"> 9F<Br> </TD>
+     <TD headers="kl1"> alt   </TD> <TD headers="nac1"> 38 </TD> <TD headers="zwo1"> B8<Br> </TD>
+     <TD headers="kl1"> DEL   </TD> <TD headers="nac1"> 53 </TD> <TD headers="zwo1"> D3<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> 5 %   </TD> <TD headers="nac1"> 06 </TD> <TD headers="zwo1"> 86<Br> </TD>
+     <TD headers="kl1"> D     </TD> <TD headers="nac1"> 20 </TD> <TD headers="zwo1"> A0<Br> </TD>
+     <TD headers="kl1"> spacja</TD> <TD headers="nac1"> 39 </TD> <TD headers="zwo1"> B9<Br> </TD>
+     <td headers="kl1"> SysRq </td> <td headers="nac1"> 54 </td> <td headers="zwo1"> D4<Br> </td>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> 6 ^   </TD> <TD headers="nac1"> 07 </TD> <TD headers="zwo1"> 87<Br> </TD>
+     <TD headers="kl1"> F     </TD> <TD headers="nac1"> 21 </TD> <TD headers="zwo1"> A1<Br> </TD>
+     <TD headers="kl1"> <span lang="en">CAPS</span>  </TD> <TD headers="nac1"> 3A </TD> <TD headers="zwo1"> BA<Br> </TD>
+     <TD headers="kl1" class="numpad"> /  (num)    </TD> <TD headers="nac1"> E0 35 </TD> <TD headers="zwo1"> B5<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> 7 &amp;</TD> <TD headers="nac1"> 08 </TD> <TD headers="zwo1"> 88<Br> </TD>
+     <TD headers="kl1"> G     </TD> <TD headers="nac1"> 22 </TD> <TD headers="zwo1"> A2<Br> </TD>
+     <TD headers="kl1"> F1    </TD> <TD headers="nac1"> 3B </TD> <TD headers="zwo1"> BB<Br> </TD>
+     <TD headers="kl1" class="numpad"> enter (num) </TD> <TD headers="nac1"> E0 1C </TD> <TD headers="zwo1"> 9C<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> 8 *   </TD> <TD headers="nac1"> 09 </TD> <TD headers="zwo1"> 89<Br> </TD>
+     <TD headers="kl1"> H     </TD> <TD headers="nac1"> 23 </TD> <TD headers="zwo1"> A3<Br> </TD>
+     <TD headers="kl1"> F2    </TD> <TD headers="nac1"> 3C </TD> <TD headers="zwo1"> BC<Br> </TD>
+     <TD headers="kl1"> F11   </TD> <TD headers="nac1"> 57 </TD> <TD headers="zwo1"> D7<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> 9 (   </TD> <TD headers="nac1"> 0A </TD> <TD headers="zwo1"> 8A<Br> </TD>
+     <TD headers="kl1"> J     </TD> <TD headers="nac1"> 24 </TD> <TD headers="zwo1"> A4<Br> </TD>
+     <TD headers="kl1"> F3    </TD> <TD headers="nac1"> 3D </TD> <TD headers="zwo1"> BD<Br> </TD>
+     <TD headers="kl1"> F12   </TD> <TD headers="nac1"> 58 </TD> <TD headers="zwo1"> D8<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> 0 )   </TD> <TD headers="nac1"> 0B </TD> <TD headers="zwo1"> 8B<Br> </TD>
+     <TD headers="kl1"> K     </TD> <TD headers="nac1"> 25 </TD> <TD headers="zwo1"> A5<Br> </TD>
+     <TD headers="kl1"> F4    </TD> <TD headers="nac1"> 3E </TD> <TD headers="zwo1"> BE<Br> </TD>
+     <td headers="kl1"> LWin  </td> <td headers="nac1"> 5B </td> <td headers="zwo1"> DB<Br> </td>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> - _   </TD> <TD headers="nac1"> 0C </TD> <TD headers="zwo1"> 8C<Br> </TD>
+     <TD headers="kl1"> L     </TD> <TD headers="nac1"> 26 </TD> <TD headers="zwo1"> A6<Br> </TD>
+     <TD headers="kl1"> F5    </TD> <TD headers="nac1"> 3F </TD> <TD headers="zwo1"> BF<Br> </TD>
+     <td headers="kl1"> PWin  </td> <td headers="nac1"> 5C </td> <td headers="zwo1"> DC<Br> </td>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> + =   </TD> <TD headers="nac1"> 0D </TD> <TD headers="zwo1"> 8D<Br> </TD>
+     <TD headers="kl1"> ; :   </TD> <TD headers="nac1"> 27 </TD> <TD headers="zwo1"> A7<Br> </TD>
+     <TD headers="kl1"> F6    </TD> <TD headers="nac1"> 40 </TD> <TD headers="zwo1"> C0<Br> </TD>
+     <td headers="kl1"> Menu  </td> <td headers="nac1"> 5D </td> <td headers="zwo1"> DD<Br> </td>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> BkSp  </TD> <TD headers="nac1"> 0E </TD> <TD headers="zwo1"> 8E<Br> </TD>
+     <TD headers="kl1"> &lsquo; &quot; </TD> <TD headers="nac1"> 28 </TD> <TD headers="zwo1"> A8<Br> </TD>
+     <TD headers="kl1"> F7    </TD> <TD headers="nac1"> 41 </TD> <TD headers="zwo1"> C1<Br> </TD>
+     <TD headers="kl1" class="numpad"> ins (num)   </TD> <TD headers="nac1"> E0 52 </TD> <TD headers="zwo1"> D2<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> Tab   </TD> <TD headers="nac1"> 0F </TD> <TD headers="zwo1"> 8F<Br> </TD>
+     <TD headers="kl1"> ~ `   </TD> <TD headers="nac1"> 29 </TD> <TD headers="zwo1"> A9<Br> </TD>
+     <TD headers="kl1"> F8    </TD> <TD headers="nac1"> 42 </TD> <TD headers="zwo1"> C2<Br> </TD>
+     <TD headers="kl1" class="numpad"> del (num)   </TD> <TD headers="nac1"> E0 53 </TD> <TD headers="zwo1"> D3<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> Q     </TD> <TD headers="nac1"> 10 </TD> <TD headers="zwo1"> 90<Br> </TD>
+     <TD headers="kl1"> L<span lang="en">Shift</span></TD> <TD headers="nac1"> 2A </TD> <TD headers="zwo1"> AA<Br> </TD>
+     <TD headers="kl1"> F9    </TD> <TD headers="nac1"> 43 </TD> <TD headers="zwo1"> C3<Br> </TD>
+     <TD headers="kl1" class="numpad"> <span lang="en">home</span>  (num) </TD> <TD headers="nac1"> E0 47<Br> </TD> <TD headers="zwo1"> C7 </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> W     </TD> <TD headers="nac1"> 11 </TD> <TD headers="zwo1"> 91<Br> </TD>
+     <TD headers="kl1"> \ |   </TD> <TD headers="nac1"> 2B </TD> <TD headers="zwo1"> AB<Br> </TD>
+     <TD headers="kl1"> F10   </TD> <TD headers="nac1"> 44 </TD> <TD headers="zwo1"> C4<Br> </TD>
+     <TD headers="kl1" class="numpad"> end  (num)  </TD> <TD headers="nac1"> E0 4F </TD> <TD headers="zwo1"> CF<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> E     </TD> <TD headers="nac1"> 12 </TD> <TD headers="zwo1"> 92<Br> </TD>
+     <TD headers="kl1"> Z     </TD> <TD headers="nac1"> 2C </TD> <TD headers="zwo1"> AC<Br> </TD>
+     <TD headers="kl1"> NUM   </TD> <TD headers="nac1"> 45 </TD> <TD headers="zwo1"> C5<Br> </TD>
+     <TD headers="kl1" class="numpad"> pgup  (num) </TD> <TD headers="nac1"> E0 49 </TD> <TD headers="zwo1"> C9<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> R     </TD> <TD headers="nac1"> 13 </TD> <TD headers="zwo1"> 93<Br> </TD>
+     <TD headers="kl1"> X     </TD> <TD headers="nac1"> 2D </TD> <TD headers="zwo1"> AD<Br> </TD>
+     <TD headers="kl1"> SCRLCK</TD> <TD headers="nac1"> 46 </TD> <TD headers="zwo1"> C6<Br> </TD>
+     <TD headers="kl1" class="numpad"> pgdn  (num) </TD> <TD headers="nac1"> E0 51 </TD> <TD headers="zwo1"> D1<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> T     </TD> <TD headers="nac1"> 14 </TD> <TD headers="zwo1"> 94<Br> </TD>
+     <TD headers="kl1"> C     </TD> <TD headers="nac1"> 2E </TD> <TD headers="zwo1"> AE<Br> </TD>
+     <TD headers="kl1"> <span lang="en">HOME</span>  </TD> <TD headers="nac1"> 47 </TD> <TD headers="zwo1"> 47<Br> </TD>
+     <TD headers="kl1" class="numpad"> lewo  (num) </TD> <TD headers="nac1"> E0 4B </TD> <TD headers="zwo1"> CB<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> Y     </TD> <TD headers="nac1"> 15 </TD> <TD headers="zwo1"> 95<Br> </TD>
+     <TD headers="kl1"> V     </TD> <TD headers="nac1"> 2F </TD> <TD headers="zwo1"> AF<Br> </TD>
+     <TD headers="kl1"> GÓRA  </TD> <TD headers="nac1"> 48 </TD> <TD headers="zwo1"> C8<Br> </TD>
+     <TD headers="kl1" class="numpad"> prawo  (num)</TD> <TD headers="nac1"> E0 4D </TD> <TD headers="zwo1"> CD<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> U     </TD> <TD headers="nac1"> 16 </TD> <TD headers="zwo1"> 96<Br> </TD>
+     <TD headers="kl1"> B     </TD> <TD headers="nac1"> 30 </TD> <TD headers="zwo1"> B0<Br> </TD>
+     <TD headers="kl1"> PGUP  </TD> <TD headers="nac1"> 49 </TD> <TD headers="zwo1"> C9<Br> </TD>
+     <TD headers="kl1" class="numpad"> góra  (num) </TD> <TD headers="nac1"> E0 48 </TD> <TD headers="zwo1"> C8<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> I     </TD> <TD headers="nac1"> 17 </TD> <TD headers="zwo1"> 97<Br> </TD>
+     <TD headers="kl1"> N     </TD> <TD headers="nac1"> 31 </TD> <TD headers="zwo1"> B1<Br> </TD>
+     <TD headers="kl1" class="numpad"> -   (num)   </TD> <TD headers="nac1"> 4A </TD> <TD headers="zwo1"> CA<Br> </TD>
+     <TD headers="kl1" class="numpad"> dół   (num) </TD> <TD headers="nac1"> E0 50 </TD> <TD headers="zwo1"> D0<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> O     </TD> <TD headers="nac1"> 18 </TD> <TD headers="zwo1"> 98<Br> </TD>
+     <TD headers="kl1"> M     </TD> <TD headers="nac1"> 32 </TD> <TD headers="zwo1"> B2<Br> </TD>
+     <TD headers="kl1" class="numpad"> 5 (num)</TD> <TD headers="nac1"> 4C </TD> <TD headers="zwo1"> CC<Br> </TD>
+     <TD headers="kl1"> Palt  </TD> <TD headers="nac1"> E0 38 </TD> <TD headers="zwo1"> B8<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> P     </TD> <TD headers="nac1"> 19 </TD> <TD headers="zwo1"> 99<Br> </TD>
+     <TD headers="kl1"> LEWO  </TD> <TD headers="nac1"> 4B </TD> <TD headers="zwo1"> CB<Br> </TD>
+     <TD headers="kl1"> PRAWO </TD> <TD headers="nac1"> 4D </TD> <TD headers="zwo1"> CD<Br> </TD>
+     <TD headers="kl1"> Pctrl </TD> <TD headers="nac1"> E0 1D </TD> <TD headers="zwo1"> 9D<Br> </TD>
+      </TR>
+<TR class="c">
+     <TD headers="kl1"> [ {   </TD> <TD headers="nac1"> 1A </TD> <TD headers="zwo1"> 9A<Br> </TD>
+     <TD headers="kl1"> , &lt;</TD> <TD headers="nac1"> 33 </TD> <TD headers="zwo1"> B3<Br> </TD>
+     <TD headers="kl1" class="numpad"> + (num)    </TD> <TD headers="nac1"> 4E </TD> <TD headers="zwo1"> CE<Br> </TD>
+     <TD headers="kl1"> Pauza </TD> <TD headers="nac1"> E1 1D 45<BR>E1 9D C5 </TD> <TD headers="zwo1"> (brak) <Br> </TD>
+      </TR>
+</tbody>
+</TABLE>
+
+<P>Na żółto, małymi literami i napisem <q>num</q> oznaczyłem
+ klawisze znajdujące się (moim zdaniem) na klawiaturze numerycznej.</P>
+
+
+<TABLE summary="Ta tablica przedstawia kody ASCII, jakie wysyłają poszczególne klawisze,
+	gdy naciśnięte są klawisze Ctrl, Alt lub Shift.">
+<CAPTION> <a name="ascii" id="ascii">Kody ASCII klawiszy z modyfikatorami</a> </CAPTION>
+<thead>
+<TR> <TH id="kl"> Klawisz </TH> <TH id="skan"> Skankod </TH> <TH id="asc">kod ASCII</TH>
+	<TH id="sh">z <span lang="en">Shift</span></TH> <TH id="ctrl">z <span lang="en">Control</span></TH>
+	<TH id="alt">z Alt</TH> <TH id="num"> z <span lang="en">NumLock</span> </TH>
+	<TH id="caps"> z <span lang="en">CapsLock</span></TH>
+        <TH id="shcaps"> z <span lang="en">Shift+CapsLock</span></TH>
+        <TH id="shnum"> z <span lang="en">Shift+NumLock</span></TH> </TR>
+</thead>
+<tbody>
+<TR class="c"> <TD headers="kl"> Esc </TD> <TD headers="skan"> 01 </TD> <TD headers="asc"> 1B </TD>
+	<TD headers="sh"> 1B </TD> <TD headers="ctrl"> 1B </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 1B </TD> <TD headers="caps"> 1B </TD> <TD headers="shcaps"> 1B </TD> <TD headers="shnum"> 1B </TD> </TR>
+<TR class="c"> <TD headers="kl"> 1 ! </TD> <TD headers="skan"> 02 </TD> <TD headers="asc"> 31 </TD>
+	<TD headers="sh"> 21 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> 7800 </TD>
+        <TD headers="num"> 31 </TD> <TD headers="caps"> 31 </TD> <TD headers="shcaps"> 31 </TD> <TD headers="shnum"> 31 </TD> </TR>
+<TR class="c"> <TD headers="kl"> 2 @ </TD> <TD headers="skan"> 03 </TD> <TD headers="asc"> 32 </TD>
+	<TD headers="sh"> 40 </TD> <TD headers="ctrl"> 0300 </TD> <TD headers="alt"> 7900 </TD>
+        <TD headers="num"> 32 </TD> <TD headers="caps"> 32 </TD> <TD headers="shcaps"> 32 </TD> <TD headers="shnum"> 32 </TD> </TR>
+<TR class="c"> <TD headers="kl"> 3 # </TD> <TD headers="skan"> 04 </TD> <TD headers="asc"> 33 </TD>
+	<TD headers="sh"> 23 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> 7A00 </TD>
+        <TD headers="num"> 33 </TD> <TD headers="caps"> 33 </TD> <TD headers="shcaps"> 33 </TD> <TD headers="shnum"> 33 </TD> </TR>
+<TR class="c"> <TD headers="kl"> 4 $ </TD> <TD headers="skan"> 05 </TD> <TD headers="asc"> 34 </TD>
+	<TD headers="sh"> 24 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> 7B00 </TD>
+        <TD headers="num"> 34 </TD> <TD headers="caps"> 34 </TD> <TD headers="shcaps"> 34 </TD> <TD headers="shnum"> 34 </TD> </TR>
+<TR class="c"> <TD headers="kl"> 5 % </TD> <TD headers="skan"> 06 </TD> <TD headers="asc"> 35 </TD>
+	<TD headers="sh"> 25 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> 7C00 </TD>
+        <TD headers="num"> 35 </TD> <TD headers="caps"> 35 </TD> <TD headers="shcaps"> 35 </TD> <TD headers="shnum"> 35 </TD> </TR>
+<TR class="c"> <TD headers="kl"> 6 ^ </TD> <TD headers="skan"> 07 </TD> <TD headers="asc"> 36 </TD>
+	<TD headers="sh"> 5E </TD> <TD headers="ctrl"> 1E </TD> <TD headers="alt"> 7D00 </TD>
+        <TD headers="num"> 36 </TD> <TD headers="caps"> 36 </TD> <TD headers="shcaps"> 36 </TD> <TD headers="shnum"> 36 </TD> </TR>
+<TR class="c"> <TD headers="kl"> 7 &amp; </TD> <TD headers="skan"> 08 </TD> <TD headers="asc"> 37 </TD>
+	<TD headers="sh"> 26 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> 7E00 </TD>
+        <TD headers="num"> 37 </TD> <TD headers="caps"> 37 </TD> <TD headers="shcaps"> 37 </TD> <TD headers="shnum"> 37 </TD> </TR>
+<TR class="c"> <TD headers="kl"> 8 * </TD> <TD headers="skan"> 09 </TD> <TD headers="asc"> 38 </TD>
+	<TD headers="sh"> 2a </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> 7F00 </TD>
+        <TD headers="num"> 38 </TD> <TD headers="caps"> 38 </TD> <TD headers="shcaps"> 38 </TD> <TD headers="shnum"> 38 </TD> </TR>
+<TR class="c"> <TD headers="kl"> 9 ( </TD> <TD headers="skan"> 0A </TD> <TD headers="asc"> 39 </TD>
+	<TD headers="sh"> 28 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> 8000 </TD>
+        <TD headers="num"> 39 </TD> <TD headers="caps"> 39 </TD> <TD headers="shcaps"> 39 </TD> <TD headers="shnum"> 39 </TD> </TR>
+<TR class="c"> <TD headers="kl"> 0 ) </TD> <TD headers="skan"> 0B </TD> <TD headers="asc"> 30 </TD>
+	<TD headers="sh"> 29 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> 8100 </TD>
+        <TD headers="num"> 30 </TD> <TD headers="caps"> 30 </TD> <TD headers="shcaps"> 30 </TD> <TD headers="shnum"> 30 </TD> </TR>
+<TR class="c"> <TD headers="kl"> - _ </TD> <TD headers="skan"> 0C </TD> <TD headers="asc"> 2D </TD>
+	<TD headers="sh"> 5F </TD> <TD headers="ctrl"> 1F </TD> <TD headers="alt"> 8200 </TD>
+        <TD headers="num"> 2D </TD> <TD headers="caps"> 2D </TD> <TD headers="shcaps"> 5F </TD> <TD headers="shnum"> 5F </TD> </TR>
+<TR class="c"> <TD headers="kl"> + = </TD> <TD headers="skan"> 0D </TD> <TD headers="asc"> 3D </TD>
+	<TD headers="sh"> 2B </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> 8300 </TD>
+        <TD headers="num"> 3D </TD> <TD headers="caps"> 3D </TD> <TD headers="shcaps"> 2B </TD> <TD headers="shnum"> 2B </TD> </TR>
+<TR class="c"> <TD headers="kl"> BkSp</TD> <TD headers="skan"> 0E </TD> <TD headers="asc"> 08 </TD>
+	<TD headers="sh"> 08 </TD> <TD headers="ctrl"> 7F </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 08 </TD> <TD headers="caps"> 08 </TD> <TD headers="shcaps"> 08 </TD> <TD headers="shnum"> 08 </TD> </TR>
+<TR class="c"> <TD headers="kl"> Tab </TD> <TD headers="skan"> 0F </TD> <TD headers="asc"> 09 </TD>
+	<TD headers="sh"> 0F00 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 09 </TD> <TD headers="caps"> 09 </TD> <TD headers="shcaps"> 0F00 </TD> <TD headers="shnum"> 0F00 </TD> </TR>
+<TR class="c"> <TD headers="kl"> Q </TD> <TD headers="skan"> 10 </TD> <TD headers="asc"> 71 </TD>
+	<TD headers="sh"> 51 </TD> <TD headers="ctrl"> 11 </TD> <TD headers="alt"> 1000 </TD>
+        <TD headers="num"> 71 </TD> <TD headers="caps"> 51 </TD> <TD headers="shcaps"> 71 </TD> <TD headers="shnum"> 51 </TD> </TR>
+<TR class="c"> <TD headers="kl"> W </TD> <TD headers="skan"> 11 </TD> <TD headers="asc"> 77 </TD>
+	<TD headers="sh"> 57 </TD> <TD headers="ctrl"> 17 </TD> <TD headers="alt"> 1100 </TD>
+        <TD headers="num"> 77 </TD> <TD headers="caps"> 57 </TD> <TD headers="shcaps"> 77 </TD> <TD headers="shnum"> 57 </TD> </TR>
+<TR class="c"> <TD headers="kl"> E </TD> <TD headers="skan"> 12 </TD> <TD headers="asc"> 65 </TD>
+	<TD headers="sh"> 45 </TD> <TD headers="ctrl"> 05 </TD> <TD headers="alt"> 1200 </TD>
+        <TD headers="num"> 65 </TD> <TD headers="caps"> 45 </TD> <TD headers="shcaps"> 65 </TD> <TD headers="shnum"> 45 </TD> </TR>
+<TR class="c"> <TD headers="kl"> R </TD> <TD headers="skan"> 13 </TD> <TD headers="asc"> 72 </TD>
+	<TD headers="sh"> 52 </TD> <TD headers="ctrl"> 12 </TD> <TD headers="alt"> 1300 </TD>
+        <TD headers="num"> 72 </TD> <TD headers="caps"> 52 </TD> <TD headers="shcaps"> 72 </TD> <TD headers="shnum"> 52 </TD> </TR>
+<TR class="c"> <TD headers="kl"> T </TD> <TD headers="skan"> 14 </TD> <TD headers="asc"> 74 </TD>
+	<TD headers="sh"> 54 </TD> <TD headers="ctrl"> 14 </TD> <TD headers="alt"> 1400 </TD>
+        <TD headers="num"> 74 </TD> <TD headers="caps"> 54 </TD> <TD headers="shcaps"> 74 </TD> <TD headers="shnum"> 54 </TD> </TR>
+<TR class="c"> <TD headers="kl"> Y </TD> <TD headers="skan"> 15 </TD> <TD headers="asc"> 79 </TD>
+	<TD headers="sh"> 59 </TD> <TD headers="ctrl"> 19 </TD> <TD headers="alt"> 1500 </TD>
+        <TD headers="num"> 79 </TD> <TD headers="caps"> 59 </TD> <TD headers="shcaps"> 79 </TD> <TD headers="shnum"> 59 </TD> </TR>
+<TR class="c"> <TD headers="kl"> U </TD> <TD headers="skan"> 16 </TD> <TD headers="asc"> 75 </TD>
+	<TD headers="sh"> 55 </TD> <TD headers="ctrl"> 15 </TD> <TD headers="alt"> 1600 </TD>
+        <TD headers="num"> 75 </TD> <TD headers="caps"> 55 </TD> <TD headers="shcaps"> 75 </TD> <TD headers="shnum"> 55 </TD> </TR>
+<TR class="c"> <TD headers="kl"> I </TD> <TD headers="skan"> 17 </TD> <TD headers="asc"> 69 </TD>
+	<TD headers="sh"> 49 </TD> <TD headers="ctrl"> 09 </TD> <TD headers="alt"> 1700 </TD>
+        <TD headers="num"> 69 </TD> <TD headers="caps"> 49 </TD> <TD headers="shcaps"> 69 </TD> <TD headers="shnum"> 49 </TD> </TR>
+<TR class="c"> <TD headers="kl"> O </TD> <TD headers="skan"> 18 </TD> <TD headers="asc"> 6F </TD>
+	<TD headers="sh"> 4F </TD> <TD headers="ctrl"> 0F </TD> <TD headers="alt"> 1800 </TD>
+        <TD headers="num"> 6F </TD> <TD headers="caps"> 4F </TD> <TD headers="shcaps"> 6F </TD> <TD headers="shnum"> 4F </TD> </TR>
+<TR class="c"> <TD headers="kl"> P </TD> <TD headers="skan"> 19 </TD> <TD headers="asc"> 70 </TD>
+	<TD headers="sh"> 50 </TD> <TD headers="ctrl"> 10 </TD> <TD headers="alt"> 1900 </TD>
+        <TD headers="num"> 70 </TD> <TD headers="caps"> 50 </TD> <TD headers="shcaps"> 70 </TD> <TD headers="shnum"> 50 </TD> </TR>
+<TR class="c"> <TD headers="kl"> [ { </TD> <TD headers="skan"> 1A </TD> <TD headers="asc"> 5B </TD>
+	<TD headers="sh"> 7B </TD> <TD headers="ctrl"> 1B </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 5B </TD> <TD headers="caps"> 5B </TD> <TD headers="shcaps"> 7B </TD> <TD headers="shnum"> 7B </TD> </TR>
+<TR class="c"> <TD headers="kl"> ] } </TD> <TD headers="skan"> 1B </TD> <TD headers="asc"> 5D </TD>
+	<TD headers="sh"> 7D </TD> <TD headers="ctrl"> 1D </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 5D </TD> <TD headers="caps"> 5D </TD> <TD headers="shcaps"> 7D </TD> <TD headers="shnum"> 7D </TD> </TR>
+<TR class="c"> <TD headers="kl"> ENTER </TD> <TD headers="skan"> 1C </TD> <TD headers="asc"> 0D </TD>
+	<TD headers="sh"> 0D </TD> <TD headers="ctrl"> 0A </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 0D </TD> <TD headers="caps"> 0D </TD> <TD headers="shcaps"> 0A </TD> <TD headers="shnum"> 0A </TD> </TR>
+<TR class="c"> <TD headers="kl"> CTRL </TD> <TD headers="skan"> 1D </TD> <TD headers="asc"> (brak) </TD>
+	<TD headers="sh"> (brak) </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> (brak) </TD> <TD headers="caps"> (brak) </TD> <TD headers="shcaps"> (brak) </TD> <TD headers="shnum"> (brak) </TD> </TR>
+<TR class="c"> <TD headers="kl"> A </TD> <TD headers="skan"> 1E </TD> <TD headers="asc"> 61 </TD>
+	<TD headers="sh"> 41 </TD> <TD headers="ctrl"> 01 </TD> <TD headers="alt"> 1E00 </TD>
+        <TD headers="num"> 61 </TD> <TD headers="caps"> 41 </TD> <TD headers="shcaps"> 61 </TD> <TD headers="shnum"> 41 </TD> </TR>
+<TR class="c"> <TD headers="kl"> S </TD> <TD headers="skan"> 1F </TD> <TD headers="asc"> 73 </TD>
+	<TD headers="sh"> 53 </TD> <TD headers="ctrl"> 13 </TD> <TD headers="alt"> 1F00 </TD>
+        <TD headers="num"> 73 </TD> <TD headers="caps"> 53 </TD> <TD headers="shcaps"> 73 </TD> <TD headers="shnum"> 53 </TD> </TR>
+<TR class="c"> <TD headers="kl"> D </TD> <TD headers="skan"> 20 </TD> <TD headers="asc"> 64 </TD>
+	<TD headers="sh"> 44 </TD> <TD headers="ctrl"> 04 </TD> <TD headers="alt"> 2000 </TD>
+        <TD headers="num"> 64 </TD> <TD headers="caps"> 44 </TD> <TD headers="shcaps"> 64 </TD> <TD headers="shnum"> 44 </TD> </TR>
+<TR class="c"> <TD headers="kl"> F </TD> <TD headers="skan"> 21 </TD> <TD headers="asc"> 66 </TD>
+	<TD headers="sh"> 46 </TD> <TD headers="ctrl"> 06 </TD> <TD headers="alt"> 2100 </TD>
+        <TD headers="num"> 66 </TD> <TD headers="caps"> 46 </TD> <TD headers="shcaps"> 66 </TD> <TD headers="shnum"> 46 </TD> </TR>
+<TR class="c"> <TD headers="kl"> G </TD> <TD headers="skan"> 22 </TD> <TD headers="asc"> 67 </TD>
+	<TD headers="sh"> 47 </TD> <TD headers="ctrl"> 07 </TD> <TD headers="alt"> 2200 </TD>
+        <TD headers="num"> 67 </TD> <TD headers="caps"> 47 </TD> <TD headers="shcaps"> 67 </TD> <TD headers="shnum"> 47 </TD> </TR>
+<TR class="c"> <TD headers="kl"> H </TD> <TD headers="skan"> 23 </TD> <TD headers="asc"> 68 </TD>
+	<TD headers="sh"> 48 </TD> <TD headers="ctrl"> 08 </TD> <TD headers="alt"> 2300 </TD>
+        <TD headers="num"> 68 </TD> <TD headers="caps"> 48 </TD> <TD headers="shcaps"> 68 </TD> <TD headers="shnum"> 48 </TD> </TR>
+<TR class="c"> <TD headers="kl"> J </TD> <TD headers="skan"> 24 </TD> <TD headers="asc"> 6A </TD>
+	<TD headers="sh"> 4A </TD> <TD headers="ctrl"> 0A </TD> <TD headers="alt"> 2400 </TD>
+        <TD headers="num"> 6A </TD> <TD headers="caps"> 4A </TD> <TD headers="shcaps"> 6A </TD> <TD headers="shnum"> 4A </TD> </TR>
+<TR class="c"> <TD headers="kl"> K </TD> <TD headers="skan"> 25 </TD> <TD headers="asc"> 6B </TD>
+	<TD headers="sh"> 4B </TD> <TD headers="ctrl"> 0B </TD> <TD headers="alt"> 2500 </TD>
+        <TD headers="num"> 6B </TD> <TD headers="caps"> 4B </TD> <TD headers="shcaps"> 6B </TD> <TD headers="shnum"> 4B </TD> </TR>
+<TR class="c"> <TD headers="kl"> L </TD> <TD headers="skan"> 26 </TD> <TD headers="asc"> 6C </TD>
+	<TD headers="sh"> 4C </TD> <TD headers="ctrl"> 0C </TD> <TD headers="alt"> 2600 </TD>
+        <TD headers="num"> 6C </TD> <TD headers="caps"> 4C </TD> <TD headers="shcaps"> 6C </TD> <TD headers="shnum"> 4C </TD> </TR>
+<TR class="c"> <TD headers="kl"> ; : </TD> <TD headers="skan"> 27 </TD> <TD headers="asc"> 3B </TD>
+	<TD headers="sh"> 3A </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 3B </TD> <TD headers="caps"> 3B </TD> <TD headers="shcaps"> 3A </TD> <TD headers="shnum"> 3A </TD> </TR>
+<TR class="c"> <TD headers="kl"> &lsquo; &quot; </TD> <TD headers="skan"> 28 </TD> <TD headers="asc"> 27 </TD>
+	<TD headers="sh"> 22 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 27 </TD> <TD headers="caps"> 27 </TD> <TD headers="shcaps"> 22 </TD> <TD headers="shnum"> 22 </TD> </TR>
+<TR class="c"> <TD headers="kl"> ~ ` </TD> <TD headers="skan"> 29 </TD> <TD headers="asc"> 60 </TD>
+	<TD headers="sh"> 7E </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 60 </TD> <TD headers="caps"> 60 </TD> <TD headers="shcaps"> 7E </TD> <TD headers="shnum"> 7E </TD> </TR>
+<TR class="c"> <TD headers="kl"> L<span lang="en">Shift</span> </TD> <TD headers="skan"> 2A </TD> <TD headers="asc"> (brak) </TD>
+	<TD headers="sh"> (brak) </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> (brak) </TD> <TD headers="caps"> (brak) </TD> <TD headers="shcaps"> (brak) </TD> <TD headers="shnum"> (brak) </TD> </TR>
+<TR class="c"> <TD headers="kl"> \ | </TD> <TD headers="skan"> 2B </TD> <TD headers="asc"> 5C </TD>
+	<TD headers="sh"> 7C </TD> <TD headers="ctrl"> 1C </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 5C </TD> <TD headers="caps"> 5C </TD> <TD headers="shcaps"> 7C </TD> <TD headers="shnum"> 7C </TD> </TR>
+<TR class="c"> <TD headers="kl"> Z </TD> <TD headers="skan"> 2C </TD> <TD headers="asc"> 7A </TD>
+	<TD headers="sh"> 5A </TD> <TD headers="ctrl"> 1A </TD> <TD headers="alt"> 2C00 </TD>
+        <TD headers="num"> 7A </TD> <TD headers="caps"> 5A </TD> <TD headers="shcaps"> 7A </TD> <TD headers="shnum"> 5A </TD> </TR>
+<TR class="c"> <TD headers="kl"> X </TD> <TD headers="skan"> 2D </TD> <TD headers="asc"> 78 </TD>
+	<TD headers="sh"> 58 </TD> <TD headers="ctrl"> 18 </TD> <TD headers="alt"> 2D00 </TD>
+        <TD headers="num"> 78 </TD> <TD headers="caps"> 58 </TD> <TD headers="shcaps"> 78 </TD> <TD headers="shnum"> 58 </TD> </TR>
+<TR class="c"> <TD headers="kl"> C </TD> <TD headers="skan"> 2E </TD> <TD headers="asc"> 63 </TD>
+	<TD headers="sh"> 43 </TD> <TD headers="ctrl"> 03 </TD> <TD headers="alt"> 2E00 </TD>
+        <TD headers="num"> 63 </TD> <TD headers="caps"> 43 </TD> <TD headers="shcaps"> 63 </TD> <TD headers="shnum"> 43 </TD> </TR>
+<TR class="c"> <TD headers="kl"> V </TD> <TD headers="skan"> 2F </TD> <TD headers="asc"> 76 </TD>
+	<TD headers="sh"> 56 </TD> <TD headers="ctrl"> 16 </TD> <TD headers="alt"> 2F00 </TD>
+        <TD headers="num"> 76 </TD> <TD headers="caps"> 56 </TD> <TD headers="shcaps"> 76 </TD> <TD headers="shnum"> 56 </TD> </TR>
+<TR class="c"> <TD headers="kl"> B </TD> <TD headers="skan"> 30 </TD> <TD headers="asc"> 62 </TD>
+	<TD headers="sh"> 42 </TD> <TD headers="ctrl"> 02 </TD> <TD headers="alt"> 3000 </TD>
+        <TD headers="num"> 62 </TD> <TD headers="caps"> 42 </TD> <TD headers="shcaps"> 62 </TD> <TD headers="shnum"> 42 </TD> </TR>
+<TR class="c"> <TD headers="kl"> N </TD> <TD headers="skan"> 31 </TD> <TD headers="asc"> 6E </TD>
+	<TD headers="sh"> 4E </TD> <TD headers="ctrl"> 0E </TD> <TD headers="alt"> 3100 </TD>
+        <TD headers="num"> 6E </TD> <TD headers="caps"> 4E </TD> <TD headers="shcaps"> 6E </TD> <TD headers="shnum"> 4E </TD> </TR>
+<TR class="c"> <TD headers="kl"> M </TD> <TD headers="skan"> 32 </TD> <TD headers="asc"> 6D </TD>
+	<TD headers="sh"> 4D </TD> <TD headers="ctrl"> 0D </TD> <TD headers="alt"> 3200 </TD>
+        <TD headers="num"> 6D </TD> <TD headers="caps"> 4D </TD> <TD headers="shcaps"> 6D </TD> <TD headers="shnum"> 4D </TD> </TR>
+<TR class="c"> <TD headers="kl"> , &lt; </TD> <TD headers="skan"> 33 </TD> <TD headers="asc"> 2C </TD>
+	<TD headers="sh"> 3C </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 2C </TD> <TD headers="caps"> 2C </TD> <TD headers="shcaps"> 3C </TD> <TD headers="shnum"> 3C </TD> </TR>
+<TR class="c"> <TD headers="kl"> . &gt; </TD> <TD headers="skan"> 34 </TD> <TD headers="asc"> 2E </TD>
+	<TD headers="sh"> 3E </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 2E </TD> <TD headers="caps"> 2E </TD> <TD headers="shcaps"> 3E </TD> <TD headers="shnum"> 3E </TD> </TR>
+<TR class="c"> <TD headers="kl"> / ? </TD> <TD headers="skan"> 35 </TD> <TD headers="asc"> 2F </TD>
+	<TD headers="sh"> 3F </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 2F </TD> <TD headers="caps"> 2F </TD> <TD headers="shcaps"> 3F </TD> <TD headers="shnum"> 3F </TD> </TR>
+<TR class="c"> <TD headers="kl"> P<span lang="en">Shift</span> </TD> <TD headers="skan"> 36 </TD> <TD headers="asc"> (brak) </TD>
+	<TD headers="sh"> (brak) </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> (brak) </TD> <TD headers="caps"> (brak) </TD> <TD headers="shcaps"> (brak) </TD> <TD headers="shnum"> (brak) </TD> </TR>
+<TR class="c"> <TD headers="kl"> * (num) </TD> <TD headers="skan"> 37 </TD> <TD headers="asc"> 2A </TD>
+	<TD headers="sh"> (brak?) </TD> <TD headers="ctrl"> 10 </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 2A </TD> <TD headers="caps"> 2A </TD> <TD headers="shcaps"> (brak?) </TD> <TD headers="shnum"> (brak?) </TD> </TR>
+<TR class="c"> <TD headers="kl"> alt </TD> <TD headers="skan"> 38 </TD> <TD headers="asc"> (brak) </TD>
+	<TD headers="sh"> (brak) </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> (brak) </TD> <TD headers="caps"> (brak) </TD> <TD headers="shcaps"> (brak) </TD> <TD headers="shnum"> (brak) </TD> </TR>
+<TR class="c"> <TD headers="kl"> spacja </TD> <TD headers="skan"> 39 </TD> <TD headers="asc"> 20 </TD>
+	<TD headers="sh"> 20 </TD> <TD headers="ctrl"> 20 </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 20 </TD> <TD headers="caps"> 20 </TD> <TD headers="shcaps"> 20 </TD> <TD headers="shnum"> 20 </TD> </TR>
+<TR class="c"> <TD headers="kl"> <span lang="en">caps lock</span></TD> <TD headers="skan"> 3A </TD> <TD headers="asc"> (brak) </TD>
+	<TD headers="sh"> (brak) </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> (brak) </TD> <TD headers="caps"> (brak) </TD> <TD headers="shcaps"> (brak) </TD> <TD headers="shnum"> (brak) </TD> </TR>
+<TR class="c"> <TD headers="kl"> F1 </TD> <TD headers="skan"> 3B </TD> <TD headers="asc"> 3B00 </TD>
+	<TD headers="sh"> 5400 </TD> <TD headers="ctrl"> 5E00 </TD> <TD headers="alt"> 6800 </TD>
+        <TD headers="num"> 3B00 </TD> <TD headers="caps"> 3B00 </TD> <TD headers="shcaps"> 5400 </TD> <TD headers="shnum"> 5400 </TD> </TR>
+<TR class="c"> <TD headers="kl"> F2 </TD> <TD headers="skan"> 3C </TD> <TD headers="asc"> 3C00 </TD>
+	<TD headers="sh"> 5500 </TD> <TD headers="ctrl"> 5F00 </TD> <TD headers="alt"> 6900 </TD>
+        <TD headers="num"> 3C00 </TD> <TD headers="caps"> 3C00 </TD> <TD headers="shcaps"> 5500 </TD> <TD headers="shnum"> 5500 </TD> </TR>
+<TR class="c"> <TD headers="kl"> F3 </TD> <TD headers="skan"> 3D </TD> <TD headers="asc"> 3D00 </TD>
+	<TD headers="sh"> 5600 </TD> <TD headers="ctrl"> 6000 </TD> <TD headers="alt"> 6A00 </TD>
+        <TD headers="num"> 3D00 </TD> <TD headers="caps"> 3D00 </TD> <TD headers="shcaps"> 5600 </TD> <TD headers="shnum"> 5600 </TD> </TR>
+<TR class="c"> <TD headers="kl"> F4 </TD> <TD headers="skan"> 3E </TD> <TD headers="asc"> 3E00 </TD>
+	<TD headers="sh"> 5700 </TD> <TD headers="ctrl"> 6100 </TD> <TD headers="alt"> 6B00 </TD>
+        <TD headers="num"> 3E00 </TD> <TD headers="caps"> 3E00 </TD> <TD headers="shcaps"> 5700 </TD> <TD headers="shnum"> 5700 </TD> </TR>
+<TR class="c"> <TD headers="kl"> F5 </TD> <TD headers="skan"> 3F </TD> <TD headers="asc"> 3F00 </TD>
+	<TD headers="sh"> 5800 </TD> <TD headers="ctrl"> 6200 </TD> <TD headers="alt"> 6C00 </TD>
+        <TD headers="num"> 3F00 </TD> <TD headers="caps"> 3F00 </TD> <TD headers="shcaps"> 5800 </TD> <TD headers="shnum"> 5800 </TD> </TR>
+<TR class="c"> <TD headers="kl"> F6 </TD> <TD headers="skan"> 40 </TD> <TD headers="asc"> 4000 </TD>
+	<TD headers="sh"> 5900 </TD> <TD headers="ctrl"> 6300 </TD> <TD headers="alt"> 6D00 </TD>
+        <TD headers="num"> 4000 </TD> <TD headers="caps"> 4000 </TD> <TD headers="shcaps"> 5900 </TD> <TD headers="shnum"> 5900 </TD> </TR>
+<TR class="c"> <TD headers="kl"> F7 </TD> <TD headers="skan"> 41 </TD> <TD headers="asc"> 4100 </TD>
+	<TD headers="sh"> 5A00 </TD> <TD headers="ctrl"> 6400 </TD> <TD headers="alt"> 6E00 </TD>
+        <TD headers="num"> 4100 </TD> <TD headers="caps"> 4100 </TD> <TD headers="shcaps"> 5A00 </TD> <TD headers="shnum"> 5A00 </TD> </TR>
+<TR class="c"> <TD headers="kl"> F8 </TD> <TD headers="skan"> 42 </TD> <TD headers="asc"> 4200 </TD>
+	<TD headers="sh"> 5B00 </TD> <TD headers="ctrl"> 6500 </TD> <TD headers="alt"> 6F00 </TD>
+        <TD headers="num"> 4200 </TD> <TD headers="caps"> 4200 </TD> <TD headers="shcaps"> 5B00 </TD> <TD headers="shnum"> 5B00 </TD> </TR>
+<TR class="c"> <TD headers="kl"> F9 </TD> <TD headers="skan"> 43 </TD> <TD headers="asc"> 4300 </TD>
+	<TD headers="sh"> 5C00 </TD> <TD headers="ctrl"> 6600 </TD> <TD headers="alt"> 7000 </TD>
+        <TD headers="num"> 4300 </TD> <TD headers="caps"> 4300 </TD> <TD headers="shcaps"> 5C00 </TD> <TD headers="shnum"> 5C00 </TD> </TR>
+<TR class="c"> <TD headers="kl"> F10</TD> <TD headers="skan"> 44 </TD> <TD headers="asc"> 4400 </TD>
+	<TD headers="sh"> 5D00 </TD> <TD headers="ctrl"> 6700 </TD> <TD headers="alt"> 6100 </TD>
+        <TD headers="num"> 4400 </TD> <TD headers="caps"> 4400 </TD> <TD headers="shcaps"> 5D00 </TD> <TD headers="shnum"> 5D00 </TD> </TR>
+<TR class="c"> <TD headers="kl"> <span lang="en">num lock</span></TD> <TD headers="skan"> 45 </TD> <TD headers="asc"> (brak) </TD>
+	<TD headers="sh"> (brak) </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> (brak) </TD> <TD headers="caps"> (brak) </TD> <TD headers="shcaps"> (brak) </TD> <TD headers="shnum"> (brak) </TD> </TR>
+<TR class="c"> <TD headers="kl"> <span lang="en">scroll lock</span></TD> <TD headers="skan"> 46 </TD> <TD headers="asc"> (brak) </TD>
+	<TD headers="sh"> (brak) </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> (brak) </TD> <TD headers="caps"> (brak) </TD> <TD headers="shcaps"> (brak) </TD> <TD headers="shnum"> (brak) </TD> </TR>
+<TR class="c"> <TD headers="kl"> <span lang="en">home</span> </TD> <TD headers="skan"> 47 </TD> <TD headers="asc"> 4700 </TD>
+	<TD headers="sh"> 37 </TD> <TD headers="ctrl"> 7700 </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 37 </TD> <TD headers="caps"> 4700 </TD> <TD headers="shcaps"> 37 </TD> <TD headers="shnum"> 4700 </TD> </TR>
+<TR class="c"> <TD headers="kl"> góra </TD> <TD headers="skan"> 48 </TD> <TD headers="asc"> 4800 </TD>
+	<TD headers="sh"> 38 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 38 </TD> <TD headers="caps"> 4800 </TD> <TD headers="shcaps"> 38 </TD> <TD headers="shnum"> 4800 </TD> </TR>
+<TR class="c"> <TD headers="kl"> pgup </TD> <TD headers="skan"> 49 </TD> <TD headers="asc"> 4900 </TD>
+	<TD headers="sh"> 39 </TD> <TD headers="ctrl"> 8400 </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 39 </TD> <TD headers="caps"> 4900 </TD> <TD headers="shcaps"> 39 </TD> <TD headers="shnum"> 4900 </TD> </TR>
+<TR class="c"> <TD headers="kl"> - (num)</TD> <TD headers="skan"> 4A </TD> <TD headers="asc"> 2D </TD>
+	<TD headers="sh"> 2D </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 2D </TD> <TD headers="caps"> 2D </TD> <TD headers="shcaps"> 2D </TD> <TD headers="shnum"> 2D </TD> </TR>
+<TR class="c"> <TD headers="kl"> lewo </TD> <TD headers="skan"> 4B </TD> <TD headers="asc"> 4B00 </TD>
+	<TD headers="sh"> 34 </TD> <TD headers="ctrl"> 7300 </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 34 </TD> <TD headers="caps"> 4B00 </TD> <TD headers="shcaps"> 34 </TD> <TD headers="shnum"> 4B00 </TD> </TR>
+<TR class="c"> <TD headers="kl"> 5 (num) </TD> <TD headers="skan"> 4C </TD> <TD headers="asc"> 4C00 </TD>
+	<TD headers="sh"> 35 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 35 </TD> <TD headers="caps"> 4C00 </TD> <TD headers="shcaps"> 35 </TD> <TD headers="shnum"> 4C00 </TD> </TR>
+<TR class="c"> <TD headers="kl"> prawo </TD> <TD headers="skan"> 4D </TD> <TD headers="asc"> 4D00 </TD>
+	<TD headers="sh"> 36 </TD> <TD headers="ctrl"> 7400 </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 36 </TD> <TD headers="caps"> 4D00 </TD> <TD headers="shcaps"> 36 </TD> <TD headers="shnum"> 4D00 </TD> </TR>
+<TR class="c"> <TD headers="kl"> + (num)</TD> <TD headers="skan"> 4E </TD> <TD headers="asc"> 2B </TD>
+	<TD headers="sh"> 2B </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 2B </TD> <TD headers="caps"> 2B </TD> <TD headers="shcaps"> 2B </TD> <TD headers="shnum"> 2B </TD> </TR>
+<TR class="c"> <TD headers="kl"> end </TD> <TD headers="skan"> 4F </TD> <TD headers="asc"> 4F00 </TD>
+	<TD headers="sh"> 31 </TD> <TD headers="ctrl"> 7500 </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 31 </TD> <TD headers="caps"> 4F00 </TD> <TD headers="shcaps"> 31 </TD> <TD headers="shnum"> 4F00 </TD> </TR>
+<TR class="c"> <TD headers="kl"> dół</TD> <TD headers="skan"> 50 </TD> <TD headers="asc"> 5000 </TD>
+	<TD headers="sh"> 32 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 32 </TD> <TD headers="caps"> 5000 </TD> <TD headers="shcaps"> 32 </TD> <TD headers="shnum"> 5000 </TD> </TR>
+<TR class="c"> <TD headers="kl"> pgdn </TD> <TD headers="skan"> 51 </TD> <TD headers="asc"> 5100 </TD>
+	<TD headers="sh"> 33 </TD> <TD headers="ctrl"> 7600 </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 33 </TD> <TD headers="caps"> 5100 </TD> <TD headers="shcaps"> 33 </TD> <TD headers="shnum"> 5100 </TD> </TR>
+<TR class="c"> <TD headers="kl"> ins</TD> <TD headers="skan"> 52 </TD> <TD headers="asc"> 5200 </TD>
+	<TD headers="sh"> 30 </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 30 </TD> <TD headers="caps"> 5200 </TD> <TD headers="shcaps"> 30 </TD> <TD headers="shnum"> 5200 </TD> </TR>
+<TR class="c"> <TD headers="kl"> del</TD> <TD headers="skan"> 53 </TD> <TD headers="asc"> 5300 </TD>
+	<TD headers="sh"> 2E </TD> <TD headers="ctrl"> (brak) </TD> <TD headers="alt"> (brak) </TD>
+        <TD headers="num"> 2E </TD> <TD headers="caps"> 5300 </TD> <TD headers="shcaps"> 2E </TD> <TD headers="shnum"> 5300 </TD> </TR>
+</tbody>
+</TABLE>
+
+
+<br><br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

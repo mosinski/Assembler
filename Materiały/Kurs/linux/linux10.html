@@ -1,0 +1,504 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 10 - Inne języki a asembler </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux09.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux11.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="kurs, asm, asembler, assembler, wstawki asemblerowe, C, Pascal
+	Fortran, gcc, linux, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:58 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 10 - Nie jesteśmy sami, czyli jak łączyć asemblera z innymi językami</h1>
+	</div>
+
+<P>
+Jak wiemy, w asemblerze można napisać wszystko. Jednak nie zawsze wszystko trzeba pisać w
+tym języku. W tej części pokażę, jak asemblera łączyć z innymi językami. Są na to 2 sposoby:</P>
+<UL>
+ <LI>Wstawki asemblerowe wpisywane bezpośrednio w kod programu</LI>
+ <LI>Osobne moduły asemblerowe dołączane potem do modułów napisanych w innych językach</LI>
+</UL>
+<P>Postaram się z grubsza omówić te dwa sposoby na przykładzie języków
+ <span lang="en">Pascal</span>, C i Fortran 77.
+Uprzedzam jednak, że moja znajomość języka <span lang="en">Pascal</span> i narzędzi
+ związanych z tym językiem jest słaba.</P>
+
+
+
+
+
+<BR>
+<HR>
+<h2 class="nag" lang="en">Pascal</h2>
+
+	<BR><a href="#c" tabindex="1" class="bezdruk">(przeskocz <span lang="en">Pascal</span>a)</a>
+<P>
+Wstawki asemblerowe realizuje się używając słowa <q>asm</q>. Oto przykład:</P>
+<PRE title="wstawka asemblerowa w Pascalu">
+	{ Linux używa składni AT&amp;T do asemblera - jak zauważycie,
+	 argumenty instrukcji są odwrócone. }
+
+	program pas1;
+
+	begin
+ 	 asm movl $4,%eax
+ 	 end;
+	end.</PRE>
+
+<P>Można też stosować nieco inny sposób - deklarowanie zmiennej reprezentującej rejestry procesora.
+Poniższy wycinek kodu prezentuje to właśnie podejście (wywołuje przerwanie 13h z AH=48h, DL=80h,
+ DS:DX wskazującym na obiekt a):</P>
+<PRE title="Pascal a rejestry" lang="en">
+	uses crt,dos;
+
+	Var
+	   regs: Registers;
+
+	BEGIN
+	   clrscr();
+	   With regs DO
+	     Begin
+	       Ah:=$48;
+	       DL:=$80;
+	       DS:=seg(a);
+	       DX:=ofs(a);
+	     End;
+
+	       Intr($13,regs);</PRE>
+
+<P>Teraz zajmiemy się bardziej skomplikowaną sprawą - łączenie modułów napisanych w
+<span lang="en">Pascal</span>u i
+asemblerze. Pascal dekoruje nazwy zmiennych i procedur, dorabiając znak podkreślenia
+ z przodu. Jakby tego
+było mało, do nazwy procedury dopisywana jest informacja o jej parametrach. Tak więc z kodu</P>
+<PRE>
+	var
+ 	 c:integer;
+ 	 d:char;
+
+	procedure aaa(a:integer;b:char);</PRE>
+
+<P>otrzymujemy symbole: _C, _D oraz _AAA$INTEGER$CHAR.</P>
+
+<P>Oprócz tego, zwykle w <span lang="en">Pascal</span>u
+ argumenty na stos szły od lewej do prawej, ale z tego co widzę
+teraz, to <span lang="en">Free Pascal Compiler</span> działa odwrotnie
+ - argumenty idą na stos wspak. W naszym
+przykładzie najpierw na stos pójdzie zmienna typu <q lang="en">char</q>, a potem typu
+ <q lang="en">integer</q> (obie
+rozszerzone do rozmiaru DWORDa).</P>
+<P>
+Jedno jest pewne: jeżeli Twoja procedura jest uruchamiana z programu napisanego w
+ <span lang="en">Pascal</span>u, to
+Ty <q>sprzątasz po sobie</q> stos - należy przy wyjściu z procedury wykonać &nbsp;
+ <code>RET liczba</code>, gdzie
+liczba to rozmiar wszystkich parametrów włożonych na stos (wszystkie parametry są rozmiaru co
+najmniej DWORD).<BR>
+Jeśli to Ty uruchamiasz procedury napisane w <span lang="en">Pascal</span>u, to nie musisz
+ się martwić o zdejmowanie parametrów ze stosu.
+</P>
+<P>
+Samo dołączanie modułów odbywa się na linii poleceń, najlepiej w tym celu użyć linkera
+(po uprzednim skompilowaniu innych modułów na pliki obiektowe).</P>
+
+
+
+
+
+
+
+
+
+
+
+
+<HR><BR><BR>
+<h2 class="nag"><a name="c" id="c">C i C++</a></h2>
+	<BR><a href="#fortran" class="bezdruk">(przeskocz C i C++)</a>
+<P>
+
+Wstawki asemblerowe zaczynają się słowami <q>__asm (</q> a kończą nawiasem zamykającym <q>)</q>.
+W Linuksie wyglądają one nieco dziwnie i to nie tylko ze względu na <q>odwrotną</q> składnię</P>
+ <span lang="en">AT&amp;T</span>:
+<PRE title="wstawka asemblerowa w C">
+        __asm (&quot;movl $4,%eax\n&quot;
+                &quot;movb $0xff,%bl\n&quot;);</PRE>
+
+<P>Jak widać, po każdej instrukcji trzeba dać znak przejścia do nowej linii (w jednej linii może
+być tylko 1 instrukcja asemblera). Można dorzucić też znak tabulacji <q>\t</q>.</P>
+<P>Wygląd bloków <q>__asm</q> jest złożony. Po szczegóły odsyłam do stron przeznaczonych temu
+zagadnieniu. W szczególności, możecie poczytać <a hreflang="en"
+ href="http://gcc.gnu.org/onlinedocs/gcc-4.1.1/gcc/">podręcznik GCC</a> (sekcje: 5.34 i 5.35),
+<A HREF="http://www.delorie.com/djgpp/doc/brennan/brennan_att_inline_djgpp.html" hreflang="en"
+	>strony DJGPP</A> oraz (w języku polskim)
+<A HREF="http://www.cs.put.poznan.pl/adanilecki/inline_asm/index.php" hreflang="pl"
+	>stronę pana Danileckiego</A>.</P>
+<P>U siebie też mam <A HREF="../linux/attintel.html" hreflang="pl">krótkie porównanie</A> tych składni.</P>
+
+
+<P>
+W C i C++ można, podobnie jak w <span lang="en">Pascal</span>u,
+ deklarować zmienne reprezentujące rejestry procesora.
+Plik nagłówkowy BIOS.H (niestety tylko w <span lang="en">Windows</span>)
+ oferuje nam kilka możliwości. Oto przykład:</P>
+<PRE>
+	#include &lt;bios.h&gt;
+	...
+
+	REGS rejestry;
+	...
+		rejestry.x.ax = 0x13;
+		rejestry.h.bl = 0xFF;
+		int86 (0x10, rejestry, rejestry);</PRE>
+
+<P>Łączenie modułów jest prostsze niż w <span lang="en">Pascal</span>u.
+ Język zwykle C dekoruje nazwy, dodając znak podkreślenia z przodu,
+ale nie w Linuksie, gdzie po prostu nic nie jest dorabiane.<BR>
+W Linuksie deklaracja funkcji zewnętrznej wygląda po prostu tak:</P>
+<PRE><span lang="en">extern void</span> naszafunkcja (int parametr, <span lang="en">char</span>* parametr2);</PRE>
+
+<P><em class="wazne">UWAGA</em> - w języku C++ sprawy są trudniejsze nawet niż w
+ <span lang="en">Pascal</span>u. Dlatego, jeśli chcemy, aby
+nazwa naszej funkcji była niezmieniona (poza tym, że ewentualnie dodamy podkreślenie z przodu)
+i jednocześnie działała w C++, zawsze przy deklaracji funkcji w pliku nagłówkowym, należy dodać
+&nbsp;<CODE>extern &quot;C&quot;</CODE>, na przykład</P>
+
+<PRE title="opakowanie funkcji dla C++">
+	#ifdef __cplusplus
+	extern &quot;C&quot; {
+	#endif
+
+	extern void naszafunkcja (int parametr, char* a);
+
+	#ifdef  __cplusplus
+	}
+	#endif</PRE>
+
+<P>W systemach 32-bitowych parametry przekazywane są <em class="wazne">OD PRAWEJ DO LEWEJ</em>, czyli
+ pierwszy parametr (u nas powyżej: int)
+będzie włożony na stos jako ostatni, czyli będzie <q>najpłycej</q>, a ostatni
+ (u nas: <span lang="en">char</span>*)
+będzie <q>najgłębiej</q>.</P>
+<P>
+W systemach 64-bitowych sprawa wygląda trudniej: parametry, w zależności od klasy, są przekazywane
+(od LEWEJ do PRAWEJ):</P>
+<ul>
+<li>na stosie, jeśli ich rozmiar przekracza 8 bajtów lub zawiera pola niewyrównane co do adresu</li>
+<li>kolejno w rejestrach RDI, RSI, RDX, RCX, R8, R9, jeśli jest klasy całkowitej (mieści się w
+ rejestrze ogólnego przeznaczenia)</li>
+<li>kolejno w rejestrach XMM0 ... XMM7 lub ich górnych częściach, jeśli jest klasy SSE lub
+ SSEUP, odpowiednio</li>
+<li>w obszarze pamięci, jeśli jest klasy zmiennoprzecinkowej/zespolonej</li>
+</ul>
+<P>W C/C++ to funkcja <em class="wazne">uruchamiająca</em> zdejmuje włożone parametry ze stosu,
+ a <em class="wazne">NIE</em> funkcja uruchamiana.</P>
+<P>
+Na systemach 32-bitowych parametry całkowitoliczbowe do 32 bitów zwracane są w
+ rejestrze EAX (lub jego częściach:
+ AL, AX, w zależności od rozmiaru), 64-bitowe w EDX:EAX,
+ zmiennoprzecinkowe w ST0. Wskaźniki
+ w 32-bitowych kompilatorach są 32-bitowe i są zwracane w EAX (w 16-bitowych zapewne w AX).<br>
+Struktury są wkładane na stos od ostatnich pól, a jeśli funkcja zwraca strukturę przez wartość, na przykład<br>
+<code>struct xxx f ( struct xxx a )</code><br>
+to tak naprawdę jest traktowana jak taka funkcja:<br>
+<code>void f ( struct xxx *tu_bedzie_wynik, struct xxx a )</code><br>
+czyli jako ostatni na stos wkładany jest adres struktury, do której ta funkcja ma włożyć
+strukturę wynikową.
+</P>
+<P>
+Na systemach 64-bitowych sprawa ponownie wygląda inaczej. Tu także klasyfikuje się
+typ zwracanych danych, które są wtedy przekazywane:</P>
+<ul>
+<li>w pamięci, której adres przekazano w RDI (tak, jakby był to pierwszy parametr) - tak
+ na przykład można zwracać struktury. Po powrocie, RAX będzie zawierał przekazany adres</li>
+<li>w kolejnym wolnym rejestrze z grupy RAX, RDX, jeśli klasa jest całkowita</li>
+<li>w kolejnym wolnym rejestrze z grupy XMM0, XMM1, jeśli klasa to SSE</li>
+<li>w górnej części ostatniego używanego rejestru SSE, jeśli klasa to SSEUP</li>
+<li>w ST0, jeśli klasa jest zmiennoprzecinkowa</li>
+<li>razem z poprzednią wartością w ST0, jeśli klasa to X87UP</li>
+<li>część rzeczywista w ST0, a część urojona w ST1, jeśli klasa jest zespolona</li>
+</ul>
+<P>Polecam do przeczytania x64 <acronym lang="en" title="Application Binary Interface"
+>ABI</acronym> (na przykład dokument x64-abi.pdf, do znalezienia w Internecie).</P>
+
+
+<P>
+Dołączanie modułów (te napisane w asemblerze muszą być uprzednio skompilowane)
+odbywa się na linii poleceń, z tym że tym razem możemy użyć samego
+kompilatora (GCC), aby wykonał za nas łączenie (nie musimy uruchamiać linkera LD).
+</P>
+<P>
+Teraz krótki 32-bitowy przykładzik (użyję NASMa i GCC):</P>
+<PRE title="przykład asm+C">
+	; NASM - casm1l.asm
+
+	; use32 nie jest potrzebne w Linuksie, ale też nie zaszkodzi
+	section .text use32
+
+	global	suma
+
+	suma:
+
+	; po wykonaniu push ebp i mov ebp, esp:
+	; w [ebp]    znajduje się stary EBP
+	; w [ebp+4]  znajduje się adres powrotny z procedury
+	; w [ebp+8]  znajduje się pierwszy parametr,
+	; w [ebp+12] znajduje się drugi parametr
+	; itd.
+
+	%idefine	a	[ebp+8]
+	%idefine	b	[ebp+12]
+
+		push	ebp
+		mov	ebp, esp
+
+		mov	eax, a
+		add	eax, b
+
+	; LEAVE = mov esp, ebp / pop ebp
+		leave
+		ret</PRE>
+
+<P>I jeszcze plik casml.c:</P>
+<PRE>
+	#include &lt;stdio.h&gt;
+
+	extern int suma (int a, int b);
+
+	int c=1, d=2;
+
+	int main()
+	{
+		printf(&quot;%d\n&quot;, suma(c,d));
+		return 0;
+	}</PRE>
+
+<P>Kompilacja wygląda tak:</P>
+<PRE>
+	nasm -f elf casm1l.asm
+	gcc -o casm casml.c casm1l.o</PRE>
+
+<P>Po uruchomieniu programu na ekranie pojawia się oczekiwana cyfra 3.</P>
+
+<P>
+Może się zdarzyć też, że chcemy tylko korzystać z funkcji języka C, ale główną część
+ programu chcemy napisać w asemblerze. Nic trudnego: używane funkcje deklarujemy jako
+ zewnętrzne, ale
+ <em class="wazne">uwaga - swoją funkcję główną musimy nazwać <q lang="en">main</q></em>.
+ Jest tak dlatego, że teraz punkt startu programu nie jest w naszym kodzie, lecz w
+ samej bibliotece języka C. Program zaczyna się między innymi ustawieniem tablic
+ argumentów listy poleceń i zmiennych środowiska. Dopiero po tych operacjach biblioteka
+ C uruchamia funkcję <q lang="en">main</q> instrukcją <span lang="en">CALL</span>.<br>
+</P>
+<P>Inną ważną sprawą jest to, że naszą funkcję główną powinniśmy zakończyć instrukcją RET
+ (zamiast normalnych instrukcji wyjścia z programu), która
+ pozwoli przekazać kontrolę z powrotem do biblioteki C, umożliwiając posprzątanie
+ (na przykład wyrzucenie buforów z wyświetlonymi informacjami w końcu na ekran).<br>
+Krótki (także 32-bitowy) przykładzik:</P>
+<pre>
+	section .text
+
+	global main
+
+	extern printf
+
+	main:
+
+		; printf("Liczba jeden to: %d\n", 1);
+		push	dword 1		; drugi argument
+		push	dword napis	; pierwszy argument
+		call	printf		; uruchomienie funkcji
+		add	esp, 2*4	; posprzątanie stosu
+
+		; return 0;
+		xor	eax, eax
+		ret			; wyjście z programu
+
+	section .data
+
+	napis: db "Liczba jeden to: %d", 10, 0</pre>
+
+<P>Kompilacja powinna odbyć się tak:</P>
+<PRE>
+	nasm -o casm2.o -f elf casm2.asm
+	gcc -o casm2 casm2.o</PRE>
+
+<P>Jedna uwaga: funkcje biblioteki C mogą zamazać nam zawartość wszystkich rejestrów
+ (poza EBX, EBP, ESI, EDI w systemach 32-bitowych, i RBX, RBP, R12, R13, R14, R15 na
+ systemach 64-bitowych), więc <em class="wazne">nie wolno nam polegać na zawartości rejestrów</em>
+ po uruchomieniu jakiejkolwiek funkcji C.</P>
+
+
+
+
+
+
+
+
+
+
+<HR><BR><BR>
+<h2 class="nag"> <a name="fortran" id="fortran">Fortran 77</a></h2>
+
+<P>
+W tym języku nie wiem nic o wstawkach asemblerowych, więc przejdziemy od razu do łączenia
+modułów.</P>
+<P>Fortran dekoruje nazwy, stawiając znak podkreślenia <em class="wazne">PO</em>
+ nazwie funkcji lub zmiennej (wyjątkiem jest funkcja
+główna - blok PROGRAM - która nazywa się <CODE>MAIN__</CODE>, z dwoma podkreśleniami).</P>
+<P>
+Nie musimy pisać externów, ale jest kilka reguł przekazywania parametrów:</P>
+<UL>
+ <LI>parametry przekazywane są od prawej do lewej, czyli tak jak w C.</LI>
+ <LI>jeśli to jest tylko możliwe, wszystkie parametry przekazywane są przez referencję, czyli
+	przez wskaźnik. Gdy to jest niemożliwe, przekazywane są przez wartość.</LI>
+ <LI>jeśli na liście parametrów pojawia się łańcuch znakowy (lub inna tablica), to na stosie przed innymi
+	parametrami umieszczana jest jego długość (lub wymiary podawane wspak -
+	od ostatniego do pierwszego - w przypadku tablic wielowymiarowych).</LI>
+ <LI>wyniki są zwracane w tych samych miejscach, co w języku C.</LI>
+</UL>
+<P>Na przykład, następujący kod:</P>
+<PRE title="przykładowy kod Fortrana">
+        REAL FUNCTION aaa (a, b, c, i)
+
+                CHARACTER a*(*)
+                CHARACTER b*(*)
+                REAL c
+                INTEGER i
+
+                aaa = c
+        END
+
+[...]
+                CHARACTER x*8
+                CHARACTER y*5
+                REAL z,t
+                INTEGER u
+
+                t=aaa (x, y, z, u)
+[...]</PRE>
+
+<P>będzie przetłumaczony na asemblera tak (samo uruchomienie funkcji):</P>
+<PRE title="powyższy kod w asemblerze">
+	push	5
+	push	8
+	push	u_	; adres, czyli offset zmiennej &quot;u&quot;
+	push	z_
+	push	y_
+	push	x_
+
+	call	aaa_</PRE>
+
+<P>(to niekoniecznie musi wyglądać tak ładnie, gdyż zmienne <q>x</q>, <q>y</q>, <q>u</q> i <q>z</q>
+ są lokalne w funkcji MAIN__, czyli są na stosie, więc ich adresy mogą wyglądać jak
+ [ebp-28h] lub podobnie).</P>
+<P>
+Funkcja uruchamiająca sprząta stos po uruchomieniu (podobnie jak w C).</P>
+<P>
+Dołączać moduły można bezpośrednio z linii poleceń (w każdym razie kompilatorem F77/G77).</P>
+<P>
+Podam teraz przykład łączenia Fortrana 77 i asemblera (użyję NASMa i F77):</P>
+<PRE title="kod assmelbera wykorzystany w Fortranie">
+	; NASM - asm1fl.asm
+
+	section .text use32
+
+	global	suma_
+
+	suma_:
+
+	; po wykonaniu push ebp i mov ebp, esp:
+	; w [ebp]    znajduje się stary EBP
+	; w [ebp+4]  znajduje się adres powrotny z procedury
+	; w [ebp+8]  znajduje się pierwszy parametr,
+	; w [ebp+12] znajduje się drugi parametr
+	; itd.
+
+	%idefine	a	[ebp+8]
+	%idefine	b	[ebp+12]
+
+		push	ebp
+		mov	ebp, esp
+
+	; przypominam, że nasze parametry są w rzeczywistości
+	; wskaźnikami do prawdziwych parametrów
+
+		mov	edx, a		; EDX = adres pierwszego parametru
+		mov	eax, [edx]	; EAX = pierwszy parametr
+		mov	edx, b
+		add	eax, [edx]
+
+	; LEAVE = mov esp, ebp / pop ebp
+		leave
+		ret</PRE>
+
+<P>I teraz plik asmfl.f:</P>
+<PRE title="kod Fortrana korzystający z powyższego">
+	PROGRAM funkcja_zewnetrzna
+
+	INTEGER a,b,suma
+
+	a=1
+	b=2
+
+	WRITE (*,*) suma(a,b)
+
+	END</PRE>
+
+<P>Po skompilowaniu:</P>
+<PRE>
+	nasm -f elf asm1fl.asm
+	g77 -o asmfl asmfl.f asm1fl.o</PRE>
+
+<P>i uruchomieniu, na ekranie ponownie pojawia się cyfra 3.</P>
+
+
+
+
+
+<BR><HR>
+<P class="b">
+Informacji podanych w tym dokumencie <em class="wazne">NIE</em>
+ należy traktować jako <q>uniwersalnych, jedynie
+słusznych reguł działających w każdej sytuacji</q>. Aby uzyskać kompletne informacje, należy
+zapoznać się z dokumentacją posiadanego kompilatora.
+</P>
+
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux09.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux11.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+<BR><BR><HR>
+<h2 class="nag">Ćwiczenia</h2>
+<OL>
+ <LI>Napisz plik asemblera, zawierający funkcję obliczania reszty z dzielenia dwóch liczb
+	całkowitych. Następnie, połącz ten plik z programem napisanym w dowolnym innym języku
+	(najlepiej w C/C++, gdyż jest najpopularniejszy) w taki sposób, by Twoją funkcję można
+	było uruchamiać z tamtego programu. Jeśli planujesz łączyć asemblera z C, upewnij się
+	że Twoja funkcja działa również z programami napisanymi w C++.</LI>
+</OL>
+
+</BODY></HTML>

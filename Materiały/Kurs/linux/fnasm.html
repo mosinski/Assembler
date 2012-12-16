@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Porównanie dyrektyw FASMa i NASMa </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="../dos/fntasm.htm"
+	hreflang="pl" lang="pl" title="Wersja dla DOSa">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Różnice między dyrektywami FASMa i NASMa">
+<META NAME="Keywords" CONTENT="FASM, NASM, assembler, asembler, asm, linux, linuks,
+	różnice, kompilacja, Netwide Assembler, Flat Assembler">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite/Kate; www.kate-editor.org">
+
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:57 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Porównanie dyrektyw FASMa i NASMa</h1>
+<br><br>
+<a href="#fnasm01" tabindex="1" class="bezdruk">(przeskocz różnice składni)</a>
+
+<TABLE summary="Ta tabela przedstawia najczęściej używane dyrektywy
+	w języku asembler oraz ich składnię w kompilatorach NASM i FASM">
+<caption>Najważniejsze różnice między dyrektywami FASMa i NASMa</caption>
+
+<TR><TH style="WIDTH:20%" id="typ">typ dyrektywy</TH>
+	<TH style="width:40%" id="nasm"><acronym title="Netwide Asembler" lang="en">NASM</acronym></TH>
+	<TH style="width:40%" id="fasm"><acronym title="Flat Asembler">FASM</acronym></TH>
+
+<TR class="c"> <TD headers="typ"> deklaracje danych<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span> db, dw, dd, dq, dt <br></TD>
+        <TD headers="fasm"> <span class="niewidTD">FASM: </span> db, dw/du, dd, dp/df, dq, dt<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> rezerwacja niezainicjalizowanej pamięci<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span>resb, resw, resd, resq, rest <br></TD>
+	<TD headers="fasm"> <span class="niewidTD">FASM: </span> rb, rw, rd, rp/rf, rq, rt<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> deklaracje tablic<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span>
+		TIMES 10 db "$"<br>TIMES 25*34 db/dw/dd/dp/df/dq/dt 0<br>resb/resw/resd/resq/rest 25*34</TD>
+        <TD headers="fasm"> <span class="niewidTD">FASM: </span>
+		TIMES 10 db "$"<br>TIMES 25*34 db/dw/dd/dp/df/dq/dt 0<br>rb/rw/rd/rp/rf/rq/rt 25*34<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> operacje logiczne<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span> +, -, *, /, %, |, ^, &amp;, &lt;&lt;, &gt;&gt;, ~ <br></TD>
+        <TD headers="fasm"> <span class="niewidTD">FASM: </span> +, -, *, /, mod, or, xor, <span lang="en">and</span>, shl, shr, not<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> deklaracje stałych<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span> %<span lang="en">define</span>, %i<span lang="en">define</span>, %x<span lang="en">define</span>,
+        	 %xi<span lang="en">define</span>, equ  <br></TD>
+	<TD headers="fasm"> <span class="niewidTD">FASM: </span> =, equ<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> etykiety anonimowe<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span> nie ma  <br></TD>
+	<TD headers="fasm"> <span class="niewidTD">FASM: </span> @@, @b/@r, @f<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> makra<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span> %<span lang="en">macro</span>, %i<span lang="en">macro</span> nazwa ilosc_arg ... %endm  <br></TD>
+	<TD headers="fasm"> <span class="niewidTD">FASM: </span> <span lang="en">macro</span> nazwa arg {...}<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> kompilacja warunkowa<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span> %if, %if(n)def, %elif, %<span lang="en">else</span>, %endif  <br></TD>
+        <TD headers="fasm"> <span class="niewidTD">FASM: </span> <span lang="en">if, else if, else, end if</span><hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> struktury<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span> struc nazwa ... endstruc  <br></TD>
+	<TD headers="fasm"> <span class="niewidTD">FASM: </span> struc nazwa {...}<hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> symbole zewnętrzne<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span> extern, global  <br></TD>
+	<TD headers="fasm"> <span class="niewidTD">FASM: </span> extrn, <span lang="en">public</span><hr> </TD> </TR>
+
+<TR class="c"> <TD headers="typ"> segmenty<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span> segment nazwa, <span lang="en">section</span> nazwa <br> </TD>
+        <TD headers="fasm"> <span class="niewidTD">FASM:<br> </span> ELF: <span lang="en">section</span> &quot;nazwa&quot; <span lang="en">executable/writeable</span><BR>
+	ELF <span lang="en">executable: segment readable/writeable/executable</span><hr>  </TD> </TR>
+
+<TR> <TD class="c" headers="typ"> typowy początek linkowanego programu linuksowego<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM:<br> </span> <span lang="en">section</span> .text<BR>global _start<BR><BR>_start:<hr></TD>
+        <TD headers="fasm"> <span class="niewidTD">FASM:<br> </span> format ELF<BR><span lang="en">section &quot;.text&quot; executable</span>
+        		<BR><span lang="en">public</span> _start<BR>_start:<hr> </TD> </TR>
+
+<TR> <TD class="c" headers="typ"> typowy początek nielinkowanego programu linuksowego<br> </TD>
+        <TD headers="nasm"> <span class="niewidTD">NASM: </span> nie ma, zawsze trzeba linkować<Hr> </TD>
+        <TD headers="fasm"> <span class="niewidTD">FASM:<br> </span> format ELF <span lang="en">executable</span>
+        	<BR><span lang="en">segment readable executable</span><hr> </TD> </TR>
+
+</TABLE>
+
+<br><br>
+
+<TABLE summary="Ta tabela przedstawia sposoby kompilacji w kompilatorach NASM i FASM">
+<caption><a name="fnasm01" id="fnasm01">Sposoby kompilacji</a> w kompilatorach FASM i NASM</caption>
+
+<TR class="c"><TH style="width:20%" id="typp">typ programu</TH>
+	<TH style="width:40%" id="nasmp"><acronym title="Netwide Asembler" lang="en">NASM</acronym></TH>
+	<TH style="width:40%" id="fasmp"><acronym title="Flat Asembler">FASM</acronym></TH>
+	</TR>
+
+<TR class="c"> <TD headers="typp"> binarny <br> </TD>
+        <TD headers="nasmp"> nasm -f bin -o prog.bin prog.asm<hr></TD>
+        <TD headers="fasmp"> fasm prog.asm prog.bin<hr></TD>
+        </TR>
+
+<TR class="c"> <TD headers="typp"> obiekt ELF <br> </TD>
+        <TD headers="nasmp"> nasm -f elf -o prog.o prog.asm<hr></TD>
+        <TD headers="fasmp"> fasm prog.asm prog.o<hr></TD>
+        </TR>
+
+<TR class="c"> <TD headers="typp"> wykonywalny ELF<br> </TD>
+        <TD headers="nasmp"> nasm -f elf -o prog.o prog.asm<Br>ld -s -o prog prog.o<hr></TD>
+        <TD headers="fasmp"> fasm prog.asm prog<hr></TD>
+        </TR>
+
+</table>
+
+
+<br><br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+</BODY></HTML>

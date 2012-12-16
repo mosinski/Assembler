@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler pod *BSD</TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux01.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="bsd_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Asembler w *BSD">
+<META NAME="Keywords" CONTENT="BSD, FreeBSD, OpenBSD, NetBSD, linux, linuks, assembler, asembler, asm">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:56 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Informacja dla użytkowników systemów *BSD</h1>
+
+<P>
+Korzystanie z usług systemowych (przerwania 80h) w systemach klasy BSD
+ różni się nieco od sposobu używanego w <q>zwyczajnych</q> Linuksach. Mianowicie:</P>
+<OL>
+ <LI>numer funkcji przekazujemy w EAX</LI>
+ <LI>parametry wkładamy na stos od prawej do lewej (od końca)</LI>
+ <LI>przerwanie wywołujemy, wykonując <code><span lang="en">CALL</span></code>
+ 	do instrukcji <code>int 80h</code>, za którą jest <code>RET</code></LI>
+</OL>
+<P>Żeby wszystko było jasne, podam teraz przykład:<BR>
+Linux:</P>
+<PRE title="wyświetlanie napisu w Linuksie">
+	; wypisywanie tekstu na ekranie:
+
+        	mov     eax, 4
+		mov     ebx, 1
+		mov     ecx, tekst
+		mov     edx, tekst_dlugosc
+		int     80h</PRE>
+
+<P>BSD:</P>
+<PRE title="wyświetlanie napisu w BSD">
+	; wypisywanie tekstu na ekranie:
+
+        	mov     eax, 4
+		push    dword tekst_dlugosc
+		push    dword tekst
+		push    dword 1
+		call    jadro
+		add	esp, 12
+		...
+		...
+	jadro:
+		int     80h
+		ret</PRE>
+
+<P>Oczywiście, ta sama procedura <q>jadro</q> może służyć więcej
+ niż jednemu wywołaniu przerwania systemowego.
+</P>
+<P>
+Jeśli przy próbie uruchomienia programu dostajecie komunikat <q lang="en">Operation not permitted</q>
+ (<q>Operacja niedozwolona</q>), to dodajcie do kodu programu nową sekcję:</P>
+<pre>
+section .note.openbsd.ident align=4
+   dd 8
+   dd 4
+   dd 1
+   db 'OpenBSD', 0
+   dd 0 </pre>
+
+<P>Teraz program można kompilować i linkować normalnie, to znaczy linkerem LD (tak jest pokazane dalej
+ w kursie). Podziękowania dla 'Fr3m3n' za zgłoszenie tego sposobu.
+</P>
+<P>
+Innym wyjściem jest skorzystanie z kompilatora GCC, zamiast linkera LD:
+ <code>	gcc -o program program.o</code>.
+ Funkcja główna programu (miejsce rozpoczęcia wykonywania się programu) musi
+ się wtedy nazywać <span class="b">main</span>, a nie _start! Wadą tego podejścia jest to,
+ że do programu zostają dołączone pewne specjalne pliki, co powiększa jego rozmiar.
+</P>
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="4" hreflang="pl" href="linux01.html" tabindex="1">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

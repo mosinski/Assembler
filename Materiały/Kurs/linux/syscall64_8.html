@@ -1,0 +1,489 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: opis syscall (8) </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="syscall64_7.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kursy programowania w assemblerze - opis syscall">
+<META NAME="Keywords" CONTENT="Assembler, asembler, kurs, nauka, linux, syscall, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Sat, Jan 7 2012 13:09:16 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Opis funkcji systemowych <span lang="en">syscall</span></h1>
+
+<P>
+Jeśli jakaś funkcja zakończy się błędem, w RAX zwracana jest wartość ujemna z przedziału
+od -4096 do -1 włącznie.</P>
+<P>
+Z drugiej strony, opisy funkcji na stronach manuala mówią, że zwracane jest -1,
+a wartość błędu jest zapisywana do zmiennej errno z biblioteki GLIBC. Dzieje się tak
+tylko w przypadku, gdy korzystamy z interfejsu języka C (czyli deklarujemy i
+uruchamiamy zewnętrzne funkcje odpowiadające wywołaniom systemowym i linkujemy
+nasz program z biblioteką języka C), a nie bezpośrednio z wywołań systemowych (czyli
+<span lang="en">syscall</span>).
+</P>
+<P>
+Najaktualniejsze informacje o funkcjach systemowych można znaleźć zazwyczaj
+w sekcji 2 (lub 3) manuala, na przykład <span class="b">man 2 open</span>
+</P>
+<P>
+Najnowsze wersje stron manuala można znaleźć tu: <A HREF="http://www.kernel.org/pub/linux/docs/man-pages/"
+	>www.kernel.org/pub/linux/docs/man-pages</A>.
+</P>
+<P>
+Napis ASCIIZ oznacza łańcuch znaków
+ <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+ zakończony znakiem/bajtem Zerowym.
+</P>
+<P>
+Jeśli potrzeba, przy każdej funkcji jest odnośnik do opisu argumentów i innych
+ <A HREF="dodatk80.html" hreflang="pl" tabindex="1">dodatkowych informacji</a>: typów danych,
+ wartości błędów, możliwych wartości parametrów itp.
+</P>
+
+<TABLE summary="Ta tabela opisuje funkcje od 301 do 324 linuksowego wywołania systemowego syscall">
+<CAPTION> Podstawowe funkcje <span lang="en">syscall</span>: funkcje bez numerów</CAPTION>
+<thead>
+<TR><TH style="WIDTH:5%;" id="rax">Numer/ RAX</TH>
+	<TH style="WIDTH:20%;" id="opis">Opis</TH>
+	<TH id="arg">Argumenty</TH><TH style="WIDTH:30%;" id="ret">Zwraca</TH></TR>
+
+</thead><tbody>
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Czekaj na zmianę stanu innego procesu (<span lang="en">sys_waitpid</span>)  <br> </td>
+	<TD headers="arg">RDI = id procesu / <A HREF="dodatk80.html#specyfikacja">specyfikacja</A><BR>
+		RSI = NULL lub adres zmiennej DWORD, która otrzyma status<BR>
+		RDX = <A HREF="dodatk80.html#wait_opcje">opcje</a> <br> </td>
+	<TD headers="ret">RAX=PID zakończonego procesu<BR>[RSI] = (jeśli podano adres bufora) stan wyjścia procesu<BR>
+		RAX = błąd ECHILD, EINVAL, ERESTARTSYS <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_break</span> <BR>(porzucone)  <br> </td>
+	<TD headers="arg">Istnieje tylko dla zachowania zgodności<br> </td>
+	<TD headers="ret">RAX = błąd ENOSYS<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_oldstat</span> <BR>(porzucone)  <br> </td>
+	<TD headers="arg">&nbsp;<br> </td>
+	<TD headers="ret">&nbsp;<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Odmontowanie systemu plików (<span lang="en">sys_umount</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku specjalnego lub katalogu (zamontowanego)<br> </td>
+	<TD headers="ret"> nic <BR> RAX = błąd - każdy, który może się zdarzyć w systemie plików lub jądrze<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustaw czas systemowy (<span lang="en">sys_stime</span>)  <br> </td>
+	<TD headers="arg">RDI = nowy czas jako liczba sekund, które upłynęły od 1 Stycznia 1970<br> </td>
+	<TD headers="ret"> nic <BR>RAX = błąd EPERM<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_oldfstat</span><BR>(porzucone)  <br> </td>
+	<TD headers="arg">&nbsp;<br> </td>
+	<TD headers="ret">&nbsp;<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_stty</span><BR>(porzucone)  <br> </td>
+	<TD headers="arg"> --nieużywane od 2.0--<br> </td>
+	<TD headers="ret"> zawsze RAX = -1 <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_gtty</span><BR>(porzucone)  <br> </td>
+	<TD headers="arg"> --nieużywane od 2.0--<br> </td>
+	<TD headers="ret"> zawsze RAX = -1 <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Zmień priorytet procesu (<span lang="en">sys_nice</span>)  <br> </td>
+	<TD headers="arg">RDI = liczba, o którą zwiększyć numer priorytetu (czyli zmniejszyć sam priorytet)<br> </td>
+	<TD headers="ret"> nic <BR>RAX = błąd EPERM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz bieżącą datę i czas - <span lang="en">sys_ftime</span><BR>(przestarzałe)  <br> </td>
+	<TD headers="arg">--zamiast tego, używaj <span class="b">time, gettimeofday</span>--<BR>
+		RDI = adres struktury <A HREF="dodatk80.html#timeb">timeb</a> <br> </td>
+	<TD headers="ret">zawsze RAX = 0<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_prof</span><BR>(porzucone)  <br> </td>
+	<TD headers="arg"> <span class="b">niezaimplementowane w jądrach 2.4</span> <br> </td>
+	<TD headers="ret"> <span class="b">zawsze RAX = -1, błąd ENOSYS</span> <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustaw procedurę obsługi sygnału (<span lang="en">sys_signal</span>)  <br> </td>
+	<TD headers="arg">RDI = <A HREF="dodatk80.html#signal">numer sygnału</A><BR>
+		RSI = adres procedury przyjmującej <CODE>int</CODE> i zwracającą <CODE>void</CODE> (nic)
+		lub wartość SIG_IGN=1 (ignoruj sygnał) lub SIG_DFL=0 (resetuj sygnał na domyślne zachowanie)
+		<br> </td>
+	<TD headers="ret">RAX = adres poprzedniej procedury obsługi<BR>RAX = błąd SIG_ERR<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_lock</span> (porzucone)  <br> </td>
+	<TD headers="arg"> --nieużywane od 2.0--<br> </td>
+	<TD headers="ret"> zawsze RAX = -1 <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_mpx</span> (porzucone)  <br> </td>
+	<TD headers="arg"> --nieużywane od 2.0--<br> </td>
+	<TD headers="ret"> zawsze RAX = -1 <hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz/ustaw limity zasobów (<span lang="en">sys_ulimit</span>)  <br> </td>
+	<TD headers="arg"> --nieużywane (zamiast tego używaj <span class="b">getrlimit, setrlimit, sysconf</span>)--<BR>
+		<span class="b">man 3 ulimit</span><BR>
+		RDI = komenda, patrz: <A HREF="dodatk80.html#sys_ulimit"><span lang="en">sys_ulimit</span></A><BR>
+		RSI = nowy limit <BR>
+	<TD headers="ret">RAX = aktualny limit<BR>RAX = -1, gdy błąd<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_oldolduname</span> (porzucone)  <br> </td>
+	<TD headers="arg"> &nbsp;<br> </td>
+	<TD headers="ret"> &nbsp; <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz/ustal procedurę obsługi sygnału (<span lang="en">sys_sigaction</span>)  <br> </td>
+	<TD headers="arg"> RDI = numer sygnału<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#sigaction">sigaction</A> opisującą bieżącą procedurę<BR>
+		RDX = adres struktury <A HREF="dodatk80.html#sigaction">sigaction</A> opisującą starą procedurę<br> </td>
+	<TD headers="ret"> nic <BR>RAX=błąd EINVAL, EINTR, EFAULT<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz maskę synałów procesu (<span lang="en">sys_sgetmask</span>)  <br> </td>
+	<TD headers="arg"> --przestarzałe (zamiast tego używaj <span class="b">sys_sigprocmask</span>)--<BR>
+		 </td>
+	<TD headers="ret">RAX = maska sygnałów bieżącego procesu<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustaw maskę synałów procesu (<span lang="en">sys_ssetmask</span>)  <br> </td>
+	<TD headers="arg"> --przestarzałe (zamiast tego używaj <span class="b">sys_sigprocmask</span>)--<BR>
+		RDI = nowa maska sygnałów procesu<br> </td>
+	<TD headers="ret">RAX = poprzednia maska sygnałów<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Zastąpienie dla sigpause - <span lang="en">sys_sigsuspend</span>   <br> </td>
+	<TD headers="arg"> RDI = adres nowej maski sygnałowej procesu - struktury <A HREF="dodatk80.html#sigset_t">sigset_t</a> <br> </td>
+	 <TD headers="ret"> RAX = 0<BR> RAX = -1, gdy błąd<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz trwające blokujące sygnały (<span lang="en">sys_sigpending</span>)   <br> </td>
+	<TD headers="arg"> RDI = adres maski sygnałów - struktury <A HREF="dodatk80.html#sigset_t">sigset_t</a> <br> </td>
+	 <TD headers="ret"> RAX = 0<BR> RAX = -1, gdy błąd<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Czytaj katalog (<span lang="en">sys_readdir</span>)   <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#dirent">dirent</A><BR>
+		RDX = liczba struktur do odczytania (ignorowane, czytana jest 1 struktura)<br> </td>
+	<TD headers="ret"> RAX = 1<BR>RAX = 0 na końcu katalogu<BR>RAX = -1, gdy błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Profilowanie czasu wykonywania (<span lang="en">sys_profil</span>)  <br> </td>
+	<TD headers="arg">--<span class="b">man 3 profil</span>--<BR>
+		RDI = adres tablicy WORDów<BR>
+		RSI = długość tej tablicy, na którą pokazuje RDI<BR>
+		RDX = offset początkowy<BR>
+		R10 = mnożnik<BR></TD>
+	<TD headers="ret"> zawsze RAX = 0 <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_olduname</span> (porzucone)   <br> </td>
+	<TD headers="arg"> &nbsp;<br> </td>
+	<TD headers="ret"> &nbsp; <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Spowoduj bezczynność procesu 0 (<span lang="en">sys_idle</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret"> dla procesu nr 0 nigdy nie wraca.<BR> Dla pozostałych zwraca RAX = -1 (EPERM)<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Przejdź w tryb wirtualny 8086 (<span lang="en">sys_vm86old</span>)  <br> </td>
+	<TD headers="arg"> --<span class="b">to było przed jądrem 2.0.38</span>--<BR>
+		RDI = adres struktury <A HREF="dodatk80.html#vm86_struct">vm86_struct</a> <br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = -1, gdy błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Komunikacja międzyprocesowa SysV (<span lang="en">sys_ipc</span>)   <br> </td>
+	<TD headers="arg">RDI = numer wywoływanej funkcji<BR>
+		RSI, RDX, R10 = parametry 1-3 wywoływanej funkcji<BR>
+		R8 = adres dalszych parametrów, jeśli trzeba<BR>
+		R9 = parametr piąty<br> </td>
+	<TD headers="ret"> zależy od wywoływanej funkcji <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Powrót z procedury obsługi sygnału (<span lang="en">sys_sigreturn</span>)   <br> </td>
+	<TD headers="arg">RDI = argument zależny od architektury, używany przez jądro<br> </td>
+	<TD headers="ret"> nigdy nie powraca <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Zmiana listy blokowanych sygnałów (<span lang="en">sys_sigprocmask</span>)   <br> </td>
+	<TD headers="arg">RDI = <A HREF="dodatk80.html#sigprocmask">co zrobić</A><BR>
+	        RSI = adres struktury <A HREF="dodatk80.html#sigset_t">sigset_t</A><BR>
+		RDX = adres struktury <A HREF="dodatk80.html#sigset_t">sigset_t</A>
+		         (do przechowania starej maski) lub 0<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = -1, gdy błąd EINVAL, EPERM, EFAULT <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Demon wypróżniania buforów (<span lang="en">sys_bdflush</span>)   <br> </td>
+	<TD headers="arg">RDI = <A HREF="dodatk80.html#bdflush">komenda demona</A><BR>
+	        RSI = dodatkowy parametr, zależny od komendy<br> </td>
+	<TD headers="ret"> RAX=0, gdy sukces i RDI>0<BR>RAX = -1, gdy błąd EPERM, EFAULT, EBUSY, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Zmiana bieżącej pozycji w dużym pliku (<span lang="en">sys_llseek</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego pliku<BR>
+	        ECX:RSI = liczba bajtów, o którą chcemy się przesunąć<BR>
+		RDX = adres QWORDa, który otrzyma nową pozycję w pliku (big endian?)<BR>
+		R10 = <A HREF="dodatk80.html#przesun">odkąd zaczynamy ruch</a> <br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Oczekiwanie zmiany stanu deskryptora(ów) (<span lang="en">sys_newselect</span>)   <br> </td>
+	<TD headers="arg"> RDI = najwyższy numer spośród deskryptorów + 1 (co najwyżej FILE_MAX)<BR>
+		RSI = adres tablicy deskryptorów (lub 0) sprawdzanych, czy można z nich czytać<BR>
+		RDX = adres tablicy deskryptorów (lub 0) sprawdzanych, czy można do nich pisać<BR>
+		R10 = adres tablicy deskryptorów (lub 0) sprawdzanych, czy nie wystąpił u nich wyjątek<BR>
+		R8 = adres struktury <A HREF="dodatk80.html#timeval">timeval</A> zawierającą
+			maksymalny czas oczekiwania<BR> <br> </td>
+	<TD headers="ret"> RAX = całkowita liczba deskryptorów, która pozostała w tablicach<BR>
+		RAX = 0, gdy skończył się czas<BR>
+		RAX = -1, gdy wystąpił błąd EBADF, EINVAL, ENOMEM, EINTR<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Uruchom tryb wirtualny 8086 (<span lang="en">sys_vm86</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#vm86_kod">kod funkcji</A><BR>
+		RSI = adres struktury <A HREF="dodatk80.html#vm86plus_struct">vm86plus_struct</a> <br> </td>
+	<TD headers="ret"> (zależy od numeru funkcji)<BR>RAX = -1, gdy błąd EFAULT<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz limity zasobów (<span lang="en">sys_ugetrlimit</span>)  <br> </td>
+	<TD headers="arg"> patrz: <span lang="en">sys_getrlimit</span> (?)<br> </td>
+	 <TD headers="ret"> nic <BR>RAX = błąd EFAULT, EINVAL, EPERM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Mapuj urządzenie lub plik do pamięci (<span lang="en">sys_mmap2</span>)  <br> </td>
+	<TD headers="arg">RDI = proponowany adres początkowy<BR>
+		RSI = liczba bajtów pliku do zmapowania<BR>
+		RDX = <A HREF="dodatk80.html#mmap_ochrona">ochrona</A><BR>
+		R10 = <A HREF="dodatk80.html#mmap_flagi">flagi mapowania</A><BR>
+		R8 = deskryptor mapowanego pliku, jeśli mapowanie nie jest anonimowe<BR>
+		R9 = offset początku mapowanych danych w pliku, <span class="b">liczony w jednostkach wielkości strony systemowej zamiast w bajtach</span></TD>
+	<TD headers="ret">RAX = adres zmapowanego obszaru<BR>RAX = -1, gdy błąd (takie same jak w <span lang="en">sys_mmap</span> + EFAULT)<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Skróć plik, wersja 64-bitowa (<span lang="en">sys_truncate64</span>)   <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku ASCIIZ<BR>
+		RSI = liczba bajtów, do której ma zostać skrócony plik (niższy DWORD)<BR>
+		RDX = liczba bajtów, do której ma zostać skrócony plik (wyższy DWORD)<br> </td>
+	<TD headers="ret">RAX = 0<BR> RAX = -1, gdy błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Skróć plik, wersja 64-bitowa (<span lang="en">sys_ftruncate64</span>)   <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku otwartego do zapisu<BR>
+		RSI = liczba bajtów, do której ma zostać skrócony plik (niższy DWORD)<BR>
+		RDX = liczba bajtów, do której ma zostać skrócony plik (wyższy DWORD)<br> </td>
+	<TD headers="ret">RAX = 0<BR> RAX = -1, gdy błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz status pliku, wersja 64-bitowa (<span lang="en">sys_stat64</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku ASCIIZ. Jeśli plik jest linkiem, to zwracany jest
+			status obiektu docelowego.<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#stat64">stat64</a> <br> </td>
+	<TD headers="ret">RAX = 0<BR> RAX = -1, gdy błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz status pliku, wersja 64-bitowa (<span lang="en">sys_lstat64</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku ASCIIZ. Jeśli plik jest linkiem, to zwracany
+			 jest status linku, a nie obiektu docelowego.<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#stat64">stat64</a> <br> </td>
+	<TD headers="ret">RAX = 0<BR> RAX = -1, gdy błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz status pliku, wersja 64-bitowa (<span lang="en">sys_fstat64</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor otwartego pliku<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#stat64">stat64</a> <br> </td>
+	<TD headers="ret">RAX = 0<BR> RAX = -1, gdy błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Zmiana właściciela (<span lang="en">sys_lchown32</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku/katalogu ASCIIZ<BR>
+		RSI = nowy numer użytkownika<BR>
+		RDX = nowy numer grupy<br> </td>
+	<TD headers="ret"> nic <BR>RAX = błąd EPERM, EROFS, EFAULT, ENAMETOOLONG, ENOENT, ENOMEM,
+		ENOTDIR, EACCES, ELOOP i inne<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz identyfikator użytkownika (<span lang="en">sys_getuid32</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret">RAX = numer UID<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz ID grupy bieżącego procesu (<span lang="en">sys_getgid32</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret">RAX = ID grupy<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz efektywne ID użytkownika bieżącego procesu (<span lang="en">sys_geteuid32</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret">RAX = efektywny UID<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz efektywne ID grupy bieżącego procesu (<span lang="en">sys_getegid32</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret">RAX = efektywny GID<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustaw realny i efektywny ID użytkownika (<span lang="en">sys_setreuid32</span>)  <br> </td>
+	<TD headers="arg"> RDI = realny ID użytkownika (UID)<BR>
+		RSI = efektywny UID<br> </td>
+	 <TD headers="ret"> nic <BR>RAX = błąd EPERM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustaw realny i efektywny ID grupy (<span lang="en">sys_setregid32</span>)  <br> </td>
+	<TD headers="arg"> RDI = realny ID grupy (GID)<BR>
+		RSI = efektywny GID<br> </td>
+	 <TD headers="ret"> nic <BR>RAX = błąd EPERM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz liczbę dodatkowych grup (<span lang="en">sys_getgroups32</span>)   <br> </td>
+	<TD headers="arg"> RDI = rozmiar tablicy z RSI<BR>
+		RSI = adres tablicy, gdzie zostaną zapisane GID-y (DWORDY) grup dodatkowych<br> </td>
+	 <TD headers="ret">RAX = liczba dodatkowych grup procesu<BR>RAX = -1 oznacza błąd (EFAULT, EINVAL, EPERM)<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustaw liczbę dodatkowych grup (<span lang="en">sys_setgroups32</span>)   <br> </td>
+	<TD headers="arg"> RDI = rozmiar tablicy z RSI<BR>
+		RSI = adres tablicy, gdzie zawierającą GID-y (DWORDY)<br> </td>
+	 <TD headers="ret"> RAX = 0 <BR>RAX = -1 oznacza błąd (EFAULT, EINVAL, EPERM)<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Zmiana właściciela (<span lang="en">sys_fchown32</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor otwartego pliku<BR>
+		RSI = nowy numer użytkownika<BR>
+		RDX = nowy numer grupy<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = -1, gdy błąd <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustaw różne ID użytkownika (<span lang="en">sys_setresuid32</span>)  <br> </td>
+	<TD headers="arg"> RDI = realny UID lub -1 (wtedy jest bez zmian)<BR>
+		RSI = efektywny UID lub -1 (bez zmian)<BR>
+		RDX = zachowany (saved) UID lub -1 (bez zmian)<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = -1, gdy błąd EPERM<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz różne ID użytkownika (<span lang="en">sys_getresuid32</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres DWORDa, który otrzyma realny UID<BR>
+		RSI = adres DWORDa, który otrzyma efektywny UID<BR>
+		RDX = adres DWORDa, który otrzyma zachowany UID<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = -1, gdy błąd EFAULT<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustaw realny, efektywny i zachowany ID grupy (<span lang="en">sys_setresgid32</span>)  <br> </td>
+	<TD headers="arg"> RDI = realny GID<BR>
+		RSI = efektywny GID<BR>
+		RDX = zachowany (saved) GID<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = -1, gdy błąd EPERM<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz realny, efektywny i zachowany ID grupy (<span lang="en">sys_getresgid32</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres DWORDa, który otrzyma realny GID<BR>
+		RSI = adres DWORDa, który otrzyma efektywny GID<BR>
+		RDX = adres DWORDa, który otrzyma zachowany (saved) GID<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = -1, gdy błąd EFAULT<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Zmiana właściciela pliku (<span lang="en">sys_chown32</span>)  <br> </td>
+	<TD headers="arg">RDI=adres ścieżki do pliku<BR>
+		RSI = UID nowego właściciela<BR>
+		RDX = GID nowej grupy<br> </td>
+	<TD headers="ret">RAX = 0<BR>RAX = -1, gdy błąd na przykład EPERM, EROFS, EFAULT, ENOENT, ENAMETOOLONG, ENOMEM, ENOTDIR, EACCES, ELOOP <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustaw identyfikator użytkownika (<span lang="en">sys_setuid32</span>)  <br> </td>
+	<TD headers="arg">RDI = nowy UID<br> </td>
+	<TD headers="ret"> nic <BR>RAX = błąd EPERM<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustaw ID grupy bieżącego procesu (<span lang="en">sys_setgid32</span>)  <br> </td>
+	<TD headers="arg">RDI = nowy ID grupy<br> </td>
+	<TD headers="ret"> nic <BR>RAX = błąd EPERM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustal UID przy sprawdzaniu systemów plików (<span lang="en">sys_setfsuid32</span>)  <br> </td>
+	<TD headers="arg"> RDI = nowy ID użytkownika<br> </td>
+	<TD headers="ret"> RAX = stary UID (zawsze) <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Ustal GID przy sprawdzaniu systemów plików (<span lang="en">sys_setfsgid32</span>)  <br> </td>
+	<TD headers="arg"> RDI = nowy ID grupy<br> </td>
+	<TD headers="ret"> RAX = stary GID (zawsze) <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Kontrola nad deskryptorem pliku, wersja 64-bitowa (<span lang="en">sys_fcntl64</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<BR>
+		RSI = kod <A HREF="dodatk80.html#fcntl">komendy</A><BR>
+		RDX zależy od komendy<br> </td>
+	<TD headers="ret">RAX zależy od komendy<BR>RAX = błąd EACCES, EAGAIN, EBADF, EDEADLK, EFAULT,
+		EINTR, EINVAL, EMFILE, ENOLOCK, EPERM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> brak danych  <br> </td>
+	<TD headers="arg"> -<br> </td>
+	<TD headers="ret"> - <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_alloc_hugepages</span>  <br> </td>
+	<TD headers="arg"> <span class="b">zaimplementowane tylko w jądrach 2.5.36 - 2.5.54</span>, więc nie będę omawiał<br> </td>
+	<TD headers="ret"> <span class="b">zawsze RAX = -1, błąd ENOSYS</span> <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_free_hugepages</span>  <br> </td>
+	<TD headers="arg"> <span class="b">zaimplementowane tylko w jądrach 2.5.36 - 2.5.54</span>, więc nie będę omawiał<br> </td>
+	<TD headers="ret"> <span class="b">zawsze RAX = -1, błąd ENOSYS</span> <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz statystyki systemu plików, wersja 64-bitowa (<span lang="en">sys_statfs64</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres nazwy dowolnego pliku w zamontowanym systemie plików<BR>
+		RSI adres struktury <A HREF="dodatk80.html#statfs64">statfs64</A> <br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = -1, gdy błąd<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Pobierz statystyki systemu plików, wersja 64-bitowa (<span lang="en">sys_fstatfs64</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor dowolnego otwartego pliku w zamontowanym systemie plików<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#statfs64">statfs64</A> <br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = -1, gdy błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> <span lang="en">sys_setaltroot</span>  <br> </td>
+	<TD headers="arg"> nieużywane<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax">-<br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_oldlstat</span> (porzucone)   <br> </td>
+	<TD headers="arg"> &nbsp;<br> </td>
+	<TD headers="ret"> &nbsp; <hr> <br> </td> </TR>
+
+
+
+</TABLE>
+
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="syscall64_6.html">Poprzednia część</a> (Alt+3)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

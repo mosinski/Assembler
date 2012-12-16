@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Porty szeregowe i równoległe </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm">
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm">
+
+<link rel="alternate" type="text/html" href="porty_tut_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Porty szeregowe i równoległe">
+<META NAME="Keywords" CONTENT="asm, assembler, asembler, Linux, porty, szeregowe, równoległe, COM, LPT">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite/Kate; www.kate-editor.org">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:58 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Porty szeregowe i równoległe</h1>
+
+<P>
+Niektórym programom nie wystarcza działanie na samym procesorze czy sprzęcie
+znajdującym się w komputerze. Czasem trzeba połączyć się z jakimś urządzeniem
+zewnętrznym, takim jak modem zewnętrzny czy drukarka. Celem tego artykułu jest
+właśnie pokazanie, jak to zrobić.</P>
+
+
+
+
+
+
+
+
+<hr>
+<h2 class="nag">Porty równoległe</h2>
+	<BR><a href="#szer" class="bezdruk" tabindex="1">(przeskocz porty równoległe)</a>
+
+<P>
+Tutaj sprawa jest dość prosta. Porty równoległe nie wymagają żadnych ustawień, ewentualnie
+tylko tryb pracy, ustawiany w <acronym lang="en" title="Basic Input/Output System">BIOS</acronym>ie.
+Praca z portem równoległym pod Linuksem sprowadza się do czytania i zapisu do specjalnych
+plików - <code>/dev/parportN</code> (N - liczba), które reprezentują porty równoległe. O tym, jak
+obsługiwać pliki, napisałem <a href="linux11.html" hreflang="pl">w kursie</a>.</P>
+
+
+
+
+
+
+
+<hr>
+<h2 class="nag"><a name="szer" id="szer">Porty szeregowe</a></h2>
+
+<P>
+Porty szeregowe są trudniejsze w obsłudze. Czasem wystarczy, podobnie jak dla portów
+równoległych, po prostu czytać i zapisywać do specjalnych plików, ale to nie zawsze może
+wystarczyć. Jest tak, gdyż porty szeregowe mają swoje ustawienia:</P>
+<ul>
+ <li>szybkość transmisji (w bodach = bitach na sekundę): od 75 do nawet 4 milionów</li>
+ <li>liczba bitów danych - od 5 do 8</li>
+ <li>kontrola parzystości - brak, parzysta, nieparzysta, mark (znacznik)
+ 	i <span lang="en">space</span></li>
+ <li>kontrola przepływu - brak, programowa (XON/XOFF) i sprzętowa (RTS/CTS)</li>
+ <li>bity stopu - 1, półtora lub 2</li>
+</ul>
+<P>Pierwszym krokiem jest otwarcie specjalnego pliku urządzenia, zazwyczaj <code>/dev/ttySx</code>
+(x - liczba).  O tym, jak otwierać pliki, zapisywać i odczytywać z nich dane, napisałem
+<a href="linux11.html" hreflang="pl">w kursie</a>.</P>
+<P>
+Jeśli trzeba ustawić parametry portu, wykonuje się to funkcją systemową <span class="b">sys_ioctl</span>
+(numer 54). Przyjmuje ona w tym przypadku 3 argumenty:</P>
+<ul>
+ <li>EBX = deskryptor portu, otrzymany z otwarcia pliku urządzenia</li>
+ <li>ECX = komenda (TCGETS=0x00005401 dla pobrania parametrów portu, TCSETS=0x00005402
+ 	dla ustawienia)</li>
+ <li>EDX = adres struktury termios, która otrzyma dane lub zawiera parametry do ustawienia.
+ 	Struktura ta wygląda tak:
+ 	<pre>
+ 	struc __kernel_termios
+	    .c_iflag:	resd 1;		flagi trybu wejścia
+	    .c_oflag:	resd 1;		flagi trybu wyjścia
+	    .c_cflag:	resd 1;		flagi trybu kontroli
+	    .c_lflag:	resd 1;		flagi trybu lokalnego
+	    .c_line:	resb 1;		obsługa linii
+	    .c_cc:	resb 32;	znaki kontrolne
+	endstruc</pre>
+</ul>
+<P>Najpierw należy pobrać bieżące parametry portu, potem zmienić te, które chcemy i wysłać
+je do portu. Poniżej przedstawiam przykładowy kod w składni NASMa. Najpierw otwiera on
+plik portu, potem odczytuje bieżące argumenty, i ustawia nowe:</P>
+<ul>
+ <li>we flagach kontrolnych - szybkość 115200 bps (B115200), 8 bitów danych (CS8), połączenie
+ 	lokalne (CLOCAL), możliwość odczytywania (CREAD)</li>
+ <li>we flagach wejściowych - sprawdzanie parzystości (INPCK)</li>
+ <li>we flagach wyjściowych nic nie jest potrzebne</li>
+ <li>we flagach obsługi linii - tryb kanoniczny (ICANON): dane są przesyłane linijkami
+ 	(dopiero znak Entera powoduje wysłanie danych)</li>
+ <li>w znakach kontrolnych - znak VKILL ma być ignorowany, a minimalna liczba znaków (VMIN)
+ 	wynosi 1</li>
+</ul>
+<P>Wszystkie wykorzystane stałe można znaleźć w pliku <code>/usr/include/bits/termios.h</code>.
+Polecam zapoznanie się, gdyż można tam znaleźć wiele ciekawych opcji, na przykład automatyczne
+tłumaczenie znaków CR na LF i na odwrót.</P>
+<pre>
+	mov	eax, 5		; otwieranie pliku
+	mov	ebx, port	; nazwa
+	mov	ecx, 402o	; odczyt i zapis, nie terminal kontrolujący
+	mov	edx, 777o	; rwx dla wszystkich
+	int	80h
+
+	cmp	eax, 0
+	jl	koniec
+	mov	ebx, eax	; EBX = deskryptor
+
+	; pobieranie i ustawianie parametrów portu
+%define TCGETS 0x00005401
+%define TCSETS 0x00005402
+
+	mov	eax, 54		; sys_ioctl
+	;ebx = deskryptor
+	mov	ecx, TCGETS	; pobierz parametry
+	mov	edx, termios
+	int	80h
+
+	cmp	eax, 0
+	jl	koniec
+
+%define B115200  0010002o
+%define CS8   0000060o
+%define CLOCAL  0004000o
+%define CREAD   0000200o
+	mov dword [termios+__kernel_termios.c_cflag],B115200|CS8|CLOCAL|CREAD
+%define INPCK   0000020o
+	mov	dword [termios+__kernel_termios.c_iflag], INPCK
+	mov	dword [termios+__kernel_termios.c_oflag], 0
+%define ICANON  0000002o
+	mov	dword [termios+__kernel_termios.c_lflag], ICANON
+%define VKILL 3
+%define VMIN 6
+	mov	byte [termios+__kernel_termios.c_cc+VKILL], 0
+	mov	byte [termios+__kernel_termios.c_cc+VMIN], 1
+
+	mov	eax, 54		; sys_ioctl
+	;ebx = deskryptor
+	mov	ecx, TCSETS	; ustaw parametry
+	mov	edx, termios
+	int	80h
+
+	cmp	eax, 0
+	jnl	ioctl_set_ok
+...
+section .data
+port		db	"/dev/ttyS0", 0
+termios		istruc	__kernel_termios</pre>
+
+<P>Po wykonaniu tego kodu można normalnie czytać z urządzenia i zapisywać do niego jak do
+zwykłego pliku.
+</P>
+<P>
+Na uwagę zasługuje wartość 402o wpisana do ECX przed otwarciem pliku. Mówi ona, że chcemy
+dostęp do odczytu i zapisu, ale dodatkowo włączona jest opcja O_NOCTTY (400o). Sprawi ona,
+że otwarte przez nas urządzenie znakowe <em class="wazne">NIE</em> stanie
+się terminalem kontrolującym programu.
+W innym przypadku czytanie ze standardowego wejścia kończyłoby się czytaniem z wybranego
+portu szeregowego, a próba wyświetlenia napisu wysyłałaby bajty na ten port.
+</P>
+<P>
+Polecam lekturę <a href="http://www.faqs.org/docs/Linux-HOWTO/Serial-Programming-HOWTO.html"
+hreflang="en" lang="en">Serial Programming HOWTO</a>.</P>
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

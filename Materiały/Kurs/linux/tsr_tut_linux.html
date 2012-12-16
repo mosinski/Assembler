@@ -1,0 +1,241 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Programy rezydentne </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="tsr_tut_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Pisanie programów rezydentnych (demonów systemowych) pod Linuksem">
+<META NAME="Keywords" CONTENT="asm, assembler, asembler, linux, linuks, TSR, demon, daemon">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 18:00:00 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Pisanie programów rezydentnych pod Linuksem</h1>
+
+<P>
+W Linuksie są co najmniej dwa sposoby na uruchomienie programu w tle:</P>
+<OL>
+ <LI>dodanie znaczka ampersand (&amp;) do uruchomienia programu,
+ 	na przykład <q>program param1 param2 param3 &amp;</q>.</LI>
+ <LI>skorzystanie z programu <span class="b" lang="en">screen</span>,
+ 	na przykład <q>screen -m -d program param1 param2</q>.</LI>
+</OL>
+<P>
+Ale nie jesteśmy programistami po to, by liczyć, że nasz program zostanie właśnie tak uruchomiony.
+ Teraz pokażę, jak samemu zadbać o działanie swojego programu w tle. Najpierw posłuży nam do
+ tego funkcja <span class="b">daemon</span> (patrz: man 3 daemon)
+ z biblioteki języka C. Dlatego sposób pisania programu będzie troszkę inny niż zwykle:</P>
+<OL>
+ <LI>zamiast LD do łączenia programu, skorzystamy z GCC (który widząc rozszerzenie .o naszego pliku,
+ 	połączy go odpowiednio z biblioteką języka C bez kompilowania)</LI>
+ <LI>skoro korzystamy z GCC i biblioteki C (która ma już własny symbol _start), to nasz kod będzie
+ 	się zaczynał etykietą <span class="b">main</span> (taką samą, jak programy w języku C)</LI>
+ <LI>funkcja daemon musi być zadeklarowana jako zewnętrzna (extern)</LI>
+</OL>
+<P>Aby było widać, że nasz demon (odpowiednik TSR w Linuksie) rzeczywiście działa, umieścimy w nim
+ pętlę co jakiś czas wyświetlającą jakiś napis. W celu odmierzania przerwy skorzystamy
+ z funkcji systemowej <A HREF="przer80h_4.html#0162">sys_nano<span lang="en">sleep</span></A> (numer 162).</P>
+ <P>
+Jak widać ze strony podręcznika, funkcja daemon przyjmuje 2 argumenty w postaci
+ liczb całkowitych (DWORD):</P>
+<UL>
+ <LI>pierwszy argument (ostatni wkładany na stos) mówi o tym, czy nie zmieniać katalogu pracy na
+ 	katalog główny /. My nie chcemy zmieniać, więc wstawimy wartość 1.</LI>
+ <LI>drugi argument (pierwszy wkładany na stos) mówi o tym, czy nie zamykać strumieni wejścia i wyjścia.
+	My nie chcemy zamykać, więc wstawimy wartość 1.</LI>
+</UL>
+<P>
+Po omówieniu tego wszystkiego, przejdźmy wreszcie do przykładowego programu. Jego zadaniem jest
+ przejście w tryb demona i wyświetlanie co 5 sekund wskazanego tekstu w nieskończoność. Działanie będzie
+ więc widoczne na terminalu, z którego uruchamiacie program. Sam program można będzie oczywiście
+ zobaczyć na liście działających procesów (komenda <code>ps -A</code>). Jedynym sposobem na zakończenie
+ programu jest zabicie go poleceniem <span class="b">kill</span>.</P>
+
+<P>A oto kod dla NASMa:</P>
+	<BR><a href="#tsr_tut_linux01" class="bezdruk" tabindex="1">(przeskocz program)</a>
+<PRE>
+; Program przechodzący w tryb demona systemowego
+;
+; autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+; nasm -f elf -o demon.o demon.asm
+; gcc -o demon demon.o
+
+
+extern daemon			; deklaracja funkcji zewnętrznej
+
+section .text			; początek sekcji kodu
+global main			;symbol &quot;main&quot; musi być globalny dla GCC
+
+main:
+	push	dword 1		; drugi argument
+	push	dword 1		; pierwszy argument
+	call	daemon		; uruchomienie funkcji daemon
+	add	esp, 8		; usunięcie argumentów ze stosu
+
+			; przerwa między kolejnymi napisami
+			; będzie trwać 5 sekund i 0 nanosekund:
+	mov	dword [t1+timespec.tv_nsec], 0
+	mov	dword [t1+timespec.tv_sec], 5
+
+.petla:
+	mov	eax, 4		; funkcja zapisywania do pliku
+	mov	ebx, 1		; standardowe wyjście
+	mov	ecx, napis	; co wypisać
+	mov	edx, napis_dl	; długość napisu
+	int	80h
+
+	mov     eax, 162	; funkcja sys_nanosleep
+	mov     ebx, t1		; tyle czekać
+	mov     ecx, 0	; ewentualny adres drugiej struktury timespec
+	int     80h		;  robimy przerwę...
+
+	jmp	.petla		; i od nowa....
+
+				; poniższy kod nie będzie wykonany
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h		; wyjście z programu
+
+section .data
+
+napis		db	&quot;Tu Twoj demon mowi.&quot;, 10
+napis_dl	equ	$ - napis
+
+struc timespec			; definicja struktury timespec
+				; (tylko jako typ danych)
+	.tv_sec:	resd 1
+	.tv_nsec:	resd 1
+endstruc
+
+t1 istruc timespec		; tworzymy zmienną t1 jako całą
+				; strukturę timespec</PRE>
+
+
+
+
+<P><a name="tsr_tut_linux01" id="tsr_tut_linux01">Kompilacja i łączenie</a> odbywa się tak:</P>
+<PRE>	nasm -f elf -o demon.o demon.asm
+	gcc -o demon demon.o</PRE>
+
+<P>O jednej rzeczy należy wspomnieć: sam fakt, że program jest demonem <em class="wazne">NIE</em>
+ musi oznaczać, że działa na prawach administratora (i całe zabezpieczenie systemu jest do niczego).</P>
+
+
+
+
+
+
+<Hr>
+<h2 class="nag"><a name="tsr_int80h" id="tsr_int80h">Programy rezydentne z wykorzystaniem int 80h</a></h2>
+
+<P>
+Funkcja daemon jest co prawda z biblioteki C, ale można ją przerobić na kod korzystający wyłącznie
+ z przerwania int 80h. Sam kod funkcji jest w pliku misc/daemon.c w źródłach biblioteki glibc. Nie
+ jest on za długi i dość łatwo można go przerobić na takie oto makro:</P>
+	<BR><a href="#tsr_tut_linux02" class="bezdruk" tabindex="1">(przeskocz makro)</a>
+<pre title="makro zastępujące funkcję daemon">
+%macro daemon 2
+	; pierwszy parametr: nochdir - czy nie zmieniać katalogu na główny?
+	; drugi parametr: noclose - czy nie zamykać stdin i stdout?
+
+	mov	eax, 2
+	int	80h		; sys_fork
+
+	cmp	eax, 0
+	jl	%%koniec	; EAX &lt; 0 oznacza błąd
+
+	test	eax, eax
+	jz	%%dalej		; EAX = 0 w procesie potomnym
+				; EAX &gt; 0 w procesie rodzica
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h		; sys_exit - rodzic kończy pracę.
+
+ %%glowny:	db	"/", 0
+ %%devnull:	db	"/dev/null", 0
+
+ %%dalej:
+	mov	eax, 66		; sys_setsid
+	int	80h		; tworzymy nową sesję i ustawiamy GID
+
+	cmp	eax, 0
+	jl	%%koniec	; EAX &lt; 0 oznacza błąd
+
+	%if %1 = 0
+
+		mov	eax, 12		; sys_chdir
+		mov	ebx, %%glowny
+		int	80h		; zmieniamy katalog na główny
+	%endif
+
+	%if %2 = 0
+
+		; otwieramy /dev/null:
+		mov	eax, 5
+		mov	ebx, %%devnull
+		mov	ecx, 2
+		mov	edx, 0
+		int	80h
+
+		cmp	eax, 0
+		jl	%%koniec	; EAX &lt; 0 oznacza błąd
+
+		mov	ebx, eax	; EBX = deskryptor /dev/null
+
+		;duplikujemy deskryptory standardowego wejścia, wyjścia i
+		;wyjścia błędów do deskryptora otwartego /dev/null, po czym
+		; ten /dev/null zamkamy
+
+		mov	eax, 63
+		mov	ecx, 0		; wejście
+		int	80h
+
+		mov	eax, 63
+		mov	ecx, 1		; wyjście
+		int	80h
+
+		mov	eax, 63
+		mov	ecx, 2		; wyjście błędów
+		int	80h
+
+		mov	eax, 6
+		int	80h		; zamykamy /dev/null
+
+	%endif
+ %%koniec:
+
+%endmacro
+
+; użycie:
+	daemon 1, 1	; bez żadnych PUSH ani ADD ESP
+</pre>
+
+<P><a name="tsr_tut_linux02" id="tsr_tut_linux02">Teraz można już powrócić</a> do starego schematu
+programu, gdzie symbolem startowym był _start, a łączenie odbywało się za pomocą LD, a nie GCC
+z biblioteką C.</P>
+
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

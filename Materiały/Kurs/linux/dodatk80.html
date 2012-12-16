@@ -1,0 +1,3802 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: opis funkcji systemowych - dodatki </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kursy programowania w assemblerze">
+<META NAME="Keywords" CONTENT="Linux, Linuks, assembler, asembler, asm, kurs, nauka, int 80h">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Thu, May 10 2012 17:58:38 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Dodatkowe typy danych, wartości stałych systemowych</h1>
+<P>
+ Należy przyjąć, że "int", "long",  "PID", "clock_t",
+"time_t", "u(int)32" są typu DWORD, zaś "short" jest typu WORD.
+</P>
+
+<HR>
+<P><a name="pt_regs" id="pt_regs"
+>Struktura "pt_regs"</a> (funkcja 2) z <span class="b">/usr/include/asm/ptrace.h</span>:</P>
+<PRE>
+	struct pt_regs {
+		long ebx;
+		long ecx;
+		long edx;
+		long esi;
+		long edi;
+		long ebp;
+		long eax;
+		int  xds;
+		int  xes;
+		long orig_eax;
+		long eip;
+		int  xcs;
+		long eflags;
+		long esp;
+		int  xss;
+	};</PRE>
+
+
+
+
+
+
+
+<HR>
+<BR>
+
+<table class="c" summary="Bity dostępu">
+<CAPTION><a name="bity_dostepu" id="bity_dostepu">Bity dostępu</a> (funkcje 5 i 277)
+ z <span class="b">/usr/include/asm/fcntl.h</span></CAPTION>
+<TR class="c"> <TH id="t_tryb"> nazwa </TH> <TH id="t_oct"> ósemkowo </TH> <TH id="t_opis"> komentarz </TH> </TR>
+
+<TR class="c"> <TD headers="t_tryb"> O_ACCMODE <br> </td> <TD headers="t_oct"> 3 <br> </td> <TD headers="t_opis"> Pełne prawa dostępu <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_RDONLY <br> </td> <TD headers="t_oct"> 0 <br> </td> <TD headers="t_opis"> Otwieranie tylko do odczytu. Dostępne dla sys_mq_open. <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_WRONLY <br> </td> <TD headers="t_oct"> 1 <br> </td> <TD headers="t_opis"> Otwieranie tylko do zapisu. Dostępne dla sys_mq_open. <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_RDWR <br> </td> <TD headers="t_oct"> 2 <br> </td> <TD headers="t_opis"> Otwieranie do odczytu i zapisu. Dostępne dla sys_mq_open. <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_CREAT <br> </td> <TD headers="t_oct"> 100 <br> </td> <TD headers="t_opis"> Utworzenie pliku. Dostępne dla sys_mq_open. <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_EXCL <br> </td> <TD headers="t_oct"> 200 <br> </td> <TD headers="t_opis"> Nie twórz pliku, jeśli już istnieje. Dostępne dla sys_mq_open. <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_NOCTTY <br> </td> <TD headers="t_oct"> 400 <br> </td> <TD headers="t_opis"> Jeśli podana nazwa pliku to terminal, to NIE zostanie on terminalem kontrolnym procesu. <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_TRUNC <br> </td> <TD headers="t_oct"> 1000 <br> </td> <TD headers="t_opis"> Obcięcie pliku <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_APPEND <br> </td> <TD headers="t_oct"> 2000 <br> </td> <TD headers="t_opis"> Dopisywanie do pliku <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_NONBLOCK <br> </td> <TD headers="t_oct"> 4000 <br> </td> <TD headers="t_opis"> Nie otwieraj, jeśli spowoduje to blokadę. Dostępne dla sys_mq_open. <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_NDELAY <br> </td> <TD headers="t_oct"> O_NONBLOCK <br> </td> <TD headers="t_opis"> jak wyżej <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_SYNC <br> </td> <TD headers="t_oct"> 10000 <br> </td> <TD headers="t_opis"> specyficzne dla ext2 i urządzeń blokowych <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> FASYNC <br> </td> <TD headers="t_oct"> 20000 <br> </td> <TD headers="t_opis"> fcntl, dla zgodności z BSD <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_DIRECT <br> </td> <TD headers="t_oct"> 40000 <br> </td> <TD headers="t_opis"> podpowiedź bezpośredniego dostępu do dysku, obecnie ignorowana <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_LARGEFILE <br> </td> <TD headers="t_oct"> 100000 <br> </td> <TD headers="t_opis"> Pozwól na otwieranie plików &gt;4GB <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_DIRECTORY <br> </td> <TD headers="t_oct"> 200000 <br> </td> <TD headers="t_opis"> musi być katalogiem <br> </td> </TR>
+<TR class="c"> <TD headers="t_tryb"> O_NOFOLLOW <br> </td> <TD headers="t_oct"> 400000 <br> </td> <TD headers="t_opis"> nie podążaj za linkami <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+
+
+<BR>
+
+<table class="c" summary="Prawa dostępu">
+<CAPTION><a name="tryb" id="tryb">Prawa dostępu</a> / tryb (funkcje 5, 8, 14, 15 i 277)
+ z <span class="b">/usr/include/linux/stat.h</span></CAPTION>
+<TR> <TH id="prawa"> nazwa </TH> <TH id="p_oct"> ósemkowo </TH> <TH id="p_opis"> komentarz </TH> </TR>
+
+<TR class="c"> <TD headers="prawa"> S_ISUID <br> </td> <TD headers="p_oct"> 4000 <br> </td>
+	<TD headers="p_opis"> ustaw ID użytkownika przy wykonywaniu (suid) <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_ISGID <br> </td> <TD headers="p_oct"> 2000 <br> </td>
+	<TD headers="p_opis"> ustaw ID grupy przy wykonywaniu (sgid) <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_ISVTX <br> </td> <TD headers="p_oct"> 1000 <br> </td>
+	<TD headers="p_opis"> "sticky bit" - usuwać z takiego katalogu może tylko właściciel <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IRUSR <br> </td> <TD headers="p_oct"> 400 <br> </td>
+	<TD headers="p_opis"> czytanie przez właściciela (S_IREAD) <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IWUSR <br> </td> <TD headers="p_oct"> 200 <br> </td>
+	<TD headers="p_opis"> zapis przez właściciela (S_IWRITE) <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IXUSR <br> </td> <TD headers="p_oct"> 100 <br> </td>
+	<TD headers="p_opis"> wykonywanie/przeszukiwanie katalogu przez właściciela (S_IEXEC) <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IRGRP <br> </td> <TD headers="p_oct"> 40 <br> </td>
+	<TD headers="p_opis"> czytanie przez grupę <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IWGRP <br> </td> <TD headers="p_oct"> 20 <br> </td>
+	<TD headers="p_opis"> zapis przez grupę <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IXGRP <br> </td> <TD headers="p_oct"> 10 <br> </td>
+	<TD headers="p_opis"> wykonywanie/przeszukiwanie katalogu przez grupę <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IROTH <br> </td> <TD headers="p_oct"> 4 <br> </td>
+	<TD headers="p_opis"> czytanie przez innych (R_OK) <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IWOTH <br> </td> <TD headers="p_oct"> 2 <br> </td>
+	<TD headers="p_opis"> zapis przez innych (W_OK) <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IWOTH <br> </td> <TD headers="p_oct"> 1 <br> </td>
+	<TD headers="p_opis"> wykonywanie/przeszukiwanie katalogu przez innych (X_OK) <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IRWXUGO <br> </td> <TD headers="p_oct"> (S_IRWXU | S_IRWXG | S_IRWXO) <br> </td>
+	<TD headers="p_opis"> czytanie, pisanie i wykonywanie przez wszystkich <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IALLUGO <br> </td> <TD headers="p_oct"> (S_ISUID | S_ISGID | S_ISVTX | S_IRWXUGO) <br> </td>
+	<TD headers="p_opis"> czytanie, pisanie i wykonywanie przez wszystkich + suid + sgid + sticky bit <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IRUGO <br> </td> <TD headers="p_oct"> (S_IRUSR | S_IRGRP | S_IROTH) <br> </td>
+	<TD headers="p_opis"> czytanie dla wszystkich <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IWUGO <br> </td> <TD headers="p_oct"> (S_IWUSR | S_IWGRP | S_IWOTH) <br> </td>
+	<TD headers="p_opis"> zapis dla wszystkich <br> </td> </TR>
+<TR class="c"> <TD headers="prawa"> S_IXUGO <br> </td> <TD headers="p_oct"> (S_IXUSR | S_IXGRP | S_IXOTH) <br> </td>
+	<TD headers="p_opis"> wykonywanie/przeszukiwanie katalogu dla wszystkich <br> </td> </TR>
+
+</TABLE>
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+<table class="c" summary="Flagi montowania">
+<CAPTION><a name="flagi_mont" id="flagi_mont">Flagi montowania</a> (funkcja 21)
+ z <span class="b">/usr/include/linux/fs.h</span></CAPTION>
+<TR> <TH id="mont"> nazwa </TH> <TH id="mont_w"> wartość </TH> <TH id="mont_opis"> komentarz </TH> </TR>
+<TR class="c"> <TD headers="mont"> MS_MGC_MSK <br> </td> <TD headers="mont_w"> 0xC0ED <br> </td>
+	<TD headers="mont_opis"> in m.s. 16-bit; 'magic', niezbędne przed 2.4.0-t9 (????) <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_RDONLY <br> </td> <TD headers="mont_w"> 1 <br> </td>
+	<TD headers="mont_opis"> Zamontuj tylko do odczytu <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_NOSUID <br> </td> <TD headers="mont_w"> 2 <br> </td>
+	<TD headers="mont_opis"> Ignoruj bity suid i sgid <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_NODEV <br> </td> <TD headers="mont_w"> 4 <br> </td>
+	<TD headers="mont_opis"> Zabroń dostępu do specjalnych plików/urządzeń <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_NOEXEC <br> </td> <TD headers="mont_w"> 8 <br> </td>
+	<TD headers="mont_opis"> Zabroń wykonywania programów <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_SYNCHRONOUS <br> </td> <TD headers="mont_w"> 16 <br> </td>
+	<TD headers="mont_opis"> Zapisy są synchronizowane natychmiast <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_REMOUNT <br> </td> <TD headers="mont_w"> 32 <br> </td>
+	<TD headers="mont_opis"> Zmień flagi zamontowanego systemu plików (przemontuj z innymi atrybutami) <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_MANDLOCK <br> </td> <TD headers="mont_w"> 64 <br> </td>
+	<TD headers="mont_opis"> Pozwól na nakazane blokady na systemie plików (???) <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_NOATIME <br> </td> <TD headers="mont_w"> 1024 <br> </td>
+	<TD headers="mont_opis"> Nie zmieniaj czasów dostępu <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_NODIRATIME <br> </td> <TD headers="mont_w"> 2048 <br> </td>
+	<TD headers="mont_opis"> Nie zmieniaj czasów dostępu do katalogów <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_BIND <br> </td> <TD headers="mont_w"> 4096 <br> </td>
+	<TD headers="mont_opis"> Montowanie bindowane - widoczne w innym miejscu systemu plików <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_REC <br> </td> <TD headers="mont_w"> 16384 <br> </td>
+	<TD headers="mont_opis"> &nbsp; <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_VERBOSE <br> </td> <TD headers="mont_w"> 32768 <br> </td>
+	<TD headers="mont_opis"> &nbsp; <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_ACTIVE <br> </td> <TD headers="mont_w"> (1&lt;&lt;30) <br> </td>
+	<TD headers="mont_opis"> &nbsp; <br> </td> </TR>
+<TR class="c"> <TD headers="mont"> MS_NOUSER <br> </td> <TD headers="mont_w"> (1&lt;&lt;31) <br> </td>
+	<TD headers="mont_opis"> &nbsp; <br> </td> </TR>
+
+</TABLE>
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE style="WIDTH:70%" class="c" summary="Przechodzenie do innego miejsca w pliku">
+<caption><a name="przesun" id="przesun">Przechodzenie do innego miejsca</a>
+ w pliku (funkcja 19 i 140) z <span class="b">/usr/include/fcntl.h</span></caption>
+<TR> <TH id="seek"> nazwa </TH> <TH id="seek_w"> wartość </TH> <TH id="seek_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="seek"> SEEK_SET <br> </td> <TD headers="seek_w"> 0 <br> </td>
+	<TD headers="seek_opis"> Przesuwanie zaczyna się od początku pliku <br> </td> </TR>
+<TR class="c"> <TD headers="seek"> SEEK_CUR <br> </td> <TD headers="seek_w"> 1 <br> </td>
+	<TD headers="seek_opis"> Przesuwanie zaczyna się od bieżącej pozycji <br> </td> </TR>
+<TR class="c"> <TD headers="seek"> SEEK_END <br> </td> <TD headers="seek_w"> 2 <br> </td>
+	<TD headers="seek_opis"> Przesuwanie zaczyna się od końca pliku <br> </td> </TR>
+</TABLE>
+
+
+
+
+<BR>
+<HR>
+<table class="c" summary="Specyfikacja procesu">
+<CAPTION><a name="specyfikacja" id="specyfikacja">Tak zwana specyfikacja procesu</a> (funkcja 7 i 37)</CAPTION>
+<TR> <TH id="spec_n"> PID </TH> <TH id="spec_opis"> dany sygnał zostanie wysłany do </TH> </TR>
+<TR class="c"> <TD headers="spec_n"> &gt;  0 <br> </td>
+	<TD headers="spec_opis"> procesu potomnego o tym PID <br> </td> </TR>
+<TR class="c"> <TD headers="spec_n"> 0 <br> </td>
+	<TD headers="spec_opis"> każdego procesu potomnego w grupie procesów wywołującego <br> </td> </TR>
+<TR class="c"> <TD headers="spec_n"> -1 <br> </td>
+	<TD headers="spec_opis"> wszystkich procesów potomnych z wyjątkiem pierwszego <br> </td> </TR>
+<TR class="c"> <TD headers="spec_n"> &lt; -1 <br> </td>
+	<TD headers="spec_opis"> wszystkich procesów potomnych w grupie |{gid}| <br> </td> </TR>
+</TABLE>
+
+
+<br>
+<HR>
+
+<table class="c" summary="Funkcje śledzenia procesu">
+<caption><a name="request" id="request">Żądane działanie</a> (funkcja 26)
+ z <span class="b">/usr/include/linux/ptrace.h</span>
+</caption>
+<TR class="c"> <TH style="width:20%" id="peek">PTRACE_...</TH> <TH style="width:5%" id="peek_w">wartość</TH>
+	<TH style="width:30%" id="peek_arg"> argumenty </TH> <TH id="peek_ret">   zwraca </TH></TR>
+
+<TR class="c"> <TD headers="peek">PEEKTEXT <br> </td> <TD headers="peek_w">0 <br> </td>
+	<TD headers="peek_arg">PID, adres, wskaźnik na dane <br> </td> <TD headers="peek_ret"> czytaj (d)word pod podanym adresem <br> </td> </TR>
+<TR class="c"> <TD headers="peek">PEEKDATA <br> </td> <TD headers="peek_w">1 <br> </td>
+	<TD headers="peek_arg">PID, adres, wskaźnik na dane <br> </td> <TD headers="peek_ret"> czytaj (d)word pod podanym adresem w obszarze pamięci Użytkownika <br> </td></TR>
+<TR class="c"> <TD headers="peek">PEEKUSR <br> </td>  <TD headers="peek_w">2 <br> </td>
+	<TD headers="peek_arg">PID, adres, wskaźnik na dane <br> </td> <TD headers="peek_ret"> czytaj (d)word pod podanym adresem w obszarze pamięci Użytkownika <br> </td></TR>
+<TR class="c"> <TD headers="peek">POKETEXT <br> </td> <TD headers="peek_w">3 <br> </td>
+	<TD headers="peek_arg">PID, adres, wskaźnik na dane <br> </td> <TD headers="peek_ret"> zapisz (d)word pod podanym adresem <br> </td> </TR>
+<TR class="c"> <TD headers="peek">POKEDATA <br> </td> <TD headers="peek_w">4 <br> </td>
+	<TD headers="peek_arg">PID, adres, wskaźnik na dane <br> </td> <TD headers="peek_ret"> zapisz (d)word pod podanym adresem <br> </td> </TR>
+<TR class="c"> <TD headers="peek">POKEUSR <br> </td>  <TD headers="peek_w">5 <br> </td>
+	<TD headers="peek_arg">PID, adres, wskaźnik na dane <br> </td> <TD headers="peek_ret"> zapisz (d)word pod podanym adresem w obszarze pamięci Użytkownika <br> </td></TR>
+<TR class="c"> <TD headers="peek">TRACEME <br> </td>  <TD headers="peek_w">6 <br> </td>
+	<TD headers="peek_arg"> - <br> </td> <TD headers="peek_ret"> Ustaw bit PTRACE we flagach procesu <br> </td></TR>
+<TR class="c"> <TD headers="peek">CONT <br> </td>     <TD headers="peek_w">7 <br> </td>
+	<TD headers="peek_arg">PID, - , numer sygnału <br> </td> <TD headers="peek_ret"> Uruchom ponownie po sygnale <br> </td></TR>
+<TR class="c"> <TD headers="peek">KILL <br> </td>     <TD headers="peek_w">8 <br> </td>
+	<TD headers="peek_arg">PID <br> </td> <TD headers="peek_ret">wyślij sygnał SIGKILL do procesu potomnego, kończąc go <br> </td></TR>
+<TR class="c"> <TD headers="peek">SINGLESTEP    <TD headers="peek_w">9 <br> </td>
+	<TD headers="peek_arg">PID <br> </td> <TD headers="peek_ret">Ustaw flagę TRAP, sygnał SIGTRAP <br> </td></TR>
+<TR class="c"> <TD headers="peek">GETREGS <br> </td>  <TD headers="peek_w">12 <br> </td>
+	<TD headers="peek_arg">PID, -, wskaźnik na dane <br> </td> <TD headers="peek_ret"> pobierz wartości <A HREF="#rej" tabindex="1">rejestrów</A> procesu potomnego <br> </td></TR>
+<TR class="c"> <TD headers="peek">SETREGS <br> </td>  <TD headers="peek_w">13 <br> </td>
+	<TD headers="peek_arg">PID, -, wskaźnik na dane <br> </td> <TD headers="peek_ret"> ustaw wartości <A HREF="#rej">rejestrów</A> procesu potomnego <br> </td></TR>
+<TR class="c"> <TD headers="peek">GETFPREGS <br> </td><TD headers="peek_w">14 <br> </td>
+	<TD headers="peek_arg">PID, -, wskaźnik na dane <br> </td> <TD headers="peek_ret"> pobierz stan FPU procesu potomnego <br> </td></TR>
+<TR class="c"> <TD headers="peek">SETFPREGS <br> </td><TD headers="peek_w">15 <br> </td>
+	<TD headers="peek_arg">PID, -, wskaźnik na dane <br> </td> <TD headers="peek_ret"> ustal stan FPU procesu potomnego <br> </td></TR>
+<TR class="c"> <TD headers="peek">ATTACH <br> </td>   <TD headers="peek_w">16 <br> </td>
+	<TD headers="peek_arg">PID, -, - <br> </td> <TD headers="peek_ret"> przyłącz proces do już uruchomionego procesu. <br> </td></TR>
+<TR class="c"> <TD headers="peek">DETACH <br> </td>   <TD headers="peek_w">17 <br> </td>
+	<TD headers="peek_arg">PID, -, - <br> </td> <TD headers="peek_ret"> odłącz wcześniej przyłączony proces <br> </td></TR>
+<TR class="c"> <TD headers="peek">(K4)GETFPXREGS <br> </td><TD headers="peek_w">18 <br> </td>
+	<TD headers="peek_arg">PID, -, wskaźnik na dane <br> </td> <TD headers="peek_ret"> pobierz rozszerzony stan FPU procesu potomnego <br> </td></TR>
+<TR class="c"> <TD headers="peek">(K4)SETFPXREGS <br> </td><TD headers="peek_w">19 <br> </td>
+	<TD headers="peek_arg">PID, -, wskaźnik na dane <br> </td> <TD headers="peek_ret"> ustal rozszerzony stan FPU procesu potomnego <br> </td></TR>
+<TR class="c"> <TD headers="peek">(K4)SETOPTIONS <br> </td><TD headers="peek_w">21 <br> </td>
+	<TD headers="peek_arg">PID, -, dane <br> </td> <TD headers="peek_ret"> Opcja PTRACE_O_TRACESYSGOOD lub żadna <br> </td></TR>
+<TR class="c"> <TD headers="peek">SYSCALL <br> </td>  <TD headers="peek_w">24 <br> </td>
+	<TD headers="peek_arg">PID, -, numer sygnału <br> </td> <TD headers="peek_ret">Kontynuuj i zatrzymaj się na następnym powrocie z danego sygnału <br> </td></TR>
+</TABLE>
+<BR>
+<P><a name="rej" id="rej">Rejestry są ustawione tak</a>:<BR>
+EBX, ECX, EDX, ESI, EDI, EBP, EAX, DS, ES, FS, GS, ORIG_EAX, EIP, CS, EFL, UESP, SS, FRAME_SIZE.</P>
+
+
+<HR>
+<P>Wartości błędów zwracanych przez funkcje systemowe Linuksa.
+Te numery można znaleźć także w:</P>
+<UL>
+ <LI>mojej bibliotece - załącznik "bibl/incl/..../...._system.inc"</LI>
+ <LI> <span class="b">/usr/src/linux/include/asm/errors.h</span></LI>
+ <LI> <span class="b">man errno</span> (tylko część)</LI>
+</UL>
+<P>"Prawdziwe" zwracane wartości błędów są <em class="wazne">przeciwnego znaku</em> (na przykład EIO = -5).</P>
+<PRE>
+%define	EPERM		 1	; Operacja niedozwolona
+%define	ENOENT		 2	; Nie ma takiego pliku/katalogu
+%define	ESRCH		 3	; Nie ma takiego procesu
+%define	EINTR		 4	; Przerwana funkcja systemowa
+%define	EIO		 5	; Błąd I/O
+%define	ENXIO		 6	; Nie ma takiego urządzenia/adresu
+%define	E2BIG		 7	; Za długa lista argumentów
+%define	ENOEXEC		 8	; Błąd formatu wykonywalnego
+%define	EBADF		 9	; Zły numer pliku
+%define	ECHILD		10	; Nie ma procesów potomnych
+%define	EAGAIN		11	; Zasoby chwilowo niedostępne.
+%define	ENOMEM		12	; Brak pamięci
+%define	EACCES		13	; Odmowa dostępu
+%define	EFAULT		14	; Zły adres
+%define	ENOTBLK		15	; Wymagane jest urządzenie blokowe
+%define	EBUSY		16	; Urządzenie/zasób zajęty
+%define	EEXIST		17	; Plik istnieje
+%define	EXDEV		18	; Dowiązanie międzyurządzeniowe
+%define	ENODEV		19	; Nie ma takiego urządzenia
+%define	ENOTDIR		20	; To nie jest katalog
+%define	EISDIR		21	; To jest katalog
+%define	EINVAL		22	; Nieprawidłowy argument
+%define	ENFILE		23	; Przepełnienie tablicy plików
+%define	EMFILE		24	; Za dużo otwartych plików
+%define	ENOTTY		25	; Nieodpowiednia operacja kontroli
+				; wejścia/wyjścia (Not a typewriter)
+%define	ETXTBSY		26	; Plik tekstowy zajęty
+%define	EFBIG		27	; Plik za duży
+%define	ENOSPC		28	; Brak miejsca na urządzeniu
+%define	ESPIPE		29	; Nieprawidłowa zmiana pozycji w pliku
+%define	EROFS		30	; System plików tylko do odczytu
+%define	EMLINK		31	; Za dużo linków
+%define	EPIPE		32	; Zły potok
+%define	EDOM		33	; Argument poza dziedziną funkcji matemat.
+%define	ERANGE		34	; Wyniku nie da się przedstawić
+%define	EDEADLK		35	; Uniknięto zakleszczenia zasobów
+				; (Resource deadlock would occur)
+%define	ENAMETOOLONG	36	; Zbyt długa nazwa pliku
+%define	ENOLCK		37	; Brak dostępnych blokad
+%define	ENOSYS		38	; Funkcja nie zaimplementowana
+%define	ENOTEMPTY	39	; Katalog nie jest pusty
+%define	ELOOP		40	; Zbyt dużo linków symbolicznych
+%define	EWOULDBLOCK	EAGAIN	; Zasoby chwilowo niedostępne (operacja
+				;   zablokowałaby program)
+%define	ENOMSG		42	; Nie ma wiadomości żądanego typu
+%define	EIDRM		43	; Identyfikator usunięty
+%define	ECHRNG		44	; Numer kanału spoza zasięgu
+%define	EL2NSYNC	45	; Poziom 2 nie zsynchronizowany
+%define	EL3HLT		46	; Poziom 3 zatrzymany
+%define	EL3RST		47	; Poziom 3 ponownie uruchomiony
+%define	ELNRNG		48	; Za duża liczba linków/numer linku
+%define	EUNATCH		49	; Niepodłączony sterownik protokołu
+%define	ENOCSI		50	; Brak wolnych struktur CSI
+%define	EL2HLT		51	; Poziom 2 zatrzymany
+%define	EBADE		52	; Nieprawidłowa wymiana
+%define	EBADR		53	; Nieprawidłowy deskryptor żądania
+%define	EXFULL		54	; Wymiana pełna (bufor?)
+%define	ENOANO		55	; No anode
+%define	EBADRQC		56	; Nieprawidłowy kod zadania
+%define	EBADSLT		57	; Invalid slot
+
+%define	EDEADLOCK	EDEADLK
+
+%define	EBFONT		59	; Nieprawidłowy format pliku czcionki
+%define	ENOSTR		60	; Urządzenie nie jest strumieniem
+%define	ENODATA		61	; Nie ma danych
+%define	ETIME		62	; Przekroczony limit czasu
+%define	ENOSR		63	; Brak zasobów strumieniowych
+%define	ENONET		64	; Komputer nie jest w sieci
+%define	ENOPKG		65	; Pakiet nie zainstalowany
+%define	EREMOTE		66	; Obiekt jest zdalny
+%define	ENOLINK		67	; Link has been severed
+%define	EADV		68	; Advertise error
+%define	ESRMNT		69	; Srmount error
+%define	ECOMM		70	; Błąd komunikacji przy wysyłaniu
+%define	EPROTO		71	; Błąd protokołu
+%define	EMULTIHOP	72	; Multihop attempted
+%define	EDOTDOT		73	; Błąd specyficzny dla RFS
+%define	EBADMSG		74	; To nie jest wiadomość z danymi
+%define	EOVERFLOW	75	; Wartość za duża dla określonego typu
+%define	ENOTUNIQ	76	; Nazwa nie jest unikalna w sieci
+%define	EBADFD		77	; Deskryptor pliku w złym stanie
+%define	EREMCHG		78	; Zmiana adresu zdalnego
+%define	ELIBACC		79	; Nie można się dostać do wymaganej bibl.
+%define	ELIBBAD		80	; Dostęp do zepsutej
+				;     biblioteki współdzielonej
+%define	ELIBSCN		81	; Zepsuta sekcja .lib w a.out
+%define	ELIBMAX		82	; Próba podłączenia zbyt wielu bibliotek
+				;     współdzielonych
+%define	ELIBEXEC	83	; Nie można bezpośrednio uruchamiać
+				;     biblioteki współdzielonej
+%define	EILSEQ		84	; Nieprawidłowa sekwencja bajtów
+%define	ERESTART	85	; Przerwana funkcja systemowa powinna zostać
+				;     uruchomiona ponownie
+%define	ESTRPIPE	86	; Streams pipe error
+%define	EUSERS		87	; Za dużo użytkowników
+%define	ENOTSOCK	88	; Operacja gniazdowa na nie-gnieździe
+%define	EDESTADDRREQ	89	; Wymagany adres docelowy
+%define	EMSGSIZE	90	; Wiadomość za długa
+%define	EPROTOTYPE	91	; Zły typ protokołu dla gniazda
+%define	ENOPROTOOPT	92	; Protokół niedostępny
+%define	EPROTONOSUPPORT	93	; Protokół nieobsługiwany
+%define	ESOCKTNOSUPPORT	94	; Typ gniazda nieobsługiwany
+%define	EOPNOTSUPP	95	; Operacja nie obsługiwana po drugiej
+				;     stronie transportu
+%define	EPFNOSUPPORT	96	; Nieobsługiwana rodzina protokołów
+%define	EAFNOSUPPORT	97	; Rodzina adresów nie obsługiwana przez
+				;     ten protokół
+%define	EADDRINUSE	98	; Adres już jest używany
+%define	EADDRNOTAVAIL	99	; Nie można przydzielić żądanego adresu
+%define	ENETDOWN	100	; Sieć nie działa
+%define	ENETUNREACH	101	; Sieć jest niedostępna
+%define	ENETRESET	102	; Brak sieci z powodu resetu
+%define	ECONNABORTED	103	; Przerwanie połączenia przez program
+%define	ECONNRESET	104	; Reset połączenia przez drugą stronę
+%define	ENOBUFS		105	; Brak miejsca w buforze
+%define	EISCONN		106	; Druga strona transportu już jest
+				;     podłączona
+%define	ENOTCONN	107	; Druga strona transportu nie jest
+				;     podłączona
+%define	ESHUTDOWN	108	; Nie można wysyłać po wyłączeniu z drugiej
+				;     strony transportu
+%define	ETOOMANYREFS	109	; Too many references: cannot splice
+%define	ETIMEDOUT	110	; Przekroczony limit czasu połączenia
+%define	ECONNREFUSED	111	; Odmowa połączenia
+%define	EHOSTDOWN	112	; Host jest wyłączony
+%define	EHOSTUNREACH	113	; Nie ma drogi do hosta
+%define	EALREADY	114	; Operacja już trwa
+%define	EINPROGRESS	115	; Operacja trwa teraz
+%define	ESTALE		116	; Stale NFS file handle
+%define	EUCLEAN		117	; Struktura wymaga porządkowania
+%define	ENOTNAM		118	; Not a XENIX named type file
+%define	ENAVAIL		119	; No XENIX semaphores available
+%define	EISNAM		120	; Is a named type file
+%define	EREMOTEIO	121	; Błąd zdalnego I/O
+%define	EDQUOT		122	; Przekroczony limit dyskowy (Quota)
+
+%define	ENOMEDIUM	123	; Brak nośnika
+%define	EMEDIUMTYPE	124	; Zły typ nośnika
+%define	ECANCELED	125	; Zrezygnowano z operacji
+%define	ENOKEY		126	; Wymagany klucz niedostępny
+%define	EKEYEXPIRED	127	; Klucz przedawniony
+%define	EKEYREVOKED	128	; Klucz nieważny
+%define	EKEYREJECTED	129	; Klucz odrzucony
+
+%define	EOWNERDEAD	130	; Właściciel zginął
+%define	ENOTRECOVERABLE	131	; State not recoverable
+
+
+%define ERESTARTSYS	512
+%define ERESTARTNOINTR	513
+%define ERESTARTNOHAND	514	; restart if no handler..
+%define ENOIOCTLCMD	515	; No ioctl command
+%define ERESTART_RESTARTBLOCK 516 ; restart by calling sys_restart_syscall
+
+; NFS v3
+%define EBADHANDLE	521	; Illegal NFS file handle
+%define ENOTSYNC	522	; Update synchronization mismatch
+%define EBADCOOKIE	523	; Cookie is stale
+%define ENOTSUPP	524	; Operacja nieobsługiwana
+%define ETOOSMALL	525	; Bufor lub żądanie za małe
+%define ESERVERFAULT	526	; An untranslatable error occurred
+%define EBADTYPE	527	; Typ nieobsługiwany przez serwer
+%define EJUKEBOX	528	; Request initiated, but will not
+				;     complete before timeout
+%define EIOCBQUEUED	529	; iocb queued, will get completion event
+%define EIOCBRETRY	530	; iocb queued, will trigger a retry
+
+#define EWOULDBLOCKIO	530	; Would block due to block-IO</PRE>
+
+<BR>
+<HR>
+<P><a name="tms" id="tms"
+>Struktura "tms"</a> (funkcja 43) z <span class="b">/usr/include/linux/times.h</span>:</P>
+<PRE>
+	struct tms {
+	    	clock_t tms_utime;
+		clock_t tms_stime;
+		clock_t tms_cutime;
+	    	clock_t tms_cstime;
+	    };</PRE>
+
+
+
+<!-- potrzebne tuż zaraz -->
+<HR>
+<P><a name="flock" id="flock">Struktura "flock"</a> z <span class="b">/usr/include/asm/fcntl.h</span>:</P>
+<PRE>
+	struct flock {
+		short l_type;	// rodzaj blokady pliku (WORD)
+
+		short l_whence;	// patrz SEEK_* powyżej? (WORD)
+
+		off_t l_start;	// adres miejsca, do którego odnosi
+				// się blokada, w bajtach liczonych
+				// od pozycji określonej
+				// przez l_whence (DWORD)
+
+		off_t l_len;	// długość zablokowanego obszaru.
+				// Zero oznacza do końca pliku (DWORD)
+
+		pid_t l_pid;	// otrzymane komendą F_GETLK,
+				// ignorowane przy włączaniu blokady (DWORD)
+	};</PRE>
+
+
+
+
+<HR>
+
+<BR>
+
+<table class="c" summary="Funkcje kontroli plików">
+<caption><a name="fcntl" id="fcntl">Argumenty funkcji sys_fcntl</a> (numer 55)
+ z <span class="b">/usr/include/bits/fcntl.h</span>
+</caption>
+<TR class="c"> <TH style="width:10%" id="fc_kom"> ECX (komenda) </TH>
+	<TH style="width:5%" id="fc_w"> Wartość </TH> <TH id="fc_opis"> Opis </TH></TR>
+
+<TR class="c"> <TD headers="fc_kom"> F_DUPFD <br> </td> <TD headers="fc_w"> 0 <br> </td>
+	<TD headers="fc_opis"> EDX staje się kopią deskryptora z EBX <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_GETFD <br> </td> <TD headers="fc_w"> 1 <br> </td>
+	<TD headers="fc_opis"> Odczytaj flagę close-on-exec. Gdy bit0=0, plik zostanie otwarty pomimo exec, inaczej plik zostanie zamknięty. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_SETFD <br> </td> <TD headers="fc_w"> 2 <br> </td>
+	<TD headers="fc_opis"> Ustaw flagę close-on-exec na wartość ostatniego bitu w EDX <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_GETFL <br> </td> <TD headers="fc_w"> 3 <br> </td>
+	<TD headers="fc_opis"> Zwróć takie flagi deskryptora, jakie były ustawione przez funkcję open <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_SETFL <br> </td> <TD headers="fc_w"> 4 <br> </td>
+	<TD headers="fc_opis"> Ustaw flagi deskryptora na wartość EDX. Można ustawić tylko O_APPEND i O_NONBLOCK. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_GETLK <br> </td> <TD headers="fc_w"> 5 <br> </td>
+	<TD headers="fc_opis"> <span class="b">[Jeśli uruchamiasz sys_fcntl64, użyj wersji 64-bitowej]</span><BR>EDX ma adres struktury <A HREF="#flock">flock</A>. Zwróć strukturę flock, która chroni nas przed uzyskaniem blokady lub ustaw pole l_type blokady na F_UNLCK jeśli możliwe <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_SETLK <br> </td> <TD headers="fc_w"> 6 <br> </td>
+	<TD headers="fc_opis"> <span class="b">[Jeśli uruchamiasz sys_fcntl64, użyj wersji 64-bitowej]</span><BR>EDX ma adres struktury <A HREF="#flock">flock</A>. Blokada jest ustawiana jeśli l_type jest F_RDLCK lub F_WRLCK albo usuwana, gdy jest F_UNLCK. Jeśli blokada jest przechowywana przez kogoś innego, zwraca -1 i EACCES  lub EAGAIN. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_SETLKW <br> </td> <TD headers="fc_w"> 7 <br> </td>
+	<TD headers="fc_opis"> <span class="b">[Jeśli uruchamiasz sys_fcntl64, użyj wersji 64-bitowej]</span><BR>Podobnie jak F_SETLK, ale zamiast zwracać błąd, czeka na zwolnienie blokady. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_SETOWN <br> </td> <TD headers="fc_w"> 8 <br> </td>
+	<TD headers="fc_opis"> Ustaw proces, będący właścicielem gniazda (socket). Tutaj i w poniższej funkcji grupy procesów zwracane są jako wartości ujemne. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_GETOWN <br> </td> <TD headers="fc_w"> 9 <br> </td>
+	<TD headers="fc_opis"> Pobierz ID procesu, będącego właścicielem gniazda. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_SETSIG <br> </td> <TD headers="fc_w"> 10 <br> </td>
+	<TD headers="fc_opis"> Ustaw numer sygnału, który ma zostać wysłany. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_GETSIG <br> </td> <TD headers="fc_w"> 11 <br> </td>
+	<TD headers="fc_opis"> Pobierz numer sygnału, który ma zostać wysłany. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_GETLK64 <br> </td> <TD headers="fc_w"> 12 <br> </td>
+	<TD headers="fc_opis"> EDX ma adres struktury <A HREF="#flock">flock</A>. Zwróć strukturę flock, która chroni nas przed uzyskaniem blokady lub ustaw pole l_type locka na F_UNLCK jeśli możliwe <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_SETLK64 <br> </td> <TD headers="fc_w"> 13 <br> </td>
+	<TD headers="fc_opis"> EDX ma adres struktury <A HREF="#flock">flock</A>. Blokada jest ustawiana jeśli l_type jest F_RDLCK lub F_WRLCK albo usuwana, gdy jest F_UNLCK. Jeśli blokada jest przechowywana przez kogoś innego, zwraca -1 i EACCES  lub EAGAIN. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_SETLKW64 <br> </td> <TD headers="fc_w"> 14 <br> </td>
+	<TD headers="fc_opis"> Podobnie jak F_SETLK, ale zamiast zwracać błąd, czeka na zwolnienie blokady. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_SETLEASE <br> </td> <TD headers="fc_w"> 1024 <br> </td>
+	<TD headers="fc_opis"> Ustaw dzierżawę. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_GETLEASE <br> </td> <TD headers="fc_w"> 1025 <br> </td>
+	<TD headers="fc_opis"> Pobierz informację, jaka dzierżawa jest aktywna. <br> </td></TR>
+<TR class="c"> <TD headers="fc_kom"> F_NOTIFY <br> </td> <TD headers="fc_w"> 1026 <br> </td>
+	<TD headers="fc_opis"> Żądaj powiadomień na danym katalogu. <br> </td></TR>
+
+</TABLE>
+<BR>
+<HR>
+<P><a name="sigaction" id="sigaction"
+>Struktura sigaction</a> (funkcja 67) z <span class="b">/usr/include/asm/signal.h</span>:
+</P>
+
+<PRE>
+	struct sigaction {
+	    	__sighandler_t sa_handler;	//procedura obsługi sygnału
+	    	unsigned long sa_flags;
+	    	void (*sa_restorer)(void);	// procedura przywracająca?
+	    	sigset_t sa_mask;		// maska utrzymywana dla
+	    					// rozszerzalności
+	    };
+
+	typedef void (*__sighandler_t)(int);	// typ procedury
+						// obsługi sygnału
+
+	#define _NSIG		64
+	#define _NSIG_BPW	32
+	#define _NSIG_WORDS	(_NSIG/_NSIG_BPW)
+
+	typedef struct {
+	    	unsigned long sig[_NSIG_WORDS];
+	    } sigset_t;				// definicja typu tej
+	    					// maski powyżej</PRE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="rlimit" id="rlimit"
+>Struktura rlimit</a> (funkcje 75 i 76) z <span class="b">/usr/include/linux/resource.h</span>:</P>
+
+<PRE>
+	struct rlimit {
+	    	unsigned long rlim_cur;	// limit "miękki" lub
+	    				// RLIM_INFINITY=-1 jeśli brak
+	    	unsigned long rlim_max;	// maksymalny limit lub
+	    				// RLIM_INFINITY jeśli brak
+	    };</PRE>
+
+<table class="c" summary="Rodzaje limitów zasobów">
+<caption>Tabela numerów zasobów  z <span class="b">/usr/include/bits/resource.h</span> </caption>
+<TR class="c"> <TH id="rlim"> nazwa </TH> <TH id="rlim_w"> wartość </TH><TH id="rlim_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="rlim"> RLIMIT_CPU <br> </td> <TD headers="rlim_w"> 0 <br> </td>
+	<TD headers="rlim_opis"> limit czasu procesora w sekundach <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_FSIZE <br> </td> <TD headers="rlim_w"> 1 <br> </td>
+	<TD headers="rlim_opis"> rozmiar w bajtach największego pliku możliwego do utworzenia <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_DATA <br> </td> <TD headers="rlim_w"> 2 <br> </td>
+	<TD headers="rlim_opis"> maksymalny rozmiar w bajtach wszystkich segmentów danych <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_STACK <br> </td> <TD headers="rlim_w"> 3 <br> </td>
+	<TD headers="rlim_opis"> maksymalny rozmiar stosu w bajtach <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_CORE <br> </td> <TD headers="rlim_w"> 4 <br> </td>
+	<TD headers="rlim_opis"> maksymalny rozmiar rdzenia (core) w bajtach <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_RSS <br> </td> <TD headers="rlim_w"> 5 <br> </td>
+	<TD headers="rlim_opis"> maksymalny rozmiar kodu rezydentnego <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_NPROC <br> </td> <TD headers="rlim_w"> 6 <br> </td>
+	<TD headers="rlim_opis"> maksymalna liczba procesów dla danego rzeczywistego PID <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_OFILE, RLIMIT_NOFILE <br> </td> <TD headers="rlim_w"> 7 <br> </td>
+	<TD headers="rlim_opis"> maksymalna liczba otwartych deskryptorów + 1 <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_MEMLOCK <br> </td> <TD headers="rlim_w"> 8 <br> </td>
+	<TD headers="rlim_opis"> maksymalna liczba bajtów pamięci, którą można zablokować (sys_mlock) <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_AS <br> </td> <TD headers="rlim_w"> 9 <br> </td>
+	<TD headers="rlim_opis"> limit przestrzeni adresowej <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_LOCKS <br> </td> <TD headers="rlim_w"> 10 <br> </td>
+	<TD headers="rlim_opis"> limit blokad plików (sys_flock itp.) <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_SIGPENDING <br> </td> <TD headers="rlim_w"> 11 <br> </td>
+	<TD headers="rlim_opis"> maksymalna liczba czekających sygnałów <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_MSGQUEUE <br> </td> <TD headers="rlim_w"> 12 <br> </td>
+	<TD headers="rlim_opis"> maksymalna liczba bajtów w kolejkach wiadomości <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_NICE <br> </td> <TD headers="rlim_w"> 13 <br> </td>
+	<TD headers="rlim_opis"> maksymalny priorytet sys_nice, jaki można ustawić <br> </td> </TR>
+<TR class="c"> <TD headers="rlim"> RLIMIT_RTPRIO <br> </td> <TD headers="rlim_w"> 14 <br> </td>
+	<TD headers="rlim_opis"> maksymalny priorytet czasu rzeczywistego, jaki można ustawić dla nieuprzywilejowanego procesu <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="rusage" id="rusage"
+>Struktura rusage</a> (funkcja 77) z <span class="b">/usr/include/linux/resource.h</span>:</P>
+
+<PRE>
+	    #define	RUSAGE_SELF	0
+	    #define	RUSAGE_CHILDREN	(-1)
+	    #define	RUSAGE_BOTH	(-2)	// sys_wait4() używa tego
+
+	    struct	rusage {
+	    	struct timeval ru_utime; // wykorzystany czas użytkownika
+	    	struct timeval ru_stime; // wykorzystany czas systemu
+	    	long	ru_maxrss;	// rozmiar maksymalnego
+	    				// rezydentnego zbioru?
+	    	long	ru_ixrss;	// rozmiar współdzielonej pamięci
+	    	long	ru_idrss;	// rozmiar niewspółdzielonej pamięci
+	    	long	ru_isrss;	// rozmiar niewspółdzielonego stosu
+	    	long	ru_minflt;	// liczba odzyskanych stron pamięci
+	    	long	ru_majflt;	// liczba błędów stron pamięci
+	    	long	ru_nswap;	// wymiany (swaps)
+	    	long	ru_inblock;	// blokujące operacje wejścia
+	    	long	ru_oublock;	// blokujące operacje wyjścia
+	    	long	ru_msgsnd;	// wysłane wiadomości
+	    	long	ru_msgrcv;	// odebrane wiadomości
+	    	long	ru_nsignals;	// odebrane sygnały
+	    	long	ru_nvcsw;	// dobrowolne zmiany kontekstu
+	    	long	ru_nivcsw;	// niedobrowolne zmiany kontekstu
+	    };</PRE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="timeval" id="timeval"
+>Struktura timeval</a> (funkcja 78) z <span class="b">/usr/include/linux/time.h</span>:</P>
+
+<PRE>
+	struct timeval {
+	    	time_t		tv_sec;		// dword, sekundy
+	    	suseconds_t	tv_usec;	// dword, mikrosekundy
+	    };</PRE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="timezone" id="timezone"
+>Struktura timezone</a> (funkcja 78) z <span class="b">/usr/include/linux/time.h</span>:</P>
+
+<PRE>
+	struct timezone {
+		int	tz_minuteswest;	// minuty na zachód od Greenwich
+		int	tz_dsttime;	// typ poprawki punktu docelowego?
+		};</PRE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="sigset_t" id="sigset_t"
+>Struktura sigset_t</a> (funkcje 72 i 73) z <span class="b">/usr/include/asm/signal.h</span>:</P>
+
+<PRE>
+	#define _NSIG		64
+	#define _NSIG_BPW	32
+	#define _NSIG_WORDS	(_NSIG/_NSIG_BPW)
+
+	typedef struct {
+	    	unsigned long sig[_NSIG_WORDS];
+	    } sigset_t;</PRE>
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<table class="c" summary="Możliwości pobierania i ustawiania limitów">
+<caption><a name="sys_ulimit" id="sys_ulimit">Komendy dla funkcji sys_ulimit</a> (numer 58)
+ z <span class="b">/usr/include/ulimit.h</span>
+</caption>
+<TR> <TH id="ulim"> nazwa </TH> <TH id="ulim_w"> wartość </TH> <TH id="ulim_opis"> komenda </TH> </TR>
+
+<TR class="c"> <TD headers="ulim"> UL_GETFSIZE <br> </td> <TD headers="ulim_w"> 1 <br> </td>
+	<TD headers="ulim_opis"> pobierz limit rozmiaru pliku, w 512-bajtowych jednostkach <br> </td> </TR>
+<TR class="c"> <TD headers="ulim"> UL_SETFSIZE <br> </td> <TD headers="ulim_w"> 2 <br> </td>
+	<TD headers="ulim_opis"> ustaw limit rozmiaru pliku, w 512-bajtowych jednostkach <br> </td> </TR>
+<TR class="c"> <TD headers="ulim"> __UL_GETMAXBRK <br> </td> <TD headers="ulim_w"> 3 <br> </td>
+	<TD headers="ulim_opis"> (podobno nie w Linuksie) podaj najwyższy możliwy adres w segmencie danych <br> </td> </TR>
+<TR class="c"> <TD headers="ulim"> __UL_GETOPENMAX <br> </td> <TD headers="ulim_w"> 4 <br> </td>
+	<TD headers="ulim_opis"> podaj największą liczbę plików, którą ten proces może otworzyć <br> </td> </TR>
+</TABLE>
+
+
+
+<BR>
+<HR>
+
+<TABLE style="WIDTH:70%" class="c" summary="Rodzaje urządzeń">
+<caption><a name="mknod_typ" id="mknod_typ">Typ urządzenia</a> dla funkcji sys_mknod (numer 14)
+ z <span class="b">/usr/include/linux/stat.h</span></caption>
+<TR> <TH id="urz"> nazwa </TH> <TH id="urz_w"> ósemkowo </TH> <TH id="urz_opis"> typ urządzenia </TH> </TR>
+
+<TR class="c"> <TD headers="urz"> S_IFREG <br> </td> <TD headers="urz_w"> 0100000 <br> </td>
+	<TD headers="urz_opis"> normalny plik <br> </td> </TR>
+<TR class="c"> <TD headers="urz"> S_IFCHR <br> </td> <TD headers="urz_w"> 0020000 <br> </td>
+	<TD headers="urz_opis"> urządzenie znakowe <br> </td> </TR>
+<TR class="c"> <TD headers="urz"> S_IFBLK <br> </td> <TD headers="urz_w"> 0060000 <br> </td>
+	<TD headers="urz_opis"> urządzenie blokowe <br> </td> </TR>
+<TR class="c"> <TD headers="urz"> S_IFIFO <br> </td> <TD headers="urz_w"> 0010000 <br> </td>
+	<TD headers="urz_opis"> nazwany potok (named pipe) <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="utimbuf" id="utimbuf"
+>Struktura "utimbuf"</a> (funkcja 30) z <span class="b">/usr/include/linux/utime.h</span>:</P>
+
+<PRE>
+              struct utimbuf {
+                      time_t actime;  /* czas dostępu */
+                      time_t modtime; /* czas ostatniej zmiany */
+              };</PRE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="timeb" id="timeb"
+>Struktura "timeb"</a> (funkcja 35) z <span class="b">/usr/include/sys/timeb.h</span>:</P>
+
+<PRE>
+	struct timeb {
+		time_t   time;		/*liczba sekund od początku epoki*/
+		unsigned short millitm;	/* liczba milisekund od chwili
+					   time sekund */
+		short    timezone;	/* przesuniecie czasu dla strefy
+					   lokalnej w minutach na zachód
+					    od Greenwich */
+		short    dstflag;	/* różne od zera oznacza, że w
+					   danej części roku obowiązuje
+					   czas letni */
+                 };</PRE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="ustat" id="ustat"
+>Struktura "ustat"</a> (funkcja 62) z <span class="b">/usr/include/bits/ustat.h</span>:</P>
+
+<PRE>
+	struct ustat {
+		__daddr_t f_tfree; /* całkowita liczba wolnych bloków */
+		__ino_t f_tinode;  /* liczba wolnych węzłów i-node */
+		char f_fname[6];   /* nazwa systemu plików (nieużywane) */
+		char f_fpack[6];   /* nazwa paczki(?) systemu plików
+					 (nieużywane) */
+		  };</PRE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="swap_flagi" id="swap_flagi"
+>Flagi dla funkcji swapon</a> (numer 87) z <span class="b">/usr/include/sys/swap.h</span>:</P>
+
+<PRE>
+/* Priorytet przestrzeni wymiany swap jest kodowany tak:
+   (prio &lt;&lt; SWAP_FLAG_PRIO_SHIFT) &amp; SWAP_FLAG_PRIO_MASK
+*/
+#define SWAP_FLAG_PREFER        0x8000  /* Ustawiony, jeśli jest określony
+					   priorytet. Ustawienie tego bitu
+					   powoduje to, że nowa przestrzeń
+					   wymiany będzie miała wyższy
+					   priorytet */
+#define SWAP_FLAG_PRIO_MASK     0x7fff
+#define SWAP_FLAG_PRIO_SHIFT    0</PRE>
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+<table class="c" summary="Komendy resetowania komputera">
+<caption><a name="reboot_flagi" id="reboot_flagi">Flagi dla funkcji reboot</a> (numer 88)
+ z <span class="b">/usr/include/linux/reboot.h</span></caption>
+<TR> <TH id="reset"> nazwa </TH> <TH id="reset_w"> wartość </TH> <TH id="reset_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="reset"> LINUX_REBOOT_CMD_RESTART <br> </td> <TD headers="reset_w"> 0x01234567 <br> </td>
+	<TD headers="reset_opis"> reset systemu <br> </td> </TR>
+<TR class="c"> <TD headers="reset"> LINUX_REBOOT_CMD_HALT <br> </td> <TD headers="reset_w"> 0xCDEF0123 <br> </td>
+	<TD headers="reset_opis"> zatrzymanie systemu <br> </td> </TR>
+<TR class="c"> <TD headers="reset"> LINUX_REBOOT_CMD_CAD_ON <br> </td> <TD headers="reset_w"> 0x89ABCDEF <br> </td>
+	<TD headers="reset_opis"> włączenie obsługi Ctrl-Alt-Del <br> </td> </TR>
+<TR class="c"> <TD headers="reset"> LINUX_REBOOT_CMD_CAD_OFF <br> </td> <TD headers="reset_w"> 0x00000000 <br> </td>
+	<TD headers="reset_opis"> wyłączenie obsługi Ctrl-Alt-Del <br> </td> </TR>
+<TR class="c"> <TD headers="reset"> LINUX_REBOOT_CMD_POWER_OFF <br> </td> <TD headers="reset_w"> 0x4321FEDC <br> </td>
+	<TD headers="reset_opis"> wyłączenie zasilania <br> </td> </TR>
+<TR class="c"> <TD headers="reset"> LINUX_REBOOT_CMD_RESTART2 <br> </td> <TD headers="reset_w"> 0xA1B2C3D4 <br> </td>
+	<TD headers="reset_opis"> reset z użyciem komendy podanej jako dodatkowy argument <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="dirent" id="dirent"
+>Struktura "dirent"</a> (funkcja 89 i 141) z <span class="b">/usr/include/linux/dirent.h</span>:</P>
+
+<PRE>
+	struct dirent {
+		long d_ino;                 /* numer i-węzła */
+		off_t d_off;                /* offset od początku katalogu
+					do następnej struktury dirent
+					(do bieżącego dirent?) */
+		unsigned short d_reclen;    /* długość tego dirent
+						 (d_name?) */
+		char d_name [NAME_MAX+1];   /* nazwa pliku (zakończona
+						 znakiem zerowym) */
+              };</PRE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+<TABLE style="WIDTH:70%" class="c" summary="Rodzaje ochrony mapowania pamięci">
+<caption><a name="mmap_ochrona" id="mmap_ochrona">Rodzaje ochrony</a> mapowanych danych (funkcja 90)
+ z <span class="b">/usr/include/bits/mman.h</span></caption>
+<TR> <TH id="map_p"> nazwa </TH> <TH id="map_p_w"> wartość </TH> <TH id="map_p_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="map_p"> PROT_READ <br> </td> <TD headers="map_p_w"> 1 <br> </td> <TD headers="map_p_opis"> strona pamięci może być czytana <br> </td> </TR>
+<TR class="c"> <TD headers="map_p"> PROT_WRITE <br> </td> <TD headers="map_p_w"> 2 <br> </td> <TD headers="map_p_opis"> strona może być zapisywana <br> </td> </TR>
+<TR class="c"> <TD headers="map_p"> PROT_EXEC <br> </td> <TD headers="map_p_w"> 4 <br> </td> <TD headers="map_p_opis"> strona może być wykonywana <br> </td> </TR>
+<TR class="c"> <TD headers="map_p"> PROT_NONE <br> </td> <TD headers="map_p_w"> 0 <br> </td> <TD headers="map_p_opis"> nie ma dostępu do strony <br> </td> </TR>
+</TABLE>
+Można użyć OR, by połączyć więcej flag.<BR>
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+<table class="c" summary="Rodzaje mapowania danych">
+<caption><a name="mmap_flagi" id="mmap_flagi">Flagi mapowania danych</a> (funkcja 90)
+ z <span class="b">/usr/include/bits/mman.h</span></caption>
+<TR> <TH id="map_f"> nazwa </TH> <TH id="map_f_w"> wartość </TH> <TH id="map_f_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="map_f"> MAP_FIXED <br> </td> <TD headers="map_f_w"> 0x10 <br> </td>
+	<TD headers="map_f_opis"> Koniecznie użyj adresu podanego jako parametr <br> </td> </TR>
+<TR class="c"> <TD headers="map_f"> MAP_GROWSDOWN <br> </td> <TD headers="map_f_w"> 0x0100 <br> </td>
+	<TD headers="map_f_opis"> Segment typu stosowego ("rośnie" w dół) <br> </td> </TR>
+<TR class="c"> <TD headers="map_f"> MAP_DENYWRITE <br> </td> <TD headers="map_f_w"> 0x0800 <br> </td>
+	<TD headers="map_f_opis"> Ignorowane <br> </td> </TR>
+<TR class="c"> <TD headers="map_f"> MAP_EXECUTABLE <br> </td> <TD headers="map_f_w"> 0x1000 <br> </td>
+	<TD headers="map_f_opis"> Wykonywalny (ignorowane) <br> </td> </TR>
+<TR class="c"> <TD headers="map_f"> MAP_LOCKED <br> </td> <TD headers="map_f_w"> 0x2000 <br> </td>
+	<TD headers="map_f_opis"> Zablokuj mapowanie. Ignorowane. <br> </td> </TR>
+<TR class="c"> <TD headers="map_f"> MAP_NORESERVE <br> </td> <TD headers="map_f_w"> 0x4000 <br> </td>
+	<TD headers="map_f_opis"> Nie rezerwuj stron wymiany swap dla tego mapowania. <br> </td> </TR>
+<TR class="c"> <TD headers="map_f"> MAP_POPULATE <br> </td> <TD headers="map_f_w"> 0x8000 <br> </td>
+	<TD headers="map_f_opis"> Rozmnóż tablice stron? <br> </td> </TR>
+<TR class="c"> <TD headers="map_f"> MAP_NONBLOCK <br> </td> <TD headers="map_f_w"> 0x10000 <br> </td>
+	<TD headers="map_f_opis"> Nie blokuj w czasie we/wy. <br> </td> </TR>
+<TR class="c"> <TD headers="map_f"> MAP_FILE <br> </td> <TD headers="map_f_w"> 0 <br> </td>
+	<TD headers="map_f_opis"> użyj pliku? Ignorowane. <br> </td> </TR>
+<TR class="c"> <TD headers="map_f"> MAP_ANONYMOUS, MAP_ANON <br> </td> <TD headers="map_f_w"> 0x20 <br> </td>
+	<TD headers="map_f_opis"> Nie używaj pliku. Ignorowane są deskryptor pliku i parametr offset. Zaimplementowany od 2.4 <br> </td> </TR>
+</TABLE><BR>
+Wybrać tylko 1 spośród tych:
+<TABLE style="WIDTH:70%" class="c" summary="Rodzaje współdzielenia">
+<caption>Rodzaje współdzielenia</caption>
+<TR> <TH id="map_s"> nazwa </TH> <TH id="map_s_w"> wartość </TH> <TH id="map_s_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="map_s"> MAP_SHARED <br> </td> <TD headers="map_s_w"> 0x01 <br> </td>
+	<TD headers="map_s_opis"> współdzielenie zmian <br> </td> </TR>
+<TR class="c"> <TD headers="map_s"> MAP_PRIVATE <br> </td> <TD headers="map_s_w"> 0x02 <br> </td>
+	<TD headers="map_s_opis"> zmiany są prywatne <br> </td> </TR>
+</TABLE><BR>
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+<table class="c" summary="Określenie, czyj priorytet pobieramy/zmieniamy">
+<caption><a name="prio_which" id="prio_which">Parametry funkcji 96 i 97</a>
+ (z <span class="b">/usr/include/bits/resource.h</span>)</caption>
+<TR> <TH id="prio"> EBX = czyj priorytet pobieramy/zmieniamy </TH> <TH id="prio_w"> wartość w EBX </TH>
+	<TH id="prio_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="prio"> PRIO_PROCESS <br> </td> <TD headers="prio_w"> 0 <br> </td>
+	<TD headers="prio_opis"> ECX to ID procesu <br> </td> </TR>
+<TR class="c"> <TD headers="prio"> PRIO_PGRP <br> </td> <TD headers="prio_w"> 1 <br> </td>
+	<TD headers="prio_opis"> ECX to ID grupy procesów <br> </td> </TR>
+<TR class="c"> <TD headers="prio"> PRIO_USER <br> </td> <TD headers="prio_w"> 2 <br> </td>
+	<TD headers="prio_opis"> ECX to ID użytkownika <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="statfs" id="statfs"
+>Struktura "statfs"</a> (funkcja 99) z <span class="b">/usr/include/asm/statfs.h</span>:</P>
+<PRE>
+	struct statfs {
+		long    f_type;     /* typ systemu plików (patrz niżej) */
+		long    f_bsize;    /* optymalny rozmiar bloku transferu */
+		long    f_blocks;   /* całkowita liczba bloków danych */
+		long    f_bfree;    /* wolne bloki */
+		long    f_bavail;   /* wolne bloki dostępne dla
+					 nie-superużytkowników */
+		long    f_files;    /* całkowita liczba węzłów plików
+					 (<span lang="en">file nodes</span>) */
+		long    f_ffree;    /* wolne węzły */
+		fsid_t  f_fsid;     /* ID systemu plików */
+		long    f_namelen;  /* maks. długość nazwy pliku */
+		long    f_spare[6]; /* zapasowe na później */
+              };
+
+		struct
+	      {
+	        int __val[2];
+	      } __fsid_t;		/* typ struktury fsid_t powyżej */</PRE>
+
+<BR><BR>
+<table class="c" summary="Typy systemów plików">
+<caption>Typ systemu plików</caption>
+<TR> <TH id="syspl"> nazwa </TH> <TH id="syspl_w"> wartość </TH> </TR>
+
+<TR class="c"> <TD headers="syspl"> AFFS_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0xADFF <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> EXT_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x137D <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> EXT2_OLD_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0xEF51 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> EXT2_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0xEF53 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> HPFS_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0xF995E849 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> ISOFS_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x9660 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> MINIX_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x137F (oryg. minix) <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> MINIX_SUPER_MAGIC2 <br> </td> <TD headers="syspl_w"> 0x138F (30-znakowy minix) <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> MINIX2_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x2468 (minix V2) <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> MINIX2_SUPER_MAGIC2 <br> </td> <TD headers="syspl_w"> 0x2478 (minix V2, 30-znakowy) <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> MSDOS_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x4d44 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> NCP_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x564c <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> NFS_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x6969 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> PROC_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x9fa0 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> SMB_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x517B <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> XENIX_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x012FF7B4 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> SYSV4_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x012FF7B5 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> SYSV2_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x012FF7B6 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> COH_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x012FF7B7 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> UFS_MAGIC <br> </td> <TD headers="syspl_w"> 0x00011954 <br> </td> </TR>
+<TR class="c"> <TD headers="syspl"> _XIAFS_SUPER_MAGIC <br> </td> <TD headers="syspl_w"> 0x012FD16D <br> </td> </TR>
+</TABLE>
+
+
+
+
+<BR>
+<HR>
+
+<TABLE class="c" style="WIDTH:80%" summary="Funkcje logowania systemowego">
+<caption><a name="syslog_cmd" id="syslog_cmd">Komenda dla funkcji sys_syslog</a> (numer 103)
+ z <span class="b">/usr/src/linux/kernel/printk.c</span></caption>
+<TR class="c"> <TH id="sysl"> wartość </TH> <TH id="sysl_opis"> komentarz </TH> </TR>
+
+<TR class="c"> <TD headers="sysl"> 0 <br> </td>
+	<TD headers="sysl_opis"> Zamknij log. Nic nie robi. <br> </td> </TR>
+<TR class="c"> <TD headers="sysl"> 1 <br> </td>
+	<TD headers="sysl_opis"> Otwórz log. Nic nie robi. <br> </td> </TR>
+<TR class="c"> <TD headers="sysl"> 2 <br> </td>
+	<TD headers="sysl_opis"> Czytaj z logu co najwyżej EDX bajtów do [ECX]. Zwraca w EAX liczbę odczytanych bajtów. <br> </td> </TR>
+<TR class="c"> <TD headers="sysl"> 3 <br> </td>
+	<TD headers="sysl_opis"> Przeczytaj wszystkie (ostatnie EDX bajtów) wiadomości pozostałe w buforze. Zwraca w EAX liczbę odczytanych bajtów. <br> </td> </TR>
+<TR class="c"> <TD headers="sysl"> 4 <br> </td>
+	<TD headers="sysl_opis"> Przeczytaj i wyczyść wszystkie (ostatnie EDX bajtów) wiadomości pozostałe w buforze. Zwraca w EAX liczbę odczytanych bajtów. <br> </td> </TR>
+<TR class="c"> <TD headers="sysl"> 5 <br> </td>
+	<TD headers="sysl_opis"> Wyczyść bufor. <br> </td> </TR>
+<TR class="c"> <TD headers="sysl"> 6 <br> </td>
+	<TD headers="sysl_opis"> Wyłącz funkcję printk() na konsolę. <br> </td> </TR>
+<TR class="c"> <TD headers="sysl"> 7 <br> </td>
+	<TD headers="sysl_opis"> Włącz funkcję printk() na konsolę. <br> </td> </TR>
+<TR class="c"> <TD headers="sysl"> 8 <br> </td>
+	<TD headers="sysl_opis"> Ustal poziom logowania wiadomości wysyłanych na konsolę. <br> </td> </TR>
+</TABLE>
+
+
+
+
+<BR>
+<HR>
+
+
+<TABLE class="c" style="WIDTH:70%" summary="Rodzaje czasomierzy i jaki czas one liczą">
+<caption><a name="itimer" id="itimer">Numer czasomierza</a> (funkcja 104)
+ z <span class="b">/usr/include/linux/time.h</span></caption>
+<TR class="c"> <TH id="itim"> nazwa </TH> <TH id="itim_w"> wartość </TH> <TH id="itim_opis"> komentarz </TH> </TR>
+
+<TR class="c"> <TD headers="itim">ITIMER_REAL <br> </td> <TD headers="itim_w"> 0 <br> </td>
+	<TD headers="itim_opis"> odlicza czas rzeczywisty <br> </td> </TR>
+<TR class="c"> <TD headers="itim">ITIMER_VIRTUAL <br> </td> <TD headers="itim_w"> 1 <br> </td>
+	<TD headers="itim_opis"> odlicza czas wykonywania się procesu <br> </td> </TR>
+<TR class="c"> <TD headers="itim">ITIMER_PROF <br> </td> <TD headers="itim_w"> 2 <br> </td>
+	<TD headers="itim_opis"> odlicza oba czasy <br> </td> </TR>
+</TABLE>
+
+
+
+
+<BR>
+<HR>
+<P><a name="itimerval" id="itimerval"
+>Struktura "itimerval"</a> (funkcja 104) z <span class="b">/usr/include/linux/time.h</span>:</P>
+<PRE>
+	struct itimerval {
+                struct timeval it_interval; /* następna wartość? */
+                struct timeval it_value;    /* obecna wartość */
+            };
+
+	struct timeval {
+                long tv_sec;                /* sekundy */
+                long tv_usec;               /* mikrosekundy */
+            };</PRE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="stat" id="stat"
+>Struktura "stat"</a> (funkcja 104) z <span class="b">man 2 stat</span>
+ (i <span class="b">/usr/include/asm/stat.h</span>, gdzie zwykle dane są
+ bardziej adekwatne do posiadanego systemu, niż na stronach manuala):</P>
+<PRE>
+		/* ze strony manuala: */
+              struct stat {
+                  dev_t         st_dev;      /* urządzenie */
+                  ino_t         st_ino;      /* i-węzeł (inode) */
+                  umode_t       st_mode;     /* ochrona */
+                  nlink_t       st_nlink;    /* liczba dowiązań stałych
+                  				 (hardlinks) */
+                  uid_t         st_uid;      /*ID użytkownika właściciela*/
+                  gid_t         st_gid;      /* ID grupy właściciela */
+                  dev_t         st_rdev;     /* typ urządzenia (jeśli
+                  				 urządzenie inode) */
+                  off_t         st_size;     /* całkowity rozmiar
+                  				w bajtach */
+                  unsigned long st_blksize;  /* wielkość bloku dla I/O
+                  				 systemu plików */
+                  unsigned long st_blocks;   /*liczba zaalokowanych bloków*/
+                  time_t        st_atime;    /* czas ostatniego dostępu */
+                  time_t        st_mtime;    /*czas ostatniej modyfikacji*/
+                  time_t        st_ctime;    /* czas ostatniej zmiany */
+              };
+
+		/* z pliku /usr/include/asm/stat.h: */
+		struct stat {
+			unsigned long  st_dev;
+			unsigned long  st_ino;
+			unsigned short st_mode;
+			unsigned short st_nlink;
+			unsigned short st_uid;
+			unsigned short st_gid;
+			unsigned long  st_rdev;
+			unsigned long  st_size;
+			unsigned long  st_blksize;
+			unsigned long  st_blocks;
+			unsigned long  st_atime;
+			unsigned long  st_atime_nsec;
+			unsigned long  st_mtime;
+			unsigned long  st_mtime_nsec;
+			unsigned long  st_ctime;
+			unsigned long  st_ctime_nsec;
+			unsigned long  __unused4;
+			unsigned long  __unused5;
+		};</PRE>
+
+<BR><BR>
+
+<TABLE class="c" summary="Tryby dostępu">
+<caption>Możliwe wartości pola st_mode</caption>
+<TR class="c"> <TH id="acc"> nazwa </TH> <TH id="acc_w"> ósemkowo </TH> <TH id="acc_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="acc">S_IFMT <br> </td> <TD headers="acc_w">00170000 <br> </td>
+	<TD headers="acc_opis">maska bitowa dla pól bitowych typu pliku <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IFSOCK <br> </td> <TD headers="acc_w">0140000 <br> </td>
+	<TD headers="acc_opis">gniazdo <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IFLNK <br> </td> <TD headers="acc_w">0120000 <br> </td>
+	<TD headers="acc_opis">dowiązanie symboliczne (symbolic link) <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IFREG <br> </td> <TD headers="acc_w">0100000 <br> </td>
+	<TD headers="acc_opis">plik regularny <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IFBLK <br> </td> <TD headers="acc_w">0060000 <br> </td>
+	<TD headers="acc_opis">urządzenie blokowe <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IFDIR <br> </td> <TD headers="acc_w">0040000 <br> </td>
+	<TD headers="acc_opis">katalog <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IFCHR <br> </td> <TD headers="acc_w">0020000 <br> </td>
+	<TD headers="acc_opis">urządzenie znakowe <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IFIFO <br> </td> <TD headers="acc_w">0010000 <br> </td>
+	<TD headers="acc_opis">fifo <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_ISUID <br> </td> <TD headers="acc_w">0004000 <br> </td>
+	<TD headers="acc_opis">bit 'set UID' <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_ISGID <br> </td> <TD headers="acc_w">0002000 <br> </td>
+	<TD headers="acc_opis">bit 'set GID' <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_ISVTX <br> </td> <TD headers="acc_w">0001000 <br> </td>
+	<TD headers="acc_opis">bit 'sticky' <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IRWXU <br> </td> <TD headers="acc_w">00700 <br> </td>
+	<TD headers="acc_opis">użytkownik  (właściciel pliku) ma prawa odczytu, zapisu i wykonania <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IRUSR (S_IREAD) <br> </td> <TD headers="acc_w">00400 <br> </td>
+	<TD headers="acc_opis">użytkownik ma prawa odczytu <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IWUSR (S_IWRITE) <br> </td> <TD headers="acc_w">00200 <br> </td>
+	<TD headers="acc_opis">użytkownik ma prawa zapisu <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IXUSR (S_IEXEC) <br> </td> <TD headers="acc_w">00100 <br> </td>
+	<TD headers="acc_opis">użytkownik ma prawa wykonania <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IRWXG <br> </td> <TD headers="acc_w">0070 <br> </td>
+	<TD headers="acc_opis">grupa ma prawa odczytu, zapisu i wykonania <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IRGRP (S_IREAD) <br> </td> <TD headers="acc_w">0040 <br> </td>
+	<TD headers="acc_opis">grupa ma prawa odczytu <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IWGRP (S_IWRITE) <br> </td> <TD headers="acc_w">0020 <br> </td>
+	<TD headers="acc_opis">grupa ma prawa zapisu <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IXGRP (S_IEXEC) <br> </td> <TD headers="acc_w">0010 <br> </td>
+	<TD headers="acc_opis">użytkownik ma prawa wykonania <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IRWXO <br> </td> <TD headers="acc_w">007 <br> </td>
+	<TD headers="acc_opis">inni mają prawa odczytu, zapisu i wykonania <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IROTH (S_IREAD) <br> </td> <TD headers="acc_w">004 <br> </td>
+	<TD headers="acc_opis">inni mają prawa odczytu <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IWOTH (S_IWRITE) <br> </td> <TD headers="acc_w">002 <br> </td>
+	<TD headers="acc_opis">inni mają prawa zapisu <br> </td> </TR>
+<TR class="c"> <TD headers="acc">S_IXOTH (S_IEXEC) <br> </td> <TD headers="acc_w">001 <br> </td>
+	<TD headers="acc_opis">inni mają prawa wykonania <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="vm86_struct" id="vm86_struct"
+>Struktura "vm86_struct"</a> (funkcja 113) z <span class="b">/usr/include/asm/vm86.h</span>:</P>
+<PRE>
+	struct vm86_struct {
+	        struct vm86_regs regs;
+	        unsigned long flags;
+        	unsigned long screen_bitmap;
+        	unsigned long cpu_type;
+        	struct revectored_struct int_revectored;
+        	struct revectored_struct int21_revectored;
+	};
+
+	struct vm86_regs {
+	/*
+ 	 * normalne rejestry, ze specjalnym znaczeniem dla
+ 	 	rej.segmentowych i deskryptorów
+ 	 */
+        	long ebx;
+        	long ecx;
+        	long edx;
+        	long esi;
+        	long edi;
+        	long ebp;
+        	long eax;
+        	long __null_ds;
+        	long __null_es;
+        	long __null_fs;
+        	long __null_gs;
+        	long orig_eax;
+        	long eip;
+        	unsigned short cs, __csh;
+        	long eflags;
+        	long esp;
+        	unsigned short ss, __ssh;
+	/*
+	 * te są specyficzne dla trybu v86:
+	 */
+        	unsigned short es, __esh;
+        	unsigned short ds, __dsh;
+        	unsigned short fs, __fsh;
+        	unsigned short gs, __gsh;
+	};
+
+	struct revectored_struct {
+        	unsigned long __map[8];            /* 256 bitów */
+	};</PRE>
+
+
+
+
+
+
+<BR>
+<HR>
+
+<P>
+<a name="wait_opcje" id="wait_opcje">Opcje dla funkcji typu "wait"</a>
+ (numer 7 i 114) to wartość 0 lub jedna lub
+ więcej tych opcji (z <span class="b">/usr/include/bits/waitflags.h</span>):
+
+</P>
+<TABLE class="c" style="WIDTH:80%" summary="Możliwe rodzaje czekania funkcji wait">
+<caption>Opcje dla funkcji typu "wait"</caption>
+<TR class="c"> <TH id="wait"> nazwa </TH> <TH id="wait_w"> wartość </TH> <TH id="wait_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="wait"> WNOHANG <br> </td> <TD headers="wait_w"> 1 <br> </td>
+	<TD headers="wait_opis"> nie blokuj czekania, wraca natychmiast, gdy żaden potomek się nie zakończył. <span class="b">Tylko dla sys_wait/pid</span> <br> </td> </TR>
+<TR class="c"> <TD headers="wait"> WUNTRACED <br> </td> <TD headers="wait_w"> 2 <br> </td>
+	<TD headers="wait_opis"> podaj status zatrzymanych procesów potomnych. <span class="b">Tylko dla sys_wait, sys_waitpid</span> <br> </td> </TR>
+<TR class="c"> <TD headers="wait"> WCONTINUED <br> </td> <TD headers="wait_w"> 8 <br> </td>
+	<TD headers="wait_opis"> czekaj na zatrzymanych potomków, wznowionych sygnałem SIGCONT <br> </td> </TR>
+<TR class="c"> <TD headers="wait"> WSTOPPED <br> </td> <TD headers="wait_w"> 2 <br> </td>
+	<TD headers="wait_opis"> czekaj na potomków zatrzymanych przez sygnał. <span class="b">Tylko dla sys_waitid</span> <br> </td> </TR>
+<TR class="c"> <TD headers="wait"> WEXITED <br> </td> <TD headers="wait_w"> 4 <br> </td>
+	<TD headers="wait_opis"> czekaj na zakończenie potomków. <span class="b">Tylko dla sys_waitid</span> <br> </td> </TR>
+<TR class="c"> <TD headers="wait"> WNOWAIT <br> </td> <TD headers="wait_w"> 0x01000000 <br> </td>
+	<TD headers="wait_opis"> tylko pobierz status. <span class="b">Tylko dla sys_waitid</span> <br> </td> </TR>
+<TR class="c"> <TD headers="wait"> __WNOTHREAD <br> </td> <TD headers="wait_w"> 0x20000000 <br> </td>
+	<TD headers="wait_opis"> nie czekaj na potomków innych wątków grupy. <span class="b">Tylko dla sys_waitid</span> <br> </td> </TR>
+<TR class="c"> <TD headers="wait"> __WALL <br> </td> <TD headers="wait_w"> 0x40000000 <br> </td>
+	<TD headers="wait_opis"> czekaj na któregokolwiek z potomków. <span class="b">Tylko dla sys_waitid</span> <br> </td> </TR>
+<TR class="c"> <TD headers="wait"> __WCLONE <br> </td> <TD headers="wait_w"> 0x80000000 <br> </td>
+	<TD headers="wait_opis"> czekaj na sklonowane procesy. <span class="b">Tylko dla sys_waitid</span> <br> </td> </TR>
+</TABLE>
+
+
+
+
+<BR>
+<HR>
+
+<P>
+<a name="sysinfo" id="sysinfo">Struktura sysinfo</a> (funkcja 116)
+ z <span class="b">/usr/include/linux/kernel.h</span>:</P>
+<PRE>
+	(pre 2.3.16, wszystkie rozmiary w bajtach):
+
+	struct sysinfo {
+                   long uptime;             /* liczba sekund od startu
+                   				 systemu */
+                   unsigned long loads[3];  /* średnie obciążenie w ciągu
+                   				 1, 5 i 15 minut */
+                   unsigned long totalram;  /* ilość pamięci */
+                   unsigned long freeram;   /* ilość wolnej pamięci */
+                   unsigned long sharedram; /* ilość pamięci wspólnej */
+                   unsigned long bufferram; /* pamięć wykorzystywana
+                   				 przez bufory */
+                   unsigned long totalswap; /* ilość pamięci wymiany */
+                   unsigned long freeswap;  /* ilość wolnej
+                   				 pamięci wymiany */
+                   unsigned short procs;    /* liczba procesów */
+                   char _f[22];             /* dopełnienie do 64 bajtów */
+              };
+
+	(od 2.3.48, rozmiary w krotnościach mem_unit?)
+
+	struct sysinfo {
+                   long uptime;             /* liczba sekund od startu
+                   				 systemu */
+                   unsigned long loads[3];  /* średnie obciążenie w ciągu
+                   				 1, 5 i 15 minut */
+                   unsigned long totalram;  /* ilość pamięci */
+                   unsigned long freeram;   /* ilość wolnej pamięci */
+                   unsigned long sharedram; /* ilość pamięci wspólnej */
+                   unsigned long bufferram; /* pamięć wykorzystywana
+                   				przez bufory */
+                   unsigned long totalswap; /* ilość pamięci wymiany */
+                   unsigned long freeswap;  /* ilość wolnej
+                   				 pamięci wymiany */
+                   unsigned short procs;    /* liczba procesów */
+                   unsigned long totalhigh; /* ilość pamięci wysokiej */
+                   unsigned long freehigh;  /* ilość wolnej
+                   				 pamięci wysokiej */
+                   unsigned int mem_unit;   /* wielkość jednostki pamięci
+                   				 w bajtach */
+ 				/* dopełnienie dla libc5 */
+                    char _f[20-2*sizeof(long)-sizeof(int)];
+              };</PRE>
+
+
+
+
+
+<BR>
+<HR>
+
+<P>
+<a name="flagi_klonowania" id="flagi_klonowania">Flagi dla funkcji 120</a>
+ (dla jądra 2.4.18?) z <span class="b">/usr/include/linux/sched.h</span>:
+
+</P>
+<TABLE class="c" summary="Flagi klonowania">
+<caption>Flagi klonowania</caption>
+<TR class="c"> <TH id="kl_f"> nazwa </TH> <TH id="kl_f_w"> wartość </TH> <TH id="kl_f_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="kl_f"> CSIGNAL <br> </td> <TD headers="kl_f_w"> 0x000000ff <br> </td>
+	<TD headers="kl_f_opis">maska sygnałów do wysłania przy wychodzeniu <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_VM <br> </td> <TD headers="kl_f_w"> 0x00000100 <br> </td>
+	<TD headers="kl_f_opis">gdy VM jest dzielone między procesy <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_FS <br> </td> <TD headers="kl_f_w"> 0x00000200 <br> </td>
+	<TD headers="kl_f_opis">gdy informacje o systemie plików jest dzielone między procesy <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_FILES <br> </td> <TD headers="kl_f_w"> 0x00000400 <br> </td>
+	<TD headers="kl_f_opis">gdy otwarte pliki są dzielone między procesy <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_SIGHAND <br> </td> <TD headers="kl_f_w"> 0x00000800 <br> </td>
+	<TD headers="kl_f_opis">gdy dzielone są procedury obsługi sygnałów i blokowane sygnały <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_PID <br> </td> <TD headers="kl_f_w"> 0x00001000 <br> </td>
+	<TD headers="kl_f_opis">gdy PID jest dzielony między procesy <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_PTRACE <br> </td> <TD headers="kl_f_w"> 0x00002000 <br> </td>
+	<TD headers="kl_f_opis">jeśli chcemy, aby klon też mógł być śledzony <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_VFORK <br> </td> <TD headers="kl_f_w"> 0x00004000 <br> </td>
+	<TD headers="kl_f_opis"> jeśli klonujący chce, by proces potomny go obudził przy mm_release <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_PARENT <br> </td> <TD headers="kl_f_w"> 0x00008000 <br> </td>
+	<TD headers="kl_f_opis">jeśli klon ma mieć tego samego rodzica, co klonujący <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_THREAD <br> </td> <TD headers="kl_f_w"> 0x00010000 <br> </td>
+	<TD headers="kl_f_opis">Ta sama grupa wątków? <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_NEWNS <br> </td> <TD headers="kl_f_w"> 0x00020000 <br> </td>
+	<TD headers="kl_f_opis">Nowa grupa przestrzeni nazw?? <br> </td> </TR>
+<TR class="c"> <TD headers="kl_f"> CLONE_SIGNAL <br> </td> <TD headers="kl_f_w"> (CLONE_SIGHAND | CLONE_THREAD) <br> </td>
+	<TD headers="kl_f_opis"> Połączenie tych dwóch: ta sama grupa wątków oraz
+		gdy dzielone są procedury obsługi sygnałów i blokowane sygnały <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+
+<P>
+<a name="utsname" id="utsname">Struktura utsname</a> (funkcja 122)
+ z <span class="b">/usr/include/sys/utsname.h</span>:
+
+</P>
+<PRE>
+	#define _UTSNAME_LENGTH 65      /* wszystkie tablice poniżej
+						 są tej długości */
+
+	struct utsname  {
+    		/* Nazwa implementacji systemu operacyjnego.  */
+    		char sysname[_UTSNAME_SYSNAME_LENGTH];
+
+    		/* Nazwa tego komputera w sieci.  */
+    		char nodename[_UTSNAME_NODENAME_LENGTH];
+
+    		/* Wydanie (release) tej implementacji.  */
+    		char release[_UTSNAME_RELEASE_LENGTH];
+    		/* Wersja tego wydania.  */
+    		char version[_UTSNAME_VERSION_LENGTH];
+
+    		/* Nazwa sprzętu, na który system pracuje.  */
+    		char machine[_UTSNAME_MACHINE_LENGTH];
+
+	#if _UTSNAME_DOMAIN_LENGTH - 0
+	    /* Nazwa domeny tego komputera w sieci.  */
+	# ifdef __USE_GNU
+	    char domainname[_UTSNAME_DOMAIN_LENGTH];
+	# else
+	    char __domainname[_UTSNAME_DOMAIN_LENGTH];
+	# endif
+	#endif
+	  };</PRE>
+
+
+
+
+
+<BR>
+<HR>
+
+<P>
+<a name="modify_ldt" id="modify_ldt">Numery funkcji dla modify_ldt</a> (funkcja 123)
+
+</P>
+<TABLE class="c" style="WIDTH:70%" summary="Funkcje zmiany Lokalnej Tablicy Deskryptorów">
+<caption>Funkcje zmiany Lokalnej Tablicy Deskryptorów</caption>
+<TR class="c"><TH id="ldt"> wartość </TH> <TH id="ldt_opis"> co oznacza </TH> </TR>
+
+<TR class="c"><TD headers="ldt"> 0 <br> </td> <TD headers="ldt_opis">Czytaj LDT do [ECX], EDX bajtów <br> </td> </TR>
+<TR class="c"><TD headers="ldt"> 1 <br> </td> <TD headers="ldt_opis">Zmień 1 wpis w LDT. ECX ma adres struktury <A HREF="#modify_ldt_ldt_s">modify_ldt_ldt_s</A>, a EDX - jej rozmiar <br> </td> </TR>
+<TR class="c"><TD headers="ldt"> 2 <br> </td> <TD headers="ldt_opis">Czytaj domyślne LDT do [ECX], EDX bajtów <br> </td> </TR>
+<TR class="c"><TD headers="ldt"> 17 <br> </td> <TD headers="ldt_opis">Zmień 1 wpis w LDT. ECX ma adres struktury <A HREF="#modify_ldt_ldt_s">modify_ldt_ldt_s</A>, a EDX - jej rozmiar (?) <br> </td> </TR>
+</TABLE>
+
+<P><a name="modify_ldt_ldt_s" id="modify_ldt_ldt_s"
+>Struktura "modify_ldt_ldt_s"</a> (funkcja 123) z <span class="b">/usr/include/asm/ldt.h</span>:</P>
+<PRE>
+	struct modify_ldt_ldt_s {
+	        unsigned int  entry_number;
+	        unsigned long base_addr;
+	        unsigned int  limit;
+	        unsigned int  seg_32bit:1;
+	        unsigned int  contents:2;
+	        unsigned int  read_exec_only:1;
+	        unsigned int  limit_in_pages:1;
+	        unsigned int  seg_not_present:1;
+	        unsigned int  useable:1;
+	};</PRE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="timex" id="timex"
+>Struktura "timex"</a> (funkcja 124) z <span class="b">man 2 adjtimex</span>
+ (w <span class="b">/usr/include/linux/timex.h</span> jest trochę większa):</P>
+<PRE>
+	struct timex {
+		int modes;           /* przełącznik trybu */
+		long offset;         /* offset czasu (mikrosekundy) */
+		long frequency;      /* offset częstotliwości
+					 (skalowany ppm) */
+		long maxerror;       /* maksymalny błąd (mikrosekundy) */
+		long esterror;       /* obliczony błąd (mikrosekundy) */
+		int status;          /* komenda/status zegara */
+		long constant;       /* stała czasu pll */
+		long precision;      /* dokładność zegara (mikrosekundy)
+					 (tylko do odczytu) */
+		long tolerance;      /* tolerancja częstotliwości
+					 zegara (ppm) (tylko do odczytu) */
+		struct timeval time; /* aktualny czas (tylko do odczytu) */
+		long tick;           /* czas miedzy tyknięciami
+					 zegara (mikrosekundy) */
+              };</PRE>
+
+<P>Pole "modes" określa, które parametry (jeśli w ogóle) ustawić.  Może  ono
+zawierać  bitowe OR  kombinacji  zera  lub  więcej spośród następujących
+wartości:</P>
+<TABLE style="WIDTH:70%" class="c" summary="Co można ustawić w strukturze timex">
+<caption>Wartości pola "modes"</caption>
+<TR class="c"> <TH id="timx"> nazwa </TH> <TH id="timx_w"> wartość </TH> <TH id="timx_o"> opis </TH> </TR>
+
+<TR class="c"> <TD headers="timx"> ADJ_OFFSET <br> </td> <TD headers="timx_w"> 0x0001 <br> </td>
+	<TD headers="timx_o"> offset czasu <br> </td> </TR>
+<TR class="c"> <TD headers="timx"> ADJ_FREQUENCY <br> </td> <TD headers="timx_w"> 0x0002 <br> </td>
+	<TD headers="timx_o"> offset częstotliwości <br> </td> </TR>
+<TR class="c"> <TD headers="timx"> ADJ_MAXERROR <br> </td> <TD headers="timx_w"> 0x0004 <br> </td>
+	<TD headers="timx_o"> maksymalny błąd czasu <br> </td> </TR>
+<TR class="c"> <TD headers="timx"> ADJ_ESTERROR <br> </td> <TD headers="timx_w"> 0x0008 <br> </td>
+	<TD headers="timx_o"> obliczany błąd czasu <br> </td> </TR>
+<TR class="c"> <TD headers="timx"> ADJ_STATUS <br> </td> <TD headers="timx_w"> 0x0010 <br> </td>
+	<TD headers="timx_o"> status zegara <br> </td> </TR>
+<TR class="c"> <TD headers="timx"> ADJ_TIMECONST <br> </td> <TD headers="timx_w"> 0x0020 <br> </td>
+	<TD headers="timx_o"> stała czasu pll <br> </td> </TR>
+<TR class="c"> <TD headers="timx"> ADJ_TICK <br> </td> <TD headers="timx_w"> 0x4000 <br> </td>
+	<TD headers="timx_o"> wartość tyknięcia <br> </td> </TR>
+<TR class="c"> <TD headers="timx"> ADJ_OFFSET_SINGLESHOT <br> </td> <TD headers="timx_w"> 0x8001 <br> </td>
+	<TD headers="timx_o"> staromodne adjtime <br> </td> </TR>
+</TABLE>
+
+<P>Zwyczajni  użytkownicy  są  ograniczeni  do  wartości  zero  dla  "modes".
+Jedynie superużytkownik może ustawiać jakiekolwiek parametry.</P>
+
+<P>Jeśli nie wystąpił błąd, zwracane jest:</P>
+<TABLE style="WIDTH:60%" class="c" summary="Możliwe wyniki działania i stan zegara">
+<caption>Możliwe wyniki działania i stan zegara</caption>
+<TR class="c"> <TH id="timx_r"> nazwa </TH> <TH id="timx_r_w"> wartość </TH> <TH id="timx_r_opis"> opis </TH> </TR>
+
+<TR class="c"> <TD headers="timx_r"> TIME_OK <br> </td> <TD headers="timx_r_w"> 0 <br> </td>
+	<TD headers="timx_r_opis"> zegar zsynchronizowany <br> </td> </TR>
+<TR class="c"> <TD headers="timx_r"> TIME_INS <br> </td> <TD headers="timx_r_w"> 1 <br> </td>
+	<TD headers="timx_r_opis"> dodaj sekundę przestępną <br> </td> </TR>
+<TR class="c"> <TD headers="timx_r"> TIME_DEL <br> </td> <TD headers="timx_r_w"> 2 <br> </td>
+	<TD headers="timx_r_opis"> skasuj sekundę przestępną <br> </td> </TR>
+<TR class="c"> <TD headers="timx_r"> TIME_OOP <br> </td> <TD headers="timx_r_w"> 3 <br> </td>
+	<TD headers="timx_r_opis"> sekunda przestępna trwa <br> </td> </TR>
+<TR class="c"> <TD headers="timx_r"> TIME_WAIT <br> </td> <TD headers="timx_r_w"> 4 <br> </td>
+	<TD headers="timx_r_opis"> wystąpiła sekunda przestępna <br> </td> </TR>
+<TR class="c"> <TD headers="timx_r"> TIME_BAD <br> </td> <TD headers="timx_r_w"> 5 <br> </td>
+	<TD headers="timx_r_opis"> błąd, zegar nie zsynchronizowany <br> </td> </TR>
+</TABLE>
+<P>Więcej informacji w <span class="b">/usr/include/linux/timex.h</span>.</P>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="sigprocmask" id="sigprocmask"
+>Akcja do wykonania</a> (funkcja 126) z <span class="b">/usr/include/asm/signal.h</span>:</P>
+
+<TABLE style="width:80%"  class="c" summary="Zmiana bieżącego zestawu sygnałów blokowanych">
+<caption>Możliwe zmiany bieżącego zestawu sygnałów blokowanych</caption>
+<TR class="c"> <TH id="sigpm"> nazwa </TH> <TH id="sigpm_w"> wartość </TH> <TH id="sigpm_opis"> opis </TH> </TR>
+
+<TR class="c"> <TD headers="sigpm"> SIG_BLOCK <br> </td> <TD headers="sigpm_w"> 0 <br> </td>
+	<TD headers="sigpm_opis"> Do aktualnego zestawu sygnałów blokowanych dodaj te spod [ECX]. <br> </td> </TR>
+<TR class="c"> <TD headers="sigpm"> SIG_UNBLOCK <br> </td> <TD headers="sigpm_w"> 1 <br> </td>
+	<TD headers="sigpm_opis">Od aktualnego zestawu sygnałów blokowanych usuń te spod [ECX]. <br> </td> </TR>
+<TR class="c"> <TD headers="sigpm"> SIG_SETMASK <br> </td> <TD headers="sigpm_w"> 2 <br> </td>
+	<TD headers="sigpm_opis">Aktualny zestaw sygnałów blokowanych zamień na ten spod [ECX]. <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="module" id="module"
+>Struktura "module"</a> (funkcja 128) z <span class="b">man module</span>:</P>
+<PRE>
+	struct module {
+                unsigned long size_of_struct;
+                struct module *next;
+                const char *name;
+                unsigned long size;
+                long usecount;
+                unsigned long flags;
+                unsigned int nsyms;
+                unsigned int ndeps;
+                struct module_symbol *syms;
+                struct module_ref *deps;
+                struct module_ref *refs;
+                int (*init)(void);
+                void (*cleanup)(void);
+                const struct exception_table_entry *ex_table_start;
+                const struct exception_table_entry *ex_table_end;
+              #ifdef __alpha__
+                unsigned long gp;
+              #endif
+              };</PRE>
+
+<P>Więcej w <span class="b">/usr/include/linux/module.h</span>.</P>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="kernel_sym" id="kernel_sym"
+>Struktura "kernel_sym"</a> (funkcja 130) z <span class="b">/usr/include/linux/module.h</span>:</P>
+<PRE>
+	struct kernel_sym {
+        	unsigned long value;
+        	char name[60];
+	};</PRE>
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="quotactl" id="quotactl"
+>Komenda do wykonania</a> (funkcja 131) z <span class="b">/usr/include/sys/quota.h</span>
+ (w nawiasach z <span class="b">/usr/include/linux/quota.h</span>):</P>
+<table class="c" summary="Zarządzanie limitami dyskowymi">
+<caption>Opcje limitów dyskowych</caption>
+<TR class="c"> <TH id="quota"> nazwa </TH> <TH id="quota_w"> wartość </TH> <TH id="quota_opis"> opis </TH> </TR>
+
+<TR class="c"> <TD headers="quota"> Q_QUOTAON <br> </td> <TD headers="quota_w"> 0x0100 (0x800002) <br> </td>
+	<TD headers="quota_opis"> Włącz limity dyskowe. ESI = adres nazwy pliku zawierającego limity. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_QUOTAOFF <br> </td> <TD headers="quota_w"> 0x0200 (0x800003) <br> </td>
+	<TD headers="quota_opis">Wyłącz limity. EDX i ESI ignorowane. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_GETQUOTA <br> </td> <TD headers="quota_w"> 0x0300 (0x800007) <br> </td>
+	<TD headers="quota_opis">Pobierz limity i bieżące zapełnienie dla użytkownika/grupy EDX. ESI = adres struktury mem_dqblk. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_SETQUOTA <br> </td> <TD headers="quota_w"> 0x0400 (0x800008) <br> </td>
+	<TD headers="quota_opis">Ustaw limity i bieżące zapełnienie dla użytkownika/grupy EDX. ESI = adres struktury mem_dqblk. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_SETQLIM <br> </td> <TD headers="quota_w"> 0x0700 (brak) <br> </td>
+	<TD headers="quota_opis">Ustaw limity dla użytkownika/grupy EDX. ESI = adres struktury mem_dqblk. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_SETUSE <br> </td> <TD headers="quota_w"> 0x0500 (brak) <br> </td>
+	<TD headers="quota_opis">Ustaw bieżące zapełnienie dla użytkownika/grupy EDX. ESI = adres struktury mem_dqblk. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_SYNC <br> </td> <TD headers="quota_w"> 0x0600 (0x800001) <br> </td>
+	<TD headers="quota_opis">Aktualizuj kopię quot dla systemu plików. Jeśli ECX=0, synchronizowane są wszystkie systemy plików z włączoną quotą. EDX i ESI ignorowane. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_GETSTATS <br> </td> <TD headers="quota_w"> 0x0800 <br> </td>
+	<TD headers="quota_opis">Pobierz statystyki i ogólne informacje o quocie. ESI = adres struktury dqstats. ECX i EDX ignorowane. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_GETINFO <br> </td> <TD headers="quota_w"> brak (0x800005) <br> </td>
+	<TD headers="quota_opis">Pobierz informacje o pliku z quotami?. ESI = adres struktury mem_dqinfo. EDX ignorowane. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_SETINFO <br> </td> <TD headers="quota_w"> brak (0x800006) <br> </td>
+	<TD headers="quota_opis">Ustaw informacje o pliku z quotami?. ESI = adres struktury mem_dqinfo. EDX ignorowane. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_SETGRACE <br> </td> <TD headers="quota_w"> brak (brak) <br> </td>
+	<TD headers="quota_opis">Ustal "grace times" w pliku z quotami?. ESI = adres struktury mem_dqinfo. EDX ignorowane. <br> </td> </TR>
+<TR class="c"> <TD headers="quota"> Q_SETFLAGS <br> </td> <TD headers="quota_w"> brak (brak) <br> </td>
+	<TD headers="quota_opis">Ustal flagi w informacji o pliku z quotami?. ESI = adres struktury mem_dqinfo. EDX ignorowane. <br> </td> </TR>
+
+</TABLE>
+<P>Na systemie plików XFS komendy są inne.</P>
+<PRE>
+	struct mem_dqblk {
+	        __u32 dqb_bhardlimit;   /* bezwzględny limit zajętych
+	        				 bloków na dysku */
+	        __u32 dqb_bsoftlimit;   /* preferowany limit zajętych
+	        				 bloków na dysku */
+	        qsize_t dqb_curspace;   /* bieżący rozmiar zajmowanej
+	        				 przestrzeni */
+	        __u32 dqb_ihardlimit;   /* bezwzględny limit zajętych
+						węzłów (i-nodes) na dysku*/
+	        __u32 dqb_isoftlimit;   /* preferowany limit zajętych
+	        				 węzłów na dysku */
+	        __u32 dqb_curinodes;    /*bieżąca liczba zajętych węzłów*/
+	        time_t dqb_btime;       /* limit czasu nadmiernego
+	        				użycia dysku */
+	        time_t dqb_itime;       /* limit czasu nadmiernego
+	        				użycia węzła */
+	};
+
+	struct mem_dqinfo {
+	        struct quota_format_type *dqi_format;
+	        int dqi_flags;
+	        unsigned int dqi_bgrace;
+	        unsigned int dqi_igrace;
+	        union {
+                	struct v1_mem_dqinfo v1_i;
+                	struct v2_mem_dqinfo v2_i;
+        	} u;
+	};
+
+	struct dqstats {
+	        int lookups;
+	        int drops;
+	        int reads;
+	        int writes;
+	        int cache_hits;
+	        int allocated_dquots;
+	        int free_dquots;
+	        int syncs;
+	};</PRE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="bdflush" id="bdflush">Komenda do wykonania (funkcja 134)</a>:</P>
+<table class="c" summary="Komendy demona bdflush">
+<caption>Komendy demona bdflush</caption>
+<TR class="c"> <TH id="bdfl"> wartość EBX </TH> <TH id="bdfl_o"> opis </TH> </TR
+>
+<TR class="c"> <TD headers="bdfl"> &lt;= 0 <br> </td> <TD headers="bdfl_o"> jeśli demon nie był uruchomiony, to funkcja wchodzi w kod demona i nigdy nie powraca. <br> </td> </TR>
+<TR class="c"> <TD headers="bdfl"> 1 <br> </td> <TD headers="bdfl_o"> Niektóre bufory są zapisywane na dysk. <br> </td> </TR>
+<TR class="c"> <TD headers="bdfl"> &gt;=2 i jest parzyste <br> </td> <TD headers="bdfl_o"> ECX = adres DWORDa, pod [ECX] zostaje zwrócony parametr dostrajający równy (EBX-2)/2 <br> </td> </TR>
+<TR class="c"> <TD headers="bdfl"> &gt;=3 i jest nieparzyste <br> </td> <TD headers="bdfl_o"> ECX = DWORD, jądro nadaje tę wartość parametrowi dostrajającemu o numerze (EBX-3)/2 <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="sysfs" id="sysfs">Opcje dla sysfs</a> (funkcja 135):</P>
+<table class="c" summary="Operacje na nazwach systemów plików">
+<caption>Operacje na nazwach systemów plików</caption>
+<TR class="c"> <TH id="fsoper"> EBX </TH> <TH id="fsoper_opis"> opis </TH> <TH id="fsoper_cxdx">ECX i EDX</TH>
+	<TH id="fsoper_ret">co zwraca</TH> </TR>
+
+<TR class="c"> <TD headers="fsoper"> 1 <br> </td> <TD headers="fsoper_opis"> Tłumacz nazwę systemu plików na numer <br> </td>
+	<TD headers="fsoper_cxdx"> ECX = adres łańcucha znaków zawierającego nazwę. <br> </td>
+		<TD headers="fsoper_ret"> EAX = numer systemu plików <br> </td> </TR>
+<TR class="c"> <TD headers="fsoper"> 2 <br> </td> <TD headers="fsoper_opis"> Tłumacz numer systemu plików na nazwę <br> </td>
+	<TD headers="fsoper_cxdx"> ECX = numer systemu plików<BR>EDX = adres bufora na nazwę. <br> </td> <TD headers="fsoper_ret"> EAX = 0 <br> </td> </TR>
+<TR class="c"> <TD headers="fsoper"> 3 <br> </td> <TD headers="fsoper_opis"> Zwróć ogólną liczbę systemów plików aktualnie obecnych w jądrze. <br> </td>
+	<TD headers="fsoper_cxdx"> ignorowane <br> </td> <TD headers="fsoper_ret"> EAX = liczba systemów plików <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="flock_oper" id="flock_oper"
+>Operacja dla sys_flock</a> (funkcja 143) z <span class="b">/usr/include/asm/fcntl.h</span>:</P>
+<TABLE style="width:70%" class="c" summary="Zakładanie blokad plików">
+<caption>Opcje blokad plików</caption>
+<TR class="c"> <TH id="floper"> nazwa </TH> <TH id="floper_w"> wartość </TH> <TH id="floper_opis"> opis </TH> </TR>
+
+<TR class="c"> <TD headers="floper"> LOCK_SH <br> </td> <TD headers="floper_w"> 1 <br> </td>
+	<TD headers="floper_opis"> Założenie blokady współdzielonej. <br> </td></TR>
+<TR class="c"> <TD headers="floper"> LOCK_EX <br> </td> <TD headers="floper_w"> 2 <br> </td>
+	<TD headers="floper_opis"> Założenie blokady wyłącznej. <br> </td> </TR>
+<TR class="c"> <TD headers="floper"> LOCK_UN <br> </td> <TD headers="floper_w"> 8 <br> </td>
+	<TD headers="floper_opis"> Usunięcie blokady założonej przez ten proces <br> </td> </TR>
+</TABLE>
+Po zORowaniu z wartością LOCK_NB=4, funkcja nie zablokuje działania programu.
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="msync" id="msync"
+>Flagi dla sys_msync</a> (funkcja 144) z <span class="b">/usr/include/asm/mman.h</span>:</P>
+<TABLE style="width:70%" class="c" summary="Możliwości synchronizacji zapisu pamięci">
+<caption>Możliwości synchronizacji zapisu pamięci</caption>
+<TR class="c"> <TH id="msy"> nazwa </TH> <TH id="msy_w"> wartość </TH> <TH id="msy_opis"> opis </TH> </TR>
+
+<TR class="c"> <TD headers="msy"> MS_ASYNC <br> </td> <TD headers="msy_w"> 1 <br> </td>
+	<TD headers="msy_opis"> Wykonaj zapisy asynchroniczne. <br> </td></TR>
+<TR class="c"> <TD headers="msy"> MS_INVALIDATE <br> </td> <TD headers="msy_w"> 2 <br> </td>
+	<TD headers="msy_opis"> Zaznacz dane jako nieważne po zapisaniu <br> </td> </TR>
+<TR class="c"> <TD headers="msy"> MS_SYNC <br> </td> <TD headers="msy_w"> 4 <br> </td>
+	<TD headers="msy_opis"> Wykonaj zapisy synchroniczne. <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="iovec" id="iovec"
+>Struktura iovec</a> (funkcja 145) z <span class="b">/usr/include/bits/uio.h</span>:</P>
+<PRE>
+           struct iovec {
+                   void *iov_base;	/* adres danych */
+                   size_t iov_len;	/* długość danych */
+           };</PRE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="sysctl_args" id="sysctl_args"
+>Struktura sysctl_args</a> (funkcja 149) z <span class="b">man 2 sysctl</span>:</P>
+<PRE>
+       struct __sysctl_args {
+               int *name;        /* wektor liczb całkowitych
+               				opisujący zmienną */
+               int nlen;         /* długość tego wektora */
+               void *oldval;     /* 0 lub adres, gdzie zachować
+               				 starą wartość */
+               size_t *oldlenp;  /* ilość miejsca na starą wartość
+                                    nadpisywana przez rzeczywisty
+                                    jej rozmiar */
+               void *newval;     /* 0 lub adres nowej wartości */
+               size_t newlen;    /* rozmiar nowej wartości */
+       };</PRE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="mlockall" id="mlockall"
+>Flagi dla sys_mlockall</a> (funkcja 152) z <span class="b">/usr/include/bits/mman.h</span>:</P>
+<table class="c" summary="Blokowanie wszystkich stron pamięci procesu">
+<caption>Blokowanie wszystkich stron pamięci procesu</caption>
+<TR class="c"> <TH id="mla"> nazwa </TH> <TH id="mla_w"> wartość </TH> <TH id="mla_opis"> opis </TH> </TR>
+
+<TR class="c"> <TD headers="mla"> MCL_CURRENT <br> </td> <TD headers="mla_w"> 1 <br> </td>
+	<TD headers="mla_opis"> Zablokuj wszystkie strony pamięci w przestrzeni adresowej procesu. <br> </td></TR>
+<TR class="c"> <TD headers="mla"> MCL_FUTURE <br> </td> <TD headers="mla_w"> 2 <br> </td>
+	<TD headers="mla_opis"> Zablokuj wszystkie strony pamięci w przestrzeni adresowej procesu w przyszłości, w chwili mapowania ich do przestrzeni procesu. <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="sched_param" id="sched_param"
+>Struktura sched_param</a> (funkcja 154) z <span class="b">/usr/include/bits/sched.h</span>:</P>
+<PRE>
+	struct sched_param {
+    		int __sched_priority;
+  	};</PRE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="sched_policy" id="sched_policy"
+>Polityka dla szeregowania zadań</a> (funkcje 156,157,159,160)
+ z <span class="b">/usr/include/bits/sched.h</span>:</P>
+<TABLE style="width:70%" class="c" summary="Sposoby szeregowania zadań">
+<caption>Sposoby szeregowania zadań</caption>
+<TR class="c"> <TH id="sch"> nazwa </TH> <TH id="sch_w"> wartość </TH> <TH id="sch_opis"> opis </TH> </TR>
+
+<TR class="c"> <TD headers="sch"> SCHED_OTHER <br> </td> <TD headers="sch_w"> 0 <br> </td>
+	<TD headers="sch_opis"> Domyślny sposób szeregowania zadań <br> </td> </TR>
+<TR class="c"> <TD headers="sch"> SCHED_FIFO <br> </td> <TD headers="sch_w"> 1 <br> </td>
+	<TD headers="sch_opis"> Pierwszy na wejściu, pierwszy na wyjściu <br> </td></TR>
+<TR class="c"> <TD headers="sch"> SCHED_RR <br> </td> <TD headers="sch_w"> 2 <br> </td>
+	<TD headers="sch_opis"> Szeregowanie cykliczne <br> </td> </TR>
+</TABLE>
+
+
+<BR>
+<HR>
+<P><a name="timespec" id="timespec"
+>Struktura timespec</a> (funkcja 162 i inne) z <span class="b">man nanosleep</span>:</P>
+<PRE>
+	struct timespec	{
+		time_t  tv_sec;         /* sekundy */
+		long    tv_nsec;        /* nanosekundy */
+	};</PRE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="mremap_flagi" id="mremap_flagi"
+>Flagi dla funkcji sys_mremap</a> (numer 163) z <span class="b">/usr/include/linux/mman.h</span>:</P>
+<TABLE style="width:50%" class="c" summary="Możliwości remapowania pamięci">
+<caption>Możliwości remapowania pamięci</caption>
+<TR class="c"> <TH id="mrem"> nazwa </TH> <TH id="mrem_w"> wartość </TH> <th id="mrem_opis"> opis </th> </TR>
+
+<TR class="c"> <TD headers="mrem"> MREMAP_MAYMOVE <br> </td> <TD headers="mrem_w"> 1 <br> </td>
+	<td headers="mrem_opis"> Można przenosić te strony </td> </TR>
+<TR class="c"> <TD headers="mrem"> MREMAP_FIXED <br> </td> <TD headers="mrem_w"> 2 <br> </td>
+	<td headers="mrem_opis"> Nie można przenosić stron. </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="vm86_kod" id="vm86_kod"
+>Kody funkcji dla funkcji sys_vm86</a> (numer 166) z <span class="b">/usr/include/asm/vm86.h</span>:</P>
+<TABLE style="width:30%"  class="c" summary="Funkcje Trybu wirtualnego 8086">
+<caption>Funkcje Trybu wirtualnego 8086</caption>
+<TR class="c"> <TH id="vm86"> nazwa </TH> <TH id="vm86_w"> wartość </TH></TR>
+
+<TR class="c"> <TD headers="vm86"> VM86_PLUS_INSTALL_CHECK <br> </td> <TD headers="vm86_w"> 0 <br> </td></TR>
+<TR class="c"> <TD headers="vm86"> VM86_ENTER <br> </td> <TD headers="vm86_w"> 1 <br> </td></TR>
+<TR class="c"> <TD headers="vm86"> VM86_ENTER_NO_BYPASS <br> </td> <TD headers="vm86_w"> 2 <br> </td></TR>
+<TR class="c"> <TD headers="vm86"> VM86_REQUEST_IRQ <br> </td> <TD headers="vm86_w"> 3 <br> </td></TR>
+<TR class="c"> <TD headers="vm86"> VM86_FREE_IRQ <br> </td> <TD headers="vm86_w"> 4 <br> </td></TR>
+<TR class="c"> <TD headers="vm86"> VM86_GET_IRQ_BITS <br> </td> <TD headers="vm86_w"> 5 <br> </td></TR>
+<TR class="c"> <TD headers="vm86"> VM86_GET_AND_RESET_IRQ <br> </td> <TD headers="vm86_w"> 6 <br> </td></TR>
+</TABLE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="vm86plus_struct" id="vm86plus_struct"
+>Struktura "vm86plus_struct"</a> (funkcja 113) z <span class="b">/usr/include/asm/vm86.h</span>:</P>
+<PRE>
+	struct vm86plus_struct {
+	        struct vm86_regs regs;
+	        unsigned long flags;
+	        unsigned long screen_bitmap;
+	        unsigned long cpu_type;
+	        struct revectored_struct int_revectored;
+	        struct revectored_struct int21_revectored;
+	        struct vm86plus_info_struct vm86plus;
+	};
+
+	struct vm86plus_info_struct {
+	        unsigned long force_return_for_pic:1;
+	        unsigned long vm86dbg_active:1;       /* dla debuggera */
+	        unsigned long vm86dbg_TFpendig:1;     /* dla debuggera */
+	        unsigned long unused:28;
+	        unsigned long is_vm86pus:1;           /* do użytku
+	        				 wewnętrznego trybu vm86*/
+	        unsigned char vm86dbg_intxxtab[32];   /* dla debuggera */
+	};</PRE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="query_sub" id="query_sub"
+>Numery podfunkcji dla funkcji sys_query_module</a> (numer 167)
+ z <span class="b">/usr/include/linux/module.h</span>:</P>
+<table class="c" summary="Pobieranie informacji o modułach jądra">
+<caption>Odpytywanie modułów jądra</caption>
+<TR class="c"> <TH id="qs"> nazwa </TH> <TH id="qs_w"> wartość </TH> <TH id="qs_opis"> co zwraca </TH> </TR>
+
+<TR class="c"> <TD headers="qs"> brak <br> </td> <TD headers="qs_w"> 0 <br> </td>
+	<TD headers="qs_opis">zawsze sukces <br> </td></TR>
+<TR class="c"> <TD headers="qs"> QM_MODULES <br> </td> <TD headers="qs_w"> 1 <br> </td>
+	<TD headers="qs_opis">bufor: nazwy oddzielone znakiem zerowym<BR>[EDI] = liczba modułów <br> </td></TR>
+<TR class="c"> <TD headers="qs"> QM_DEPS <br> </td> <TD headers="qs_w"> 2 <br> </td>
+	<TD headers="qs_opis">w buforze: nazwy modułów używane przez podany moduł,<BR>[EDI] = liczba takich modułów <br> </td></TR>
+<TR class="c"> <TD headers="qs"> QM_REFS <br> </td> <TD headers="qs_w"> 3 <br> </td>
+	<TD headers="qs_opis">w buforze: nazwy modułów używające podanego modułu,<BR>[EDI] = liczba takich modułów <br> </td></TR>
+<TR class="c"> <TD headers="qs"> QM_SYMBOLS <br> </td> <TD headers="qs_w"> 4 <br> </td>
+	<TD headers="qs_opis">bufor: eksportowane symbole i wartości. Format: struktury module_symbol (patrz niżej)
+			i nazwy oddzielone znakiem zerowym.<BR>[EDI] = liczba symboli <br> </td></TR>
+<TR class="c"> <TD headers="qs"> QM_INFO <br> </td> <TD headers="qs_w"> 5 <br> </td>
+	<TD headers="qs_opis">Format bufora: struktury module_info (patrz niżej)<BR>[EDI] = rozmiar struktury module_info <br> </td></TR>
+</TABLE>
+<PRE>
+	struct module_symbol	{
+		unsigned long value;
+		unsigned long name;	/* adres łańcucha znaków od
+						 początku bufora */
+	};
+
+	struct module_info	{
+		unsigned long address;	/* adres modułu */
+		unsigned long size;	/* zajmowana pamięć */
+		unsigned long flags;	/* stan: MOD_RUNNING,
+					  MOD_AUTOCLEAN, ... */
+	};</PRE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="pollfd" id="pollfd"
+>Struktura "pollfd"</a> dla funkcji sys_poll (numer 168) z <span class="b">man poll</span>:</P>
+<PRE>
+	struct pollfd {
+		int fd;		/* deskryptor otwartego pliku */
+		short events;	/* maska zdarzeń (patrz niżej) do
+					 monitorowania */
+		short revents;	/* powrotna maska zdarzeń znalezionych
+					(patrz niżej) */
+	};</PRE>
+
+<P>Zdarzenia z <span class="b">/usr/include/sys/poll.h</span>:</P>
+<table class="c" summary="Zdarzenia dla funkcji sys_poll">
+<caption>Zdarzenia dla funkcji sys_poll</caption>
+<TR class="c"> <TH id="pol"> nazwa </TH> <TH id="pol_w"> wartość </TH><TH id="pol_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="pol"> POLLIN <br> </td> <TD headers="pol_w"> 0x0001 <br> </td>
+	<TD headers="pol_opis"> mogą być czytane (bez blokowania) dane o priorytecie innym niż wysoki <br> </td> </TR>
+<TR class="c"> <TD headers="pol"> POLLPRI <br> </td> <TD headers="pol_w"> 0x0002 <br> </td>
+	<TD headers="pol_opis"> mogą być czytane dane o priorytecie wysokim <br> </td> </TR>
+<TR class="c"> <TD headers="pol"> POLLOUT <br> </td> <TD headers="pol_w"> 0x0004 <br> </td>
+	<TD headers="pol_opis"> mogą być zapisywane dane normalne <br> </td> </TR>
+<TR class="c"> <TD headers="pol"> POLLWRNORM <br> </td> <TD headers="pol_w"> POLLOUT <br> </td>
+	<TD headers="pol_opis"> jak POLLOUT. <br> </td> </TR>
+<TR class="c"> <TD headers="pol"> POLLERR <br> </td> <TD headers="pol_w"> 0x0008 <br> </td>
+	<TD headers="pol_opis"> błąd <br> </td> </TR>
+<TR class="c"> <TD headers="pol"> POLLHUP <br> </td> <TD headers="pol_w"> 0x0010 <br> </td>
+	<TD headers="pol_opis"> rozłączenie <br> </td> </TR>
+<TR class="c"> <TD headers="pol"> POLLNVAL <br> </td> <TD headers="pol_w"> 0x0020 <br> </td>
+	<TD headers="pol_opis"> deskryptor jest nieprawidłowy <br> </td> </TR>
+<TR class="c"> <TD headers="pol"> POLLRDNORM <br> </td> <TD headers="pol_w"> 0x0040 <br> </td>
+	<TD headers="pol_opis"> mogą być czytane dane normalne <br> </td> </TR>
+<TR class="c"> <TD headers="pol"> POLLNORM <br> </td> <TD headers="pol_w"> POLLRDNORM <br> </td>
+	<TD headers="pol_opis"> jak POLLRDNORM. <br> </td> </TR>
+<TR class="c"> <TD headers="pol"> POLLRDBAND <br> </td> <TD headers="pol_w"> 0x0080 <br> </td>
+	<TD headers="pol_opis"> mogą być czytane dane priorytetowe <br> </td> </TR>
+<TR class="c"> <TD headers="pol"> POLLWRBAND <br> </td> <TD headers="pol_w"> 0x0100 <br> </td>
+	<TD headers="pol_opis"> mogą być zapisywane dane priorytetowe <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="nfs" id="nfs"
+>Komendy w funkcji sys_nfsservctl</a> (numer 169) z <span class="b">man nfsservctl</span>
+ i <span class="b">/usr/include/linux/nfsd/syscall.h</span>:</P>
+<table class="c" summary="Komendy kontroli serwera NFS">
+<caption>Komendy kontroli serwera NFS</caption>
+<TR class="c"> <TH id="nfs_c"> nazwa </TH> <TH id="nfs_c_w"> wartość </TH><TH id="nfs_c_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_SVC <br> </td> <TD headers="nfs_c_w"> 0 <br> </td>
+	<TD headers="nfs_c_opis"> to jest proces serwera <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_ADDCLIENT <br> </td> <TD headers="nfs_c_w"> 1 <br> </td>
+	<TD headers="nfs_c_opis"> dodanie klienta NFS <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_DELCLIENT <br> </td> <TD headers="nfs_c_w"> 2 <br> </td>
+	<TD headers="nfs_c_opis"> usunięcie klienta NFS <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_EXPORT <br> </td> <TD headers="nfs_c_w"> 3 <br> </td>
+	<TD headers="nfs_c_opis"> eksportowanie systemu plików <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_UNEXPORT <br> </td> <TD headers="nfs_c_w"> 4 <br> </td>
+	<TD headers="nfs_c_opis"> zaprzestanie eksportowania systemu plików <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_UGIDUPDATE <br> </td> <TD headers="nfs_c_w"> 5 <br> </td>
+	<TD headers="nfs_c_opis"> uaktualnienie mapy uid/gid klienta <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_GETFH <br> </td> <TD headers="nfs_c_w"> 6 <br> </td>
+	<TD headers="nfs_c_opis"> otrzymanie fh przez ino (używane przez mountd) <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_GETFD <br> </td> <TD headers="nfs_c_w"> 7 <br> </td>
+	<TD headers="nfs_c_opis"> otrzymanie fh przez ścieżkę (używane przez mountd) <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_GETFS <br> </td> <TD headers="nfs_c_w"> 8 <br> </td>
+	<TD headers="nfs_c_opis"> otrzymanie fh przez ścieżkę z maksymalną długością FH <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_FODROP <br> </td> <TD headers="nfs_c_w"> 50 <br> </td>
+	<TD headers="nfs_c_opis"> odrzuć żądania w czasie awarii <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_STOPFODROP <br> </td> <TD headers="nfs_c_w"> 51 <br> </td>
+	<TD headers="nfs_c_opis"> przestań odrzucać żądania <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_FOLOCKS <br> </td> <TD headers="nfs_c_w"> 52 <br> </td>
+	<TD headers="nfs_c_opis"> porzuć blokady w czasie awarii <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_FOGRACE <br> </td> <TD headers="nfs_c_w"> 53 <br> </td>
+	<TD headers="nfs_c_opis"> <span lang="en">set grace period for failover</span> <br> </td> </TR>
+<TR class="c"> <TD headers="nfs_c"> NFSCTL_FOSERV <br> </td> <TD headers="nfs_c_w"> 54 <br> </td>
+	<TD headers="nfs_c_opis"> <span lang="en">remove service mon for failover</span> <br> </td> </TR>
+</TABLE>
+
+<P>Struktura "nfsctl_arg" i unia "nfsctl_res" dla funkcji sys_nfsservctl (numer 169)
+ z <span class="b">man nfsservctl</span>:</P>
+<PRE>
+       struct nfsctl_arg {
+		int                     ca_version;     /*zabezpieczenie*/
+		union {
+			struct nfsctl_svc	u_svc;
+			struct nfsctl_client	u_client;
+			struct nfsctl_export	u_export;
+			struct nfsctl_uidmap	u_umap;
+			struct nfsctl_fhparm	u_getfh;
+			struct nfsctl_fdparm	u_getfd;
+			struct nfsctl_fsparm	u_getfs;
+			struct nfsctl_fodrop	u_fodrop;
+		} u;
+	}
+
+	union nfsctl_res {
+		__u8			cr_getfh[NFS_FHSIZE];
+		struct knfsd_fh		cr_getfs;
+	};
+
+	/* SVC */
+	struct nfsctl_svc {
+		unsigned short		svc_port;
+		int			svc_nthreads;
+	};
+
+	/* ADDCLIENT/DELCLIENT */
+	struct nfsctl_client {
+		char			cl_ident[NFSCLNT_IDMAX+1];
+		int			cl_naddr;
+		struct in_addr		cl_addrlist[NFSCLNT_ADDRMAX];
+		int			cl_fhkeytype;
+		int			cl_fhkeylen;
+		unsigned char		cl_fhkey[NFSCLNT_KEYMAX];
+	};
+
+	/* EXPORT/UNEXPORT */
+	struct nfsctl_export {
+		char			ex_client[NFSCLNT_IDMAX+1];
+		char			ex_path[NFS_MAXPATHLEN+1];
+		__kernel_dev_t		ex_dev;
+		__kernel_ino_t		ex_ino;
+		int			ex_flags;
+		__kernel_uid_t		ex_anon_uid;
+		__kernel_gid_t		ex_anon_gid;
+	};
+
+	/* UGIDUPDATE */
+	struct nfsctl_uidmap {
+		char *			ug_ident;
+		__kernel_uid_t		ug_uidbase;
+		int			ug_uidlen;
+		__kernel_uid_t *	ug_udimap;
+		__kernel_gid_t		ug_gidbase;
+		int			ug_gidlen;
+		__kernel_gid_t *	ug_gdimap;
+	};
+
+	/* GETFH */
+	struct nfsctl_fhparm {
+		struct sockaddr		gf_addr;
+		__kernel_dev_t		gf_dev;
+		__kernel_ino_t		gf_ino;
+		int			gf_version;
+	};
+
+	/* GETFD */
+	struct nfsctl_fdparm {
+		struct sockaddr		gd_addr;
+		char			gd_path[NFS_MAXPATHLEN+1];
+		int			gd_version;
+	};
+
+	/* GETFS - Pobierz uchwyt do pliku wraz z rozmiarem */
+	struct nfsctl_fsparm {
+		struct sockaddr		gd_addr;
+		char			gd_path[NFS_MAXPATHLEN+1];
+		int			gd_maxlen;
+	};
+
+	/* FODROP/STOPFODROP */
+	struct nfsctl_fodrop {
+		char			fo_dev[NFS_MAXPATHLEN+1];
+		__u32			fo_timeout;
+	};</PRE>
+
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="prctl" id="prctl"
+>Opcje w funkcji sys_prctl</a> (numer 172) z <span class="b">man prctl</span>
+ i <span class="b">/usr/include/linux/prctl.h</span>:</P>
+<table class="c" summary="Możliwe operacje na procesie">
+<caption>Operacje na procesie</caption>
+<TR class="c"> <TH id="proper"> nazwa </TH> <TH id="proper_w"> wartość </TH><TH id="proper_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="proper"> PR_SET_PDEATHSIG <br> </td> <TD headers="proper_w"> 1 <br> </td>
+	<TD headers="proper_opis"> ECX=numer sygnału, który otrzyma proces potomny po zakończeniu rodzica <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_GET_PDEATHSIG <br> </td> <TD headers="proper_w"> 2 <br> </td>
+	<TD headers="proper_opis"> wczytaj bieżący numer sygnału, który otrzyma proces potomny po zakończeniu rodzica do [ECX] <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_GET_DUMPABLE <br> </td> <TD headers="proper_w"> 3 <br> </td>
+	<TD headers="proper_opis"> pobranie informacji, czy program ma zrzucać rdzeń (core dump), zwraca w EAX <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_SET_DUMPABLE <br> </td> <TD headers="proper_w"> 4 <br> </td>
+	<TD headers="proper_opis"> ustawienie, czy program ma zrzucać rdzeń (<span lang="en">core dump</span>) ECX=0 (nie) ECX=1 (tak) <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_GET_UNALIGN <br> </td> <TD headers="proper_w"> 5 <br> </td>
+	<TD headers="proper_opis"> pobierz bity kontroli dostępu do nieułożonych danych? (<span lang="en">unaligned access control bits</span>), wynik w EAX? <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_SET_UNALIGN <br> </td> <TD headers="proper_w"> 6 <br> </td>
+	<TD headers="proper_opis"> ustaw bity kontroli dostępu do nieułożonych danych (<span lang="en">unaligned access control bits</span>) ECX=1 (nie rób nic), ECX=2 (generuj sygnał SIGBUS) <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_GET_KEEPCAPS <br> </td> <TD headers="proper_w"> 7 <br> </td>
+	<TD headers="proper_opis"> zachowanie możliwości procesu (<span lang="en">keep capabilities</span>), zwraca w EAX <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_SET_KEEPCAPS <br> </td> <TD headers="proper_w"> 8 <br> </td>
+	<TD headers="proper_opis"> zachowanie możliwości procesu (<span lang="en">keep capabilities</span>), ECX=1 (tak) ECX=0 (nie) <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_GET_FPEMU <br> </td> <TD headers="proper_w"> 9 <br> </td>
+	<TD headers="proper_opis"> pobierz bity kontroli emulacji FPU, zwraca w EAX? <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_SET_FPEMU <br> </td> <TD headers="proper_w"> 10 <br> </td>
+	<TD headers="proper_opis"> ustaw bity kontroli emulacji FPU, ECX=1 (emulacja włączona) ECX=2 (generuj sygnał SIGFPE) <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_GET_FPEXC <br> </td> <TD headers="proper_w"> 11 <br> </td>
+	<TD headers="proper_opis"> pobierz tryb wyjątków FPU, zwraca w EAX? <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_SET_FPEXC <br> </td> <TD headers="proper_w"> 12 <br> </td>
+	<TD headers="proper_opis"> ustaw tryb wyjątków FPU, ECX=0 (wyłączone) ECX=1 (<span lang="en">async non-recoverable exc. mode</span>), ECX=2 (<span lang="en">async recoverable exception mode</span>), ECX=3 (<span lang="en">precise exception mode</span>) <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_GET_TIMING <br> </td> <TD headers="proper_w"> 13 <br> </td>
+	<TD headers="proper_opis"> pobierz tryb mierzenia czasu procesu, zwraca w EAX? <br> </td> </TR>
+<TR class="c"> <TD headers="proper"> PR_SET_TIMING <br> </td> <TD headers="proper_w"> 14 <br> </td>
+	<TD headers="proper_opis"> pobierz tryb mierzenia czasu procesu, ECX=0 (normalny) ECX=1 (dokładny) <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="cap_user" id="cap_user"
+>Struktury dla funkcji sys_capget</a> (numer 184) i sys_capset (numer 185)
+ z <span class="b">/usr/include/linux/capability.h</span>:</P>
+<PRE>
+	typedef struct __user_cap_header_struct {
+		__u32 version;
+		int pid;
+	} *cap_user_header_t;
+
+	typedef struct __user_cap_data_struct {
+	        __u32 effective;
+	        __u32 permitted;
+	        __u32 inheritable;
+	} *cap_user_data_t;</PRE>
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="altstack" id="altstack"
+>Struktura "stack_t"</a> dla funkcji sys_sigaltstack (numer 186)
+ z <span class="b">/usr/include/asm/signal.h</span>:</P>
+<PRE>
+	SS_ONSTACK	0x0001
+	SS_DISABLE	0x0004
+
+	typedef struct sigaltstack {	// stack_t
+		void *ss_sp;		// int (dword)
+		int ss_flags;	// int (dword), SS_ONSTACK lub SS_DISABLE
+		size_t ss_size;		// int (dword)
+	} stack_t;</PRE>
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="stat64" id="stat64"
+>Struktura "stat64"</a> dla funkcji sys_*stat64 (numer 195, 196, 197)
+ z <span class="b">/usr/include/asm/stat.h</span>:</P>
+<PRE>
+	struct stat64 {
+		unsigned long long	st_dev;
+		unsigned char	__pad0[4];
+
+		unsigned long	__st_ino;
+
+		unsigned int	st_mode;
+		unsigned int	st_nlink;
+
+		unsigned long	st_uid;
+		unsigned long	st_gid;
+
+		unsigned long long	st_rdev;
+		unsigned char	__pad3[4];
+
+		long long	st_size;
+		unsigned long	st_blksize;
+
+		/* Liczba zaalokowanych 512-bajtowych bloków. */
+		unsigned long long	st_blocks;
+
+		unsigned long	st_atime;
+		unsigned long	st_atime_nsec;
+
+		unsigned long	st_mtime;
+		unsigned int	st_mtime_nsec;
+
+		unsigned long	st_ctime;
+		unsigned long	st_ctime_nsec;
+
+		unsigned long long	st_ino;
+	};</PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="madvise" id="madvise"
+>Informacja dla jądra</a> o korzystaniu z pamięci dla funkcji sys_madvise (numer 219)
+ z <span class="b">/usr/include/bits/mman.h</span>:</P>
+<table class="c" summary="Jak będziemy korzystać z danej pamięci">
+<caption>Informowanie o sposobach korzystania z pamięci</caption>
+<TR class="c"> <TH id="madv"> nazwa </TH> <TH id="madv_w"> wartość </TH><TH id="madv_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="madv"> MADV_NORMAL <br> </td> <TD headers="madv_w"> 0 <br> </td>
+	<TD headers="madv_opis"> Żadnego specjalnego traktowania <br> </td> </TR>
+<TR class="c"> <TD headers="madv"> MADV_RANDOM <br> </td> <TD headers="madv_w"> 1 <br> </td>
+	<TD headers="madv_opis"> Można oczekiwać losowych dostępów do tej pamięci <br> </td> </TR>
+<TR class="c"> <TD headers="madv"> MADV_SEQUENTIAL <br> </td> <TD headers="madv_w"> 2 <br> </td>
+	<TD headers="madv_opis"> Można oczekiwać sekwencyjnego dostępu do tej pamięci <br> </td> </TR>
+<TR class="c"> <TD headers="madv"> MADV_WILLNEED <br> </td> <TD headers="madv_w"> 3 <br> </td>
+	<TD headers="madv_opis"> Nasz proces będzie potrzebował tych stron pamięci <br> </td> </TR>
+<TR class="c"> <TD headers="madv"> MADV_DONTNEED <br> </td> <TD headers="madv_w"> 4 <br> </td>
+	<TD headers="madv_opis"> Nasz proces nie potrzebuje tych stron pamięci <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="makedev" id="makedev"
+>Makra "makedev"</a> w składni FASM dla funkcji sys_mknod (numer 14)
+ z <span class="b">/usr/include/sys/sysmacros.h</span>:</P>
+<PRE>
+	; maj = numer główny urządzenia
+	; min = numer poboczny urządzenia
+
+	; dla jądra 2.4
+	macro	makedev24	maj, min
+	{
+		xor	esi, esi
+		mov	edx, maj
+		shl	edx, 8
+		or	edx, min
+	}
+
+	; dla jądra 2.6
+	macro	makedev26	maj, min
+	{
+
+		mov	edx, min
+		and	edx, 0xff
+
+		mov	esi, maj
+		and	esi, 0xfff
+		shl	esi, 8
+		or	edx, esi
+
+		xor	eax, eax
+		mov	esi, min
+		and	esi, not 0xff
+		shld	eax, esi, 12
+		shl	esi, 12
+
+		or	edx, esi
+
+	 	mov	esi, maj
+	 	and	esi, not 0xfff
+
+		or	esi, eax
+
+	}</PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="signal" id="signal"
+>Numery sygnałów</a> (funkcje 37, 48 i 238) z <span class="b">/usr/include/bits/signum.h</span>:</P>
+<table class="c" summary="Rodzaje i numery sygnałów">
+<caption>Sygnały</caption>
+<TR class="c"> <TH id="sygn"> nazwa </TH> <TH id="sygn_w"> wartość </TH><TH id="sygn_opis"> co oznacza </TH> </TR>
+
+<TR class="c"> <TD headers="sygn"> SIGHUP <br> </td> <TD headers="sygn_w"> 1 <br> </td>
+	<TD headers="sygn_opis"> "Rozłącz się" (hangup) <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGINT <br> </td> <TD headers="sygn_w"> 2 <br> </td>
+	<TD headers="sygn_opis"> Przerwanie (na przykład naciśnięto Ctrl+C) <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGQUIT <br> </td> <TD headers="sygn_w"> 3 <br> </td>
+	<TD headers="sygn_opis"> Wyjście <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGILL <br> </td> <TD headers="sygn_w"> 4 <br> </td>
+	<TD headers="sygn_opis"> Procesor wykonał nieprawidłową instrukcję <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGTRAP <br> </td> <TD headers="sygn_w"> 5 <br> </td>
+	<TD headers="sygn_opis"> Pułapka (przy śledzeniu wykonywania) <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGABRT <br> </td> <TD headers="sygn_w"> 6 <br> </td>
+	<TD headers="sygn_opis"> Przerwanie działania <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGIOT <br> </td> <TD headers="sygn_w"> 6 (też!) <br> </td>
+	<TD headers="sygn_opis"> Pułapka IOT <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGBUS <br> </td> <TD headers="sygn_w"> 7 <br> </td>
+	<TD headers="sygn_opis"> Błąd szyny (złe ustawienie danych - na przykład adres niepodzielny przez 4) <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGFPE <br> </td> <TD headers="sygn_w"> 8 <br> </td>
+	<TD headers="sygn_opis"> Wyjątek koprocesora (wynik typu NaN, ale też dzielenie przez zero lub przepełnienie w dzieleniu) <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGKILL <br> </td> <TD headers="sygn_w"> 9 <br> </td>
+	<TD headers="sygn_opis"> Zabicie procesu <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGUSR1 <br> </td> <TD headers="sygn_w"> 10 <br> </td>
+	<TD headers="sygn_opis"> Sygnał definiowany przez użytkownika <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGSEGV <br> </td> <TD headers="sygn_w"> 11 <br> </td>
+	<TD headers="sygn_opis"> Naruszenie ochrony pamięci (segmentation fault) <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGUSR2 <br> </td> <TD headers="sygn_w"> 12 <br> </td>
+	<TD headers="sygn_opis"> Drugi sygnał definiowany przez użytkownika <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGPIPE <br> </td> <TD headers="sygn_w"> 13 <br> </td>
+	<TD headers="sygn_opis"> Nieprawidłowy potok <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGALRM <br> </td> <TD headers="sygn_w"> 14 <br> </td>
+	<TD headers="sygn_opis"> Budzik <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGTERM <br> </td> <TD headers="sygn_w"> 15 <br> </td>
+	<TD headers="sygn_opis"> Żądanie zakończenia programu <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGSTKFLT <br> </td> <TD headers="sygn_w"> 16 <br> </td>
+	<TD headers="sygn_opis"> Błąd stosu (koprocesora?) <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGCHLD, SIGCLD <br> </td> <TD headers="sygn_w"> 17 <br> </td>
+	<TD headers="sygn_opis"> Zmienił się stan procesu potomnego <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGCONT <br> </td> <TD headers="sygn_w"> 18 <br> </td>
+	<TD headers="sygn_opis"> Kontynuacja <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGSTOP <br> </td> <TD headers="sygn_w"> 19 <br> </td>
+	<TD headers="sygn_opis"> Żądanie zatrzymania programu <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGTSTP <br> </td> <TD headers="sygn_w"> 20 <br> </td>
+	<TD headers="sygn_opis"> Zatrzymanie (z) klawiatury (?) <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGTTIN <br> </td> <TD headers="sygn_w"> 21 <br> </td>
+	<TD headers="sygn_opis"> Odczyt z terminala w tle <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGTTOU <br> </td> <TD headers="sygn_w"> 22 <br> </td>
+	<TD headers="sygn_opis"> Zapis do terminala w tle <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGURG <br> </td> <TD headers="sygn_w"> 23 <br> </td>
+	<TD headers="sygn_opis"> Pilne zdarzenie na gnieździe <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGXCPU <br> </td> <TD headers="sygn_w"> 24 <br> </td>
+	<TD headers="sygn_opis"> Przekroczony limit procesora <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGXFSZ <br> </td> <TD headers="sygn_w"> 25 <br> </td>
+	<TD headers="sygn_opis"> Przekroczony limit rozmiaru pliku <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGVTALRM <br> </td> <TD headers="sygn_w"> 26 <br> </td>
+	<TD headers="sygn_opis"> Wirtualny budzik <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGPROF <br> </td> <TD headers="sygn_w"> 27 <br> </td>
+	<TD headers="sygn_opis"> Budzik profilujący <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGWINCH <br> </td> <TD headers="sygn_w"> 28 <br> </td>
+	<TD headers="sygn_opis"> Zmiana rozmiaru okna <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGIO, SIGPOLL <br> </td> <TD headers="sygn_w"> 29 <br> </td>
+	<TD headers="sygn_opis"> Można wykonywać I/O <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGPWR <br> </td> <TD headers="sygn_w"> 30 <br> </td>
+	<TD headers="sygn_opis"> Restart po awarii zasilania (?) / Błąd zasilania <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGSYS <br> </td> <TD headers="sygn_w"> 31 <br> </td>
+	<TD headers="sygn_opis"> Nieprawidłowa funkcja systemowa <br> </td> </TR>
+<TR class="c"> <TD headers="sygn"> SIGUNUSED <br> </td> <TD headers="sygn_w"> 31 (też!) <br> </td>
+	<TD headers="sygn_opis"> (nieużywane) <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="futex" id="futex"
+>Operacje futex</a> (funkcja 240) z <span class="b">/usr/include/linux/futex.h</span>:</P>
+<table class="c" summary="Operacje na futeksach">
+<caption>Operacje na futeksach</caption>
+<TR class="c"> <TH id="fut"> nazwa </TH> <TH id="fut_w"> wartość </TH><TH id="fut_opis"> co oznacza </TH>
+	<TH id="fut_ret"> zwraca w EAX </TH> </TR>
+
+<TR class="c"> <TD headers="fut"> FUTEX_WAIT <br> </td> <TD headers="fut_w"> 0 <br> </td>
+	<TD headers="fut_opis"> Sprawdza, czy wartość futeksu wynosi tyle, ile podano i czeka <br> </td>
+	<TD headers="fut_ret"> 0, gdy proces obudzono przez FUTEX_WAKE <br> </td> </TR>
+<TR class="c"> <TD headers="fut"> FUTEX_WAKE <br> </td> <TD headers="fut_w"> 1 <br> </td>
+	<TD headers="fut_opis"> Budzi co najwyżej ECX procesów czekających na danym adresie <br> </td>
+	<TD headers="fut_ret"> liczba obudzonych procesów <br> </td> </TR>
+<TR class="c"> <TD headers="fut"> FUTEX_FD <br> </td> <TD headers="fut_w"> 2 <br> </td>
+	<TD headers="fut_opis"> Przyporządkuje futeksowi deskryptor pliku <br> </td>
+	<TD headers="fut_ret"> nowy deskryptor pliku <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="user_desc" id="user_desc"
+>Struktura user_desc</a> (funkcja 243) z <span class="b">/usr/src/?/include/asm/ldt.h</span>:</P>
+<PRE>
+	struct user_desc {
+		unsigned int  entry_number;	/* numer zmienianego lub
+						pobieranego wpisu w TLS */
+		unsigned long base_addr;	/* adres bazowy */
+		unsigned int  limit;		/* limit */
+		unsigned int  seg_32bit:1;	/* segment */
+		unsigned int  contents:2;
+		unsigned int  read_exec_only:1;	/* tylko RX */
+		unsigned int  limit_in_pages:1;
+		unsigned int  seg_not_present:1;/* czy nieobecny */
+		unsigned int  useable:1;	/* można używać */
+	};</PRE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="io_event" id="io_event"
+>Struktura io_event</a> (funkcja 247) z <span class="b">/usr/src/?/include/linux/aio_abi.h</span>:</P>
+<PRE>
+	struct io_event {
+		__u64	data;		/* pole danych */
+		__u64	obj;		/* skąd przyszło zdarzenie */
+		__s64	res;		/* kod wynikowy zdarzenia */
+		__s64	res2;		/* wynik drugorzędny */
+	};</PRE>
+
+
+
+<BR>
+<HR>
+<P><a name="iocb" id="iocb"
+>Struktura iocb</a> (funkcja 247) z <span class="b">/usr/src/?/include/linux/aio_abi.h</span>:</P>
+<PRE>
+	struct iocb {
+		/* do wewnętrznego użytku jądra/libc. */
+		__u64	aio_data; /*dane do zwrócenia jako dane zdarzenia*/
+		__u32	aio_key, aio_reserved1;
+				/* jądro ustawia aio_key na żądany numer */
+
+		/* pola wspólne */
+		__u16	aio_lio_opcode;	/* zobacz: IOCB_CMD_ */
+		__s16	aio_reqprio;
+		__u32	aio_fildes;
+
+		__u64	aio_buf;
+		__u64	aio_nbytes;
+		__s64	aio_offset;
+
+		/* parametry dodatkowe */
+		__u64	aio_reserved2;	/*w przyszłości będzie to wskaźnik
+					 na strukturę sigevent */
+		__u64	aio_reserved3;
+	};</PRE>
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="epoll_event" id="epoll_event"
+>Struktura epoll_event</a> (funkcja 255 i 256) z <span class="b">man 2 epoll_ctl</span>:</P>
+<PRE>
+	typedef union epoll_data {
+		void *ptr;
+		int fd;
+		__uint32_t u32;
+		__uint64_t u64;
+	} epoll_data_t;
+
+	struct epoll_event {
+		__uint32_t events;  /* zdarzenia Epoll */
+		epoll_data_t data;  /* Zmienna danych użytkownika */
+	};</PRE>
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="epoll_op" id="epoll_op"
+>Operacje epoll</a> (funkcja 255) z <span class="b">/usr/include/sys/epoll.h</span>:</P>
+<TABLE style="width:70%"  class="c" summary="Operacje na deskryptorze epoll">
+<caption>Operacje na deskryptorze epoll</caption>
+<TR class="c"> <TH id="epol"> nazwa </TH> <TH id="epol_w"> wartość </TH><TH id="epol_opis"> co oznacza </TH></TR>
+
+<TR class="c"> <TD headers="epol"> EPOLL_CTL_ADD <br> </td> <TD headers="epol_w"> 1 <br> </td>
+	<TD headers="epol_opis"> Dodaj deskryptor EDX do deskryptora "epoll" w EBX <br> </td> </TR>
+<TR class="c"> <TD headers="epol"> EPOLL_CTL_DEL <br> </td> <TD headers="epol_w"> 2 <br> </td>
+	<TD headers="epol_opis"> Usuń deskryptor EDX do deskryptora "epoll" w EBX <br> </td> </TR>
+<TR class="c"> <TD headers="epol"> EPOLL_CTL_MOD <br> </td> <TD headers="epol_w"> 3 <br> </td>
+	<TD headers="epol_opis"> Zmień zdarzenie (struktura epoll_event) związane z deskryptorem EDX <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="sigevent" id="sigevent"
+>Struktura sigevent</a> (funkcja 259) z <span class="b">/usr/include/asm/siginfo.h</span>:</P>
+<PRE>
+	#define SIGEV_MAX_SIZE	64
+	#define SIGEV_PAD_SIZE	((SIGEV_MAX_SIZE/sizeof(int)) - 3)
+
+	typedef struct sigevent {
+		sigval_t sigev_value;
+		int sigev_signo;
+		int sigev_notify;
+		union {
+			int _pad[SIGEV_PAD_SIZE];
+
+			struct {
+				void (*_function)(sigval_t);
+				void *_attribute;   /* pthread_attr_t */
+			} _sigev_thread;
+		} _sigev_un;
+	} sigevent_t;
+
+	/* Dla funkcji mq_notify podana jest taka definicja
+		w <span class="b">man mq_notify</span>: */
+
+         union sigval {                /* Przekazane dane */
+             int     sival_int;        /* Wartość całkowita */
+             void   *sival_ptr; /* Wskaźnik (tak dosłownie mówi manual) */
+         };
+
+         struct sigevent {
+             int    sigev_notify;      /* Sposób powiadomienia 0=sygnał,
+             				 1=nic, 2=utwórz wątek*/
+             int    sigev_signal;      /* Numer sygnału powiadomienia */
+             union sigval sigev_value; /* Przekazane dane */
+             void (*sigev_notify_function) (union sigval);
+                                       /* Funkcja powiadamiania wątku */
+             void  *sigev_notify_attributes;
+                                       /* Atrybuty funkcji wątku */
+         };
+
+</PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="itimerspec" id="itimerspec"
+>Struktura itimerspec</a> (funkcja 260) z <span class="b">/usr/include/time.h</span>:</P>
+<PRE>
+	struct itimerspec {
+    		struct timespec it_interval;
+    		struct timespec it_value;
+  	};</PRE>
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="zegar" id="zegar"
+>Identyfikatory zegara</a> (funkcje 264-267) z <span class="b">/usr/include/bits/time.h</span>:</P>
+<TABLE style="width:70%"  class="c" summary="Identyfikatory zegarów">
+<caption>Identyfikatory zegarów w systemie</caption>
+<TR class="c"> <TH id="clok"> nazwa </TH> <TH id="clok_w"> wartość </TH><TH id="clok_opis"> co oznacza </TH></TR>
+
+<TR class="c"> <TD headers="clok"> CLOCK_REALTIME <br> </td> <TD headers="clok_w"> 0 <br> </td>
+	<TD headers="clok_opis"> Systemowy zegar czasu rzeczywistego <br> </td> </TR>
+<TR class="c"> <TD headers="clok"> CLOCK_MONOTONIC <br> </td> <TD headers="clok_w"> 1 <br> </td>
+	<TD headers="clok_opis"> Systemowy zegar monotoniczny <br> </td> </TR>
+<TR class="c"> <TD headers="clok"> CLOCK_PROCESS_CPUTIME_ID <br> </td> <TD headers="clok_w"> 2 <br> </td>
+	<TD headers="clok_opis"> Wysokiej rozdzielczości zegar CPU (dla procesu) <br> </td> </TR>
+<TR class="c"> <TD headers="clok"> CLOCK_THREAD_CPUTIME_ID <br> </td> <TD headers="clok_w"> 3 <br> </td>
+	<TD headers="clok_opis"> Wysokiej rozdzielczości zegar CPU (dla wątku) <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="statfs64" id="statfs64"
+>Struktura statfs64</a> (funkcje 268 i 269) z <span class="b">/usr/include/bits/statfs.h</span>:</P>
+<PRE>
+	struct statfs64  {
+    		__SWORD_TYPE f_type;		/* 32 bity */
+    		__SWORD_TYPE f_bsize;
+    		__fsblkcnt64_t f_blocks;	/* 64 bity */
+    		__fsblkcnt64_t f_bfree;
+    		__fsblkcnt64_t f_bavail;
+    		__fsfilcnt64_t f_files;
+    		__fsfilcnt64_t f_ffree;
+    		__fsid_t f_fsid;	/* struct { int __val[2]; } */
+    		__SWORD_TYPE f_namelen;
+    		__SWORD_TYPE f_frsize;
+    		__SWORD_TYPE f_spare[5];
+  	};</PRE>
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="mbind_polityka" id="mbind_polityka"
+>Polityka dla pamięci</a> (funkcja 274) z <span class="b">/usr/include/numaif.h</span>
+ i <span class="b">man 2 mbind</span>:</P>
+<TABLE style="width:70%"  class="c" summary="Rodzaje polityki odnośnie pamięci">
+<caption>Rodzaje polityki odnośnie pamięci</caption>
+<TR class="c"> <TH id="mbin"> nazwa </TH> <TH id="mbin_w"> wartość </TH><TH id="mbin_opis"> co oznacza </TH></TR>
+
+<TR class="c"> <TD headers="mbin"> MPOL_DEFAULT <br> </td> <TD headers="mbin_w"> 0 <br> </td>
+	<TD headers="mbin_opis"> Użyj domyślnej polityki procesu <br> </td> </TR>
+<TR class="c"> <TD headers="mbin"> MPOL_PREFERRED <br> </td> <TD headers="mbin_w"> 1 <br> </td>
+	<TD headers="mbin_opis"> Ustal preferowany węzeł do alokacji <br> </td> </TR>
+<TR class="c"> <TD headers="mbin"> MPOL_BIND <br> </td> <TD headers="mbin_w"> 2 <br> </td>
+	<TD headers="mbin_opis"> Ogranicz alokację pamięci tylko do podanych węzłów <br> </td> </TR>
+<TR class="c"> <TD headers="mbin"> MPOL_INTERLEAVE <br> </td> <TD headers="mbin_w"> 3 <br> </td>
+	<TD headers="mbin_opis"> Optymalizacja przepustowości na rzecz czasu trwania <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="mbind_flagi" id="mbind_flagi">Flagi dla pamięci</a> (funkcja 274)
+ z <span class="b">/usr/src/kernels/.../include/linux/mempolicy.h</span>:</P>
+<table class="c" summary="Flagi dla polityki odnośnie pamięci">
+<caption>Flagi dla polityki odnośnie pamięci</caption>
+<TR class="c"> <TH id="mbinf"> nazwa </TH> <TH id="mbinf_w"> wartość </TH><TH id="mbinf_opis"> co oznacza </TH></TR>
+
+<TR class="c"> <TD headers="mbinf"> MPOL_MF_STRICT <br> </td> <TD headers="mbinf_w"> (1&lt;&lt;0) <br> </td>
+	<TD headers="mbinf_opis"> Sprawdź, czy strony pamięci odpowiadają polityce.
+	 Jeśli nie odpowiadają polityce domyślnej lub nie mogą zostać przesunięte MPOL_MF_MOVE*, zwracany jest błąd EIO. <br> </td> </TR>
+<TR class="c"> <TD headers="mbinf"> MPOL_MF_MOVE <br> </td> <TD headers="mbinf_w">(1&lt;&lt;1) <br> </td>
+	<TD headers="mbinf_opis"> Przesuń strony pamięci tego procesu, by odpowiadały polityce <br> </td> </TR>
+<TR class="c"> <TD headers="mbinf"> MPOL_MF_MOVE_ALL <br> </td> <TD headers="mbinf_w"> (1&lt;&lt;2) <br> </td>
+	<TD headers="mbinf_opis"> Przesuń wszystkie strony pamięci, by odpowiadały polityce <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="mq_attr" id="mq_attr"
+>Struktura mq_attr</a> (funkcja 277) z <span class="b">man 3 mq_getattr</span>:</P>
+<PRE>
+         struct mq_attr {
+             long mq_flags;    /* Flagi: 0 lub O_NONBLOCK */
+             long mq_maxmsg;   /* Max. liczba wiadomości w kolejce */
+             long mq_msgsize;  /* Max. rozmiar wiadomości w bajtach */
+             long mq_curmsgs;  /* Liczba wiadomości aktualnie w kolejce */
+         };</PRE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="siginfo" id="siginfo"
+>Struktura siginfo</a> (funkcja 277) z <span class="b">/usr/include/asm/siginfo.h</span>:</P>
+<PRE>
+     typedef struct siginfo {
+	int si_signo;
+	int si_errno;
+	int si_code;
+
+	union {
+		int _pad[SI_PAD_SIZE];
+
+		/* kill() */
+		struct {
+			pid_t _pid;		/* pid wysyłającego */
+			uid_t _uid;		/* uid wysyłającego */
+		} _kill;
+
+		/* czasomierze POSIX.1b */
+		struct {
+			unsigned int _timer1;
+			unsigned int _timer2;
+		} _timer;
+
+		/* sygnały POSIX.1b */
+		struct {
+			pid_t _pid;		/* pid wysyłającego */
+			uid_t _uid;		/* uid wysyłającego */
+			sigval_t _sigval;
+		} _rt;
+
+		/* SIGCHLD */
+		struct {
+			pid_t _pid;		/* który potomek */
+			uid_t _uid;		/* uid wysyłającego */
+			int _status;		/* kod wyjścia */
+			clock_t _utime;
+			clock_t _stime;
+		} _sigchld;
+
+		/* SIGILL, SIGFPE, SIGSEGV, SIGBUS */
+		struct {
+			void *_addr; /* instrukcja, która wywołała błąd */
+		} _sigfault;
+
+		/* SIGPOLL */
+		struct {
+			int _band;	/* POLL_IN, POLL_OUT, POLL_MSG */
+			int _fd;
+		} _sigpoll;
+	} _sifields;
+     } siginfo_t;</PRE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="inotify_fl" id="inotify_fl"
+>Flagi dla inotify</a> (funkcja 292) z <span class="b">/usr/src/kernels/.../include/linux/inotify.h</span>:</P>
+<TABLE style="width:70%"  class="c" summary="Flagi dla powiadamiania o zdarzeniach na obserwowanym obiekcie">
+<caption>Flagi dla powiadamiania o zdarzeniach na obserwowanym obiekcie</caption>
+<TR class="c"> <TH id="ino"> nazwa </TH> <TH id="ino_w"> wartość </TH><TH id="ino_opis"> co oznacza </TH></TR>
+
+<TR class="c"> <TD headers="ino"> IN_ACCESS <br> </td> <TD headers="ino_w"> 0x00000001 <br> </td>
+	<TD headers="ino_opis"> Dostęp do obiektu <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_MODIFY <br> </td> <TD headers="ino_w"> 0x00000002 <br> </td>
+	<TD headers="ino_opis"> Obiekt został zmodyfikowany <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_ATTRIB <br> </td> <TD headers="ino_w"> 0x00000004 <br> </td>
+	<TD headers="ino_opis"> Zmiana atrybutów <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_CLOSE_WRITE <br> </td> <TD headers="ino_w"> 0x00000008 <br> </td>
+	<TD headers="ino_opis"> Zamknięcie pliku otwartego do zapisu <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_CLOSE_NOWRITE <br> </td> <TD headers="ino_w"> 0x00000010 <br> </td>
+	<TD headers="ino_opis"> Zamknięcie pliku nie otwartego do zapisu <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_OPEN <br> </td> <TD headers="ino_w"> 0x00000020 <br> </td>
+	<TD headers="ino_opis"> Obiekt został otwarty <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_MOVED_FROM <br> </td> <TD headers="ino_w"> 0x00000040 <br> </td>
+	<TD headers="ino_opis"> Z obserwowanego katalogu przeniesiono plik <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_MOVED_TO <br> </td> <TD headers="ino_w"> 0x00000080 <br> </td>
+	<TD headers="ino_opis"> Do obserwowanego katalogu przeniesiono plik <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_CREATE <br> </td> <TD headers="ino_w"> 0x00000100 <br> </td>
+	<TD headers="ino_opis"> W obserwowanym katalogu utworzono plik <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_DELETE <br> </td> <TD headers="ino_w"> 0x00000200 <br> </td>
+	<TD headers="ino_opis"> W obserwowanym katalogu skasowano plik <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_DELETE_SELF <br> </td> <TD headers="ino_w"> 0x00000400 <br> </td>
+	<TD headers="ino_opis"> Obserwowany obiekt został usunięty <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_MOVE_SELF <br> </td> <TD headers="ino_w"> 0x00000800 <br> </td>
+	<TD headers="ino_opis"> Obiekt został przeniesiony <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_UNMOUNT <br> </td> <TD headers="ino_w"> 0x00002000 <br> </td>
+	<TD headers="ino_opis"> System plików został odmontowany <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_Q_OVERFLOW <br> </td> <TD headers="ino_w"> 0x00004000 <br> </td>
+	<TD headers="ino_opis"> Przepełnienie kolejki zdarzeń <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_IGNORED <br> </td> <TD headers="ino_w"> 0x00008000 <br> </td>
+	<TD headers="ino_opis"> Plik został zignorowany <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_ONLYDIR <br> </td> <TD headers="ino_w"> 0x01000000 <br> </td>
+	<TD headers="ino_opis"> Obserwuj ścieżkę tylko gdy jest katalogiem <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_DONT_FOLLOW <br> </td> <TD headers="ino_w"> 0x02000000 <br> </td>
+	<TD headers="ino_opis"> Nie podążaj za dowiązaniami symbolicznymi <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_MASK_ADD <br> </td> <TD headers="ino_w"> 0x20000000 <br> </td>
+	<TD headers="ino_opis"> Jeśli ten obiekt już jest obserwowany, to dopisz dane zdarzenia do obserwacji <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_ISDIR <br> </td> <TD headers="ino_w"> 0x40000000 <br> </td>
+	<TD headers="ino_opis"> Zaszło zdarzenie na katalogu <br> </td> </TR>
+<TR class="c"> <TD headers="ino"> IN_ONESHOT <br> </td> <TD headers="ino_w"> 0x80000000 <br> </td>
+	<TD headers="ino_opis"> Obserwuj daną ścieżkę tylko do pierwszego zdarzenia <br> </td> </TR>
+</TABLE>
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE style="WIDTH:70%" class="c" summary="Tabela mówi, jakie argumenty podać funkcji sys_ioprio">
+<caption><a name="ioprio_typ" id="ioprio_typ">Wartości dla funkcji sys_ioprio</a>
+  (numer 289 i 290) z <span class="b">/usr/src/.../include/linux/fcntl.h</span></caption>
+<TR> <TH id="iop"> nazwa </TH> <TH id="iop_w"> wartość </TH> <TH id="iop_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="iop"> IOPRIO_WHO_PROCESS <br> </td> <TD headers="iop_w"> 0 <br> </td>
+	<TD headers="iop_opis"> ECX to numer pojedynczego procesu <br> </td> </TR>
+<TR class="c"> <TD headers="iop"> IOPRIO_WHO_PGRP <br> </td> <TD headers="iop_w"> 1 <br> </td>
+	<TD headers="iop_opis"> ECX to identyfikator grupy procesów <br> </td> </TR>
+<TR class="c"> <TD headers="iop"> IOPRIO_WHO_USER <br> </td> <TD headers="iop_w"> 2 <br> </td>
+	<TD headers="iop_opis"> ECX to identyfikator użytkownika <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Flagi synchronizacji segmentów pliku na dysk">
+<caption><a name="flagi_sync_file_range" id="flagi_sync_file_range">Flagi synchronizacji dla
+ funkcji sys_sync_file_range</a> (numer 314) z <span class="b">/usr/src/.../include/linux/fs.h</span></caption>
+
+<TR> <TH id="sfr"> nazwa </TH> <TH id="sfr_w"> wartość </TH> <TH id="sfr_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="sfr"> SYNC_FILE_RANGE_WAIT_BEFORE <br> </td> <TD headers="sfr_w"> 1 <br> </td>
+	<TD headers="sfr_opis"> Czekaj na synchronizację zmienionych stron, które są zaznaczone do zapisania, przed jakimkolwiek zapisem <br> </td> </TR>
+<TR class="c"> <TD headers="sfr"> SYNC_FILE_RANGE_WRITE <br> </td> <TD headers="sfr_w"> 2 <br> </td>
+	<TD headers="sfr_opis"> Zacznij synchronizację zmienionych stron, które nie są zaznaczone do zapisania <br> </td> </TR>
+<TR class="c"> <TD headers="sfr"> SYNC_FILE_RANGE_WAIT_AFTER <br> </td> <TD headers="sfr_w"> 4 <br> </td>
+	<TD headers="sfr_opis"> Czekaj na synchronizację zmienionych stron, po jakimkolwiek zapisie <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Opcje dla funkcji sigprocmask">
+<caption><a name="procmask" id="procmask">Opcje dla funkcji sigprocmask</a> (numer 175) z
+<span class="b">/usr/include/asm/signal.h</span></caption>
+
+<TR> <TH id="sprm"> nazwa </TH> <TH id="sprm_w"> wartość </TH> <TH id="sprm_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="sprm"> SIG_BLOCK <br> </td> <TD headers="sprm_w"> 0 <br> </td>
+	<TD headers="sprm_opis"> Zestaw blokowanych sygnałów jest sumą bieżącego zestawu i zestawu w [ECX] <br> </td> </TR>
+<TR class="c"> <TD headers="sprm"> SIG_UNBLOCK <br> </td> <TD headers="sprm_w"> 1 <br> </td>
+	<TD headers="sprm_opis"> Sygnały z [ECX] zostają odblokowane <br> </td> </TR>
+<TR class="c"> <TD headers="sprm"> SIG_SETMASK <br> </td> <TD headers="sprm_w"> 2 <br> </td>
+	<TD headers="sprm_opis"> Zestaw blokowanych sygnałów jest ustawiany na [ECX] <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Opcje dla funkcji fadvice">
+<caption><a name="fadvice" id="fadvice">Opcje dla funkcji fadvice</a> (numer 272) z
+<span class="b">/usr/include/bits/fcntl.h</span></caption>
+
+<TR> <TH id="fadv64"> nazwa </TH> <TH id="fadv64_w"> wartość </TH> <TH id="fadv64_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="fadv64"> POSIX_FADV_NORMAL <br> </td> <TD headers="fadv64_w"> 0 <br> </td>
+	<TD headers="fadv64_opis"> Domyślny dostęp <br> </td> </TR>
+<TR class="c"> <TD headers="fadv64"> POSIX_FADV_RANDOM <br> </td> <TD headers="fadv64_w"> 1 <br> </td>
+	<TD headers="fadv64_opis"> Dostęp w losowej kolejności <br> </td> </TR>
+<TR class="c"> <TD headers="fadv64"> POSIX_FADV_SEQUENTIAL <br> </td> <TD headers="fadv64_w"> 2 <br> </td>
+	<TD headers="fadv64_opis"> Dostęp sekwencyjny <br> </td> </TR>
+<TR class="c"> <TD headers="fadv64"> POSIX_FADV_WILLNEED <br> </td> <TD headers="fadv64_w"> 3 <br> </td>
+	<TD headers="fadv64_opis"> Te dane będą potrzebne w najbliższej przyszłości <br> </td> </TR>
+<TR class="c"> <TD headers="fadv64"> POSIX_FADV_DONTNEED <br> </td> <TD headers="fadv64_w"> 4 <br> </td>
+	<TD headers="fadv64_opis"> Te dane nie będą potrzebne w najbliższej przyszłości <br> </td> </TR>
+<TR class="c"> <TD headers="fadv64"> POSIX_FADV_NOREUSE <br> </td> <TD headers="fadv64_w"> 5 <br> </td>
+	<TD headers="fadv64_opis"> Dane będą potrzebne tylko raz <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Flagi dla funkcji splice">
+<caption><a name="flagi_splice" id="flagi_splice">Flagi dla funkcji splice</a> (numer 313),
+vmsplice (numer 316) i tee (numer 315) z
+<span class="b">/usr/include/bits/fcntl.h</span></caption>
+
+<TR> <TH id="splf"> nazwa </TH> <TH id="splf_w"> wartość </TH> <TH id="splf_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="splf"> SPLICE_F_MOVE <br> </td> <TD headers="splf_w"> 1 <br> </td>
+	<TD headers="splf_opis"> Spróbuj przenieść strony pamięci zamiast kopiowania. Nic nie robi w sys_tee. Nieużywane w sys_vmsplice. <br> </td> </TR>
+<TR class="c"> <TD headers="splf"> SPLICE_F_NONBLOCK <br> </td> <TD headers="splf_w"> 2 <br> </td>
+	<TD headers="splf_opis"> Nie blokuj w czasie operacji wejścia-wyjścia <br> </td> </TR>
+<TR class="c"> <TD headers="splf"> SPLICE_F_MORE <br> </td> <TD headers="splf_w"> 4 <br> </td>
+	<TD headers="splf_opis"> W kolejnych wywołaniach będą dalsze dane. Nic nie robi w sys_tee i sys_vmsplice. <br> </td> </TR>
+<TR class="c"> <TD headers="splf"> SPLICE_F_GIFT <br> </td> <TD headers="splf_w"> 8 <br> </td>
+	<TD headers="splf_opis"> Nieużywane w sys_splice i sys_tee. W sys_vmsplice oznacza darowanie tych stron pamięci dla jądra. <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Flagi dla funkcji shmget">
+<caption><a name="shmfl" id="shmfl">Flagi dla funkcji shmget</a> (numer 29 w x86-64) z
+<span class="b">/usr/include/linux/ipc.h</span> i <span class="b">/usr/include/bits/shm.h</span></caption>
+
+<TR> <TH id="shmfl_n"> nazwa </TH> <TH id="shmfl_w"> wartość ósemkowo </TH> <TH id="shmfl_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="shmfl_n"> IPC_CREAT <br> </td> <TD headers="shmfl_w"> 00001000 <br> </td>
+	<TD headers="shmfl_opis"> Stwórz nowy segment <br> </td> </TR>
+<TR class="c"> <TD headers="shmfl_n"> IPC_EXCL <br> </td> <TD headers="shmfl_w"> 00002000 <br> </td>
+	<TD headers="shmfl_opis"> Wyłączny dostęp do segmentu <br> </td> </TR>
+<TR class="c"> <TD headers="shmfl_n"> SHM_HUGETLB <br> </td> <TD headers="shmfl_w"> 04000 <br> </td>
+	<TD headers="shmfl_opis"> Alokuj używając "wielkich stron" pamięci. <br> </td> </TR>
+<TR class="c"> <TD headers="shmfl_n"> SHM_NORESERVE <br> </td> <TD headers="shmfl_w"> 010000 <br> </td>
+	<TD headers="shmfl_opis"> Nie rezerwuj przestrzeni wymiany dla tego segmentu<br> </td> </TR>
+<TR class="c"> <TD headers="shmfl_n"> tryb dostępu <br> </td> <TD headers="shmfl_w"> 000-777 <br> </td>
+	<TD headers="shmfl_opis"> Takie samo znaczenie, jak we <a href="#tryb">flagach dostępu</a><br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Flagi dla funkcji shmat">
+<caption><a name="shmatfl" id="shmatfl">Flagi dla funkcji shmat</a> (numer 30 w x86-64) z
+<span class="b">/usr/include/bits/shm.h</span></caption>
+
+<TR> <TH id="shmatfl_n"> nazwa </TH> <TH id="shmatfl_w"> wartość ósemkowo </TH> <TH id="shmatfl_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="shmatfl_n"> SHM_RDONLY <br> </td> <TD headers="shmatfl_w"> 010000 <br> </td>
+	<TD headers="shmatfl_opis"> Podłącz segment tylko do odczytu. <br> </td> </TR>
+<TR class="c"> <TD headers="shmatfl_n"> SHM_RND <br> </td> <TD headers="shmatfl_w"> 020000 <br> </td>
+	<TD headers="shmatfl_opis"> Zaokrąglaj adres w dół do wielokrotności SHMLBA. <br> </td> </TR>
+<TR class="c"> <TD headers="shmatfl_n"> SHM_REMAP <br> </td> <TD headers="shmatfl_w"> 040000 <br> </td>
+	<TD headers="shmatfl_opis"> Zmień wszystkie mapowania w segmencie <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Rozkazy dla funkcji shmctl">
+<caption><a name="shmctl" id="shmctl">Rozkazy dla funkcji shmctl</a> (numer 31 w x86-64) z
+<span class="b">/usr/include/linux/ipc.h</span> i <span class="b">/usr/include/bits/shm.h</span></caption>
+
+<TR> <TH id="shmctlfl_n"> nazwa </TH> <TH id="shmctlfl_w"> wartość </TH> <TH id="shmctlfl_opis"> znaczenie i wartość zwracana </TH> </TR>
+<TR class="c"> <TD headers="shmctlfl_n"> IPC_RMID <br> </td> <TD headers="shmctlfl_w"> 0 <br> </td>
+	<TD headers="shmctlfl_opis"> Zaznacz segment do usunięcia. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="shmctlfl_n"> IPC_SET <br> </td> <TD headers="shmctlfl_w"> 1 <br> </td>
+	<TD headers="shmctlfl_opis"> Zapisz niektóre elementy podanej struktury do jądra. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="shmctlfl_n"> IPC_STAT <br> </td> <TD headers="shmctlfl_w"> 2 <br> </td>
+	<TD headers="shmctlfl_opis"> Skopiuj dane z jądra o podanym segmencie do podanej struktury. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="shmctlfl_n"> IPC_INFO <br> </td> <TD headers="shmctlfl_w"> 3 <br> </td>
+	<TD headers="shmctlfl_opis"> Zwróć informacje o limitach i parametrach współdzielonej pamięci.
+	Zwraca ostatni indeks w tablicy jądra do współdzielonej pamięci. <br> </td> </TR>
+<TR class="c"> <TD headers="shmctlfl_n"> SHM_LOCK <br> </td> <TD headers="shmctlfl_w"> 11 <br> </td>
+	<TD headers="shmctlfl_opis"> Zapobiega wymianie (swapowaniu) segmentu. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="shmctlfl_n"> SHM_UNLOCK <br> </td> <TD headers="shmctlfl_w"> 12 <br> </td>
+	<TD headers="shmctlfl_opis"> Umożliwia wymianę (swapowanie) segmentu. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="shmctlfl_n"> SHM_STAT <br> </td> <TD headers="shmctlfl_w"> 13 <br> </td>
+	<TD headers="shmctlfl_opis"> Podobne do IPC_STAT, ale identyfikator oznacza numer w tablicy jądra.
+	Zwraca identyfikator segmentu o danym numerze. <br> </td> </TR>
+<TR class="c"> <TD headers="shmctlfl_n"> SHM_INFO <br> </td> <TD headers="shmctlfl_w"> 14 <br> </td>
+	<TD headers="shmctlfl_opis"> Zwróć informacje o zasobach używanych przez współdzieloną pamięć.
+	Zwraca ostatni indeks w tablicy jądra do współdzielonej pamięci. <br> </td> </TR>
+</TABLE>
+
+
+<BR>
+<P><a name="shmid_ds" id="shmid_ds"
+>Struktura shmid_ds</a> (funkcja 31 w x86-64) z <span class="b">/usr/include/bits/shm.h</span>:</P>
+<PRE>
+	struct shmid_ds {
+		struct ipc_perm shm_perm;    /* Właściciel i uprawnienia */
+		size_t          shm_segsz;   /* Rozmiar segmentu w bajtach */
+		time_t          shm_atime;   /* Czas ostatniego dołączenia */
+		time_t          shm_dtime;   /* Czas ostatniego odłączenia */
+		time_t          shm_ctime;   /* Czas ostatniej zmiany */
+		pid_t           shm_cpid;    /* PID twórcy */
+		pid_t           shm_lpid;    /* PID ostatniej operacji shmat
+						lub shmdt */
+		shmatt_t        shm_nattch;  /* Bieżąca liczba podłączeń */
+		...
+	};</pre>
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Domeny dla gniazd">
+<caption><a name="socket_dom" id="socket_dom">Domeny dla gniazd</a> (funkcja 41 w x86-64) z
+<span class="b">/usr/include/bits/socket.h</span></caption>
+
+<TR> <TH id="sockdom_n"> nazwa </TH> <TH id="sockdom_w"> wartość </TH> <TH id="sockdom_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_UNIX, AF_LOCAL <br> </td> <TD headers="sockdom_w"> 1 <br> </td>
+	<TD headers="sockdom_opis"> Lokalna komunikacja <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_INET <br> </td> <TD headers="sockdom_w"> 2 <br> </td>
+	<TD headers="sockdom_opis"> Protokoły IPv4 <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_AX25 <br> </td> <TD headers="sockdom_w"> 3 <br> </td>
+	<TD headers="sockdom_opis"> Protokół AX.25 amatorskiego radia <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_IPX <br> </td> <TD headers="sockdom_w"> 4 <br> </td>
+	<TD headers="sockdom_opis"> Protokoły Novell IPX <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_APPLETALK <br> </td> <TD headers="sockdom_w"> 5 <br> </td>
+	<TD headers="sockdom_opis"> Appletalk <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_NETROM <br> </td> <TD headers="sockdom_w"> 6 <br> </td>
+	<TD headers="sockdom_opis"> Amatorskie radio NetROM <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_BRIDGE <br> </td> <TD headers="sockdom_w"> 7 <br> </td>
+	<TD headers="sockdom_opis"> Mostek wieloprotokołowy <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_ATMPVC <br> </td> <TD headers="sockdom_w"> 8 <br> </td>
+	<TD headers="sockdom_opis"> Dostęp do surowych ATM PVC <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_X25 <br> </td> <TD headers="sockdom_w"> 9 <br> </td>
+	<TD headers="sockdom_opis"> Protokół ITU-T X.25 / ISO-8208 <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_INET6 <br> </td> <TD headers="sockdom_w"> 10 <br> </td>
+	<TD headers="sockdom_opis"> Protokoły IPv6 <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_ROSE <br> </td> <TD headers="sockdom_w"> 11 <br> </td>
+	<TD headers="sockdom_opis"> Amatorskie radio X.25 PLP <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_DECnet <br> </td> <TD headers="sockdom_w"> 12 <br> </td>
+	<TD headers="sockdom_opis"> Zarezerwowane dla projektu DECnet <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_NETBEUI <br> </td> <TD headers="sockdom_w"> 13 <br> </td>
+	<TD headers="sockdom_opis"> Zarezerwowane dla projektu 802.2LLC <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_SECURITY <br> </td> <TD headers="sockdom_w"> 14 <br> </td>
+	<TD headers="sockdom_opis"> Pseudo-domena dla wywołania zwrotnego zabezpieczeń <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_KEY <br> </td> <TD headers="sockdom_w"> 15 <br> </td>
+	<TD headers="sockdom_opis"> Interfejs zarządzania kluczami <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_NETLINK <br> </td> <TD headers="sockdom_w"> 16 <br> </td>
+	<TD headers="sockdom_opis"> Urządzenie interfejsu do jądra <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_PACKET <br> </td> <TD headers="sockdom_w"> 17 <br> </td>
+	<TD headers="sockdom_opis"> Niskopoziomowy interfejs pakietowy <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_ASH <br> </td> <TD headers="sockdom_w"> 18 <br> </td>
+	<TD headers="sockdom_opis"> Ash <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_ECONET <br> </td> <TD headers="sockdom_w"> 19 <br> </td>
+	<TD headers="sockdom_opis"> Acorn Econet <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_ATMSVC <br> </td> <TD headers="sockdom_w"> 20 <br> </td>
+	<TD headers="sockdom_opis"> ATM SVC <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_SNA <br> </td> <TD headers="sockdom_w"> 22 <br> </td>
+	<TD headers="sockdom_opis"> Projekt Linux SNA <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_IRDA <br> </td> <TD headers="sockdom_w"> 23 <br> </td>
+	<TD headers="sockdom_opis"> Gniazda IrDA <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_PPPOX <br> </td> <TD headers="sockdom_w"> 24 <br> </td>
+	<TD headers="sockdom_opis"> Gniazda PPPoX <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_WANPIPE <br> </td> <TD headers="sockdom_w"> 25 <br> </td>
+	<TD headers="sockdom_opis"> Interfejs do gniazd Wanpipe <br> </td> </TR>
+<TR class="c"> <TD headers="sockdom_n"> AF_BLUETOOTH <br> </td> <TD headers="sockdom_w"> 31 <br> </td>
+	<TD headers="sockdom_opis"> Gniazda Bluetooth <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Typy gniazd">
+<caption><a name="socket_typ" id="socket_typ">Typy gniazd</a> (funkcja 41 w x86-64) z
+<span class="b">/usr/include/bits/socket.h</span></caption>
+
+<TR> <TH id="socktyp_n"> nazwa </TH> <TH id="socktyp_w"> wartość </TH> <TH id="socktyp_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="socktyp_n"> SOCK_STREAM <br> </td> <TD headers="socktyp_w"> 1 <br> </td>
+	<TD headers="socktyp_opis"> Sekwencjonowany, wiarygodny, dwukierunkowy, opary na połączeniu strumień bajtów <br> </td> </TR>
+<TR class="c"> <TD headers="socktyp_n"> SOCK_DGRAM <br> </td> <TD headers="socktyp_w"> 2 <br> </td>
+	<TD headers="socktyp_opis"> Obsługuje datagramy (bez połączenia, niewiarygodny) <br> </td> </TR>
+<TR class="c"> <TD headers="socktyp_n"> SOCK_RAW <br> </td> <TD headers="socktyp_w"> 3 <br> </td>
+	<TD headers="socktyp_opis"> Dostęp bezpośredni do protokołów sieciowych <br> </td> </TR>
+<TR class="c"> <TD headers="socktyp_n"> SOCK_RDM <br> </td> <TD headers="socktyp_w"> 4 <br> </td>
+	<TD headers="socktyp_opis"> Wiarygodna warstwa datagramów bez gwarancji kolejności. <br> </td> </TR>
+<TR class="c"> <TD headers="socktyp_n"> SOCK_SEQPACKET <br> </td> <TD headers="socktyp_w"> 5 <br> </td>
+	<TD headers="socktyp_opis"> Sekwencjonowany, wiarygodny, dwukierunkowy, opary na połączeniu strumień bajtów.
+				Odbiorca musi przeczytać cały pakiet za każdym czytaniem. <br> </td> </TR>
+<TR class="c"> <TD headers="socktyp_n"> SOCK_PACKET <br> </td> <TD headers="socktyp_w"> 10 <br> </td>
+	<TD headers="socktyp_opis"> Przestarzałe, nie używać <br> </td> </TR>
+<TR class="c"> <TD headers="socktyp_n"> SOCK_NONBLOCK <br> </td> <TD headers="socktyp_w"> 04000 ósemkowo <br> </td>
+	<TD headers="socktyp_opis"> Ustaw tryb nieblokujący. <br> </td> </TR>
+<TR class="c"> <TD headers="socktyp_n"> SOCK_CLOEXEC <br> </td> <TD headers="socktyp_w"> 02000000 ósemkowo <br> </td>
+	<TD headers="socktyp_opis"> Ustaw flagę zamknij-podczas-exec. <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Flagi dla funkcji sendto">
+<caption><a name="sendto_fl" id="sendto_fl">Flagi dla funkcji sendto</a> (numer 44 w x86-64) i
+recvfrom (numer 45 w x86-64) z <span class="b">/usr/include/bits/socket.h</span></caption>
+
+<TR> <TH id="sendto_fl_n"> nazwa </TH> <TH id="sendto_fl_w"> wartość </TH> <TH id="sendto_fl_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_CONFIRM <br> </td> <TD headers="sendto_fl_w"> 0x800 <br> </td>
+	<TD headers="sendto_fl_opis"> (sendto) Potwierdzenie otrzymania odpowiedzi <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_DONTROUTE <br> </td> <TD headers="sendto_fl_w"> 0x04 <br> </td>
+	<TD headers="sendto_fl_opis"> (sendto) Nie używaj bramki do wysyłania, wyślij bezpośrednio <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_DONTWAIT <br> </td> <TD headers="sendto_fl_w"> 0x40 <br> </td>
+	<TD headers="sendto_fl_opis"> (sendto, recvfrom) Włącz tryb nieblokujący <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_EOR <br> </td> <TD headers="sendto_fl_w"> 0x80 <br> </td>
+	<TD headers="sendto_fl_opis"> (sendto) Koniec rekordu danych <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_MORE <br> </td> <TD headers="sendto_fl_w"> 0x8000 <br> </td>
+	<TD headers="sendto_fl_opis"> (sendto) Uruchamiający ma więcej danych do wysłania <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_NOSIGNAL <br> </td> <TD headers="sendto_fl_w"> 0x4000 <br> </td>
+	<TD headers="sendto_fl_opis"> (sendto) Nie wysyłaj sygnałów <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_OOB <br> </td> <TD headers="sendto_fl_w"> 0x01 <br> </td>
+	<TD headers="sendto_fl_opis"> (sendto, recvfrom) Wyślij dane poza kolejnością <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_CMSG_CLOEXEC <br> </td> <TD headers="sendto_fl_w"> 0x40000000 <br> </td>
+	<TD headers="sendto_fl_opis"> (recvmsg) Ustaw flagę zamknij-podczas-exc na deskryptorze otrzymanym podczas operacji SCM_RIGHTS <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_ERRQUEUE <br> </td> <TD headers="sendto_fl_w"> 0x2000 <br> </td>
+	<TD headers="sendto_fl_opis"> (recvfrom) Błędy powinny być odbierane przez kolejkę błędów gniazda <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_PEEK <br> </td> <TD headers="sendto_fl_w"> 0x02 <br> </td>
+	<TD headers="sendto_fl_opis"> (recvfrom) Pobierz dane z kolejki bez usuwania ich z kolejki <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_TRUNC <br> </td> <TD headers="sendto_fl_w"> 0x20 <br> </td>
+	<TD headers="sendto_fl_opis"> (recvfrom) Zwróć prawdziwą długość danych, nawet gdy bufor był mniejszy <br> </td> </TR>
+<TR class="c"> <TD headers="sendto_fl_n"> MSG_WAITALL <br> </td> <TD headers="sendto_fl_w"> 0x100 <br> </td>
+	<TD headers="sendto_fl_opis"> (recvfrom) Czekaj na pełne zakończenie operacji <br> </td> </TR>
+</TABLE>
+
+
+<BR>
+<P><a name="sendmsghdr" id="sendmsghdr"
+>Struktura msghdr</a> (funkcja 46 w x86-64) z <span class="b">man 2 sendmsg</span>:</P>
+<PRE>
+		struct msghdr {
+			void         *msg_name;       /* opcjonalny adres */
+			socklen_t     msg_namelen;    /* rozmiar adresu */
+			struct iovec *msg_iov;        /* tablica wysyłania i
+							 zbierania */
+			size_t        msg_iovlen;     /* liczba elementów w
+							  msg_iov */
+			void         *msg_control;    /* dane pomocnicze */
+			socklen_t     msg_controllen; /* długość bufora danych
+							 pomocniczych */
+			int           msg_flags;      /* flagi na odebranej
+							 wiadomości: MSG_EOR,
+							 MSG_TRUNC, MSG_CTRUNC,
+							 MSG_OOB, MSG_ERRQUEUE*/
+			};</pre>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="sembuf" id="sembuf"
+>Struktura sembuf</a> (funkcja 65 w x86-64) z <span class="b">/usr/include/sys/sem.h</span>:</P>
+<PRE>
+	struct sembuf
+	{
+		unsigned short int sem_num;   /* liczba semaforów */
+		short int sem_op;             /* operacja na semaforze:
+						 liczba dodatnia jest dodawana
+						 zero oznacza czekanie na zero
+						liczba ujemna jest odejmowana*/
+		short int sem_flg;            /* flaga operacji:
+						 IPC_NOWAIT=04000 ósemkowo
+						 lub SEM_UNDO=0x1000 */
+	};</pre>
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Rozkazy dla semaforów">
+<caption><a name="sem_cmd" id="sem_cmd">Rozkazy dla semaforów</a> (funkcja 66 w x86-64) z
+<span class="b">/usr/include/bits/sem.h</span> i <span class="b">/usr/include/bits/ipc.h</span></caption>
+
+<TR> <TH id="sem_cmd_n"> nazwa </TH> <TH id="sem_cmd_w"> wartość </TH> <TH id="sem_cmd_opis"> znaczenie i wartość zwracana </TH> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> IPC_RMID <br> </td> <TD headers="sem_cmd_w"> 0 <br> </td>
+	<TD headers="sem_cmd_opis"> Usuń zestaw semaforów. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> IPC_SET <br> </td> <TD headers="sem_cmd_w"> 1 <br> </td>
+	<TD headers="sem_cmd_opis"> Kopiuj dane z tablicy buf o adresie podanym w R10 do struktur jądra. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> IPC_STAT <br> </td> <TD headers="sem_cmd_w"> 2 <br> </td>
+	<TD headers="sem_cmd_opis"> Kopiuj dane ze struktur jądra do tablicy buf o adresie podanym w R10. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> IPC_INFO <br> </td> <TD headers="sem_cmd_w"> 3 <br> </td>
+	<TD headers="sem_cmd_opis"> Zwróć w buf w R10 informacje o systemowych limitach i parametrach semaforów.
+		Zwraca numer ostatniego używanego elementu w tablicy jądra. <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> GETPID <br> </td> <TD headers="sem_cmd_w"> 11 <br> </td>
+	<TD headers="sem_cmd_opis"> Zwraca PID procesu, który wykonał ostatnią operację na tym semaforze <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> GETVAL <br> </td> <TD headers="sem_cmd_w"> 12 <br> </td>
+	<TD headers="sem_cmd_opis"> Zwraca wartość podanego semafora w zestawie <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> GETALL <br> </td> <TD headers="sem_cmd_w"> 13 <br> </td>
+	<TD headers="sem_cmd_opis"> Do tablicy <span lang="en">array</span> o adresie podanym w R10 wpisuje wartości wszystkich semaforów w systemie. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> GETNCNT <br> </td> <TD headers="sem_cmd_w"> 14 <br> </td>
+	<TD headers="sem_cmd_opis"> Zwraca liczbę procesów czekających na zwiększenie się podanego semafora w zestawie <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> GETZCNT <br> </td> <TD headers="sem_cmd_w"> 15 <br> </td>
+	<TD headers="sem_cmd_opis"> Zwraca liczbę procesów czekających na wyzerowanie się podanego semafora w zestawie <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> SETVAL <br> </td> <TD headers="sem_cmd_w">  16<br> </td>
+	<TD headers="sem_cmd_opis"> Ustaw wartości podane semafora w zestawie na tę podaną w R10. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> SETALL <br> </td> <TD headers="sem_cmd_w"> 17 <br> </td>
+	<TD headers="sem_cmd_opis"> Ustaw wartości wszystkich semaforów na te podane w tablicy <span lang="en">array</span> o adresie podanym w R10. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> SEM_STAT <br> </td> <TD headers="sem_cmd_w"> 18 <br> </td>
+	<TD headers="sem_cmd_opis"> Podobne do IPC_STAT, lecz identyfikator zestawu semaforów jest numerem semafora w tablicy jądra.
+		Zwraca identyfikator zestawu semaforów o podanym numerze. <br> </td> </TR>
+<TR class="c"> <TD headers="sem_cmd_n"> SEM_INFO <br> </td> <TD headers="sem_cmd_w"> 19 <br> </td>
+	<TD headers="sem_cmd_opis"> Podobne do IPC_INFO, zwraca inne wartości w niektórych polach (<span class="b">man semctl</span>)
+		Zwraca numer ostatniego używanego elementu w tablicy jądra. <br> </td> </TR>
+</TABLE>
+
+
+
+<BR>
+<P><a name="sem_semun" id="sem_semun"
+>Unia semun</a> (funkcja 66 w x86-64) z <span class="b">man 2 semctl</span>:</P>
+<PRE>
+		union semun {
+			int              val;   /* Wartość dla SETVAL */
+			struct semid_ds *buf;   /* Bufor na IPC_STAT, IPC_SET */
+			unsigned short  *array; /* Tablica dla GETALL, SETALL */
+			struct seminfo  *__buf; /* Bufor dla IPC_INFO */
+		};</pre>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="msgp" id="msgp"
+>Struktura msgp</a> (funkcja 69 w x86-64) z <span class="b">man 2 msgsnd</span>:</P>
+<PRE>
+		struct msgbuf {
+			long mtype;       /* typ wiadomości, musi być > 0 */
+			char mtext[1];    /* dane wiadomości */
+		};</pre>
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Flagi dla msgrcv">
+<caption><a name="msgrcv_fl" id="msgrcv_fl">Flagi dla funkcji msgrcv</a> (numer 70 w x86-64) z
+<span class="b">/usr/include/bits/msq.h</span></caption>
+
+<TR> <TH id="msgrcv_n"> nazwa </TH> <TH id="msgrcv_w"> wartość ósemkowo </TH> <TH id="msgrcv_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="msgrcv_n"> IPC_NOWAIT <br> </td> <TD headers="msgrcv_w"> 04000 <br> </td>
+	<TD headers="msgrcv_opis"> Nie czekaj na wiadomości <br> </td> </TR>
+<TR class="c"> <TD headers="msgrcv_n"> MSG_EXCEPT <br> </td> <TD headers="msgrcv_w"> 020000 <br> </td>
+	<TD headers="msgrcv_opis"> Odbierz pierwszą wiadomość NIE będącą podanego typu <br> </td> </TR>
+<TR class="c"> <TD headers="msgrcv_n"> MSG_NOERROR <br> </td> <TD headers="msgrcv_w"> 010000 <br> </td>
+	<TD headers="msgrcv_opis"> Obcinaj wiadomości do podanego rozmiaru <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="msqid_ds" id="msqid_ds"
+>Struktura msqid_ds</a> (funkcja 71 w x86-64) z <span class="b">man 2 msgctl</span>:</P>
+<PRE>
+	struct msqid_ds {
+		struct ipc_perm msg_perm;     /* Właściciel i uprawnienia */
+		time_t          msg_stime;    /* Czas ostatniego msgsnd */
+		time_t          msg_rtime;    /* Czas ostatniego msgrcv */
+		time_t          msg_ctime;    /* Czas ostatniej zmiany */
+		unsigned long   __msg_cbytes; /* Aktualna liczba bajtów w
+						 kolejce */
+		msgqnum_t       msg_qnum;     /* Aktualna liczba wiadomości w
+						 kolejce */
+		msglen_t        msg_qbytes;   /* Maksymalna liczba bajtów
+						 dozwolona w kolejce */
+		pid_t           msg_lspid;    /* PID ostatniego msgsnd */
+		pid_t           msg_lrpid;    /* PID ostatniego msgrcv */
+	};
+
+	struct ipc_perm {
+		key_t          __key;       /* Klucz podany msgget */
+		uid_t          uid;         /* Efektywny UID of właściciela */
+		gid_t          gid;         /* Efektywny GID of właściciela */
+		uid_t          cuid;        /* Efektywny UID of twórcy */
+		gid_t          cgid;        /* Efektywny GID of twórcy */
+		unsigned short mode;        /* Uprawnienia */
+		unsigned short __seq;       /* Numer sekwencyjny */
+	};</pre>
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Rozkazy dla kolejek">
+<caption><a name="msgcmd" id="msgcmd">Rozkazy dla kolejek</a> (funkcja 71 w x86-64) z
+<span class="b">/usr/include/bits/msq.h</span> i <span class="b">/usr/include/bits/ipc.h</span></caption>
+
+<TR> <TH id="msq_cmd_n"> nazwa </TH> <TH id="msq_cmd_w"> wartość </TH> <TH id="msq_cmd_opis"> znaczenie i wartość zwracana </TH> </TR>
+<TR class="c"> <TD headers="msq_cmd_n"> IPC_RMID <br> </td> <TD headers="msq_cmd_w"> 0 <br> </td>
+	<TD headers="msq_cmd_opis"> Usuń kolejkę. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="msq_cmd_n"> IPC_SET <br> </td> <TD headers="msq_cmd_w"> 1 <br> </td>
+	<TD headers="msq_cmd_opis"> Kopiuj dane z tablicy buf o adresie podanym w R10 do struktur jądra. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="msq_cmd_n"> IPC_STAT <br> </td> <TD headers="msq_cmd_w"> 2 <br> </td>
+	<TD headers="msq_cmd_opis"> Kopiuj dane ze struktur jądra do tablicy buf o adresie podanym w R10. Zwraca 0. <br> </td> </TR>
+<TR class="c"> <TD headers="msq_cmd_n"> IPC_INFO <br> </td> <TD headers="msq_cmd_w"> 3 <br> </td>
+	<TD headers="msq_cmd_opis"> Zwróć w buf w R10 informacje o systemowych limitach i parametrach kolejek.
+		Zwraca numer ostatniego używanego elementu w tablicy jądra. <br> </td> </TR>
+<TR class="c"> <TD headers="msq_cmd_n"> MSG_STAT <br> </td> <TD headers="msq_cmd_w"> 11 <br> </td>
+	<TD headers="msq_cmd_opis"> Podobne do IPC_STAT, lecz identyfikator zestawu semaforów jest numerem semafora w tablicy jądra.
+		Zwraca identyfikator zestawu semaforów o podanym numerze. <br> </td> </TR>
+<TR class="c"> <TD headers="msq_cmd_n"> MSG_INFO <br> </td> <TD headers="msq_cmd_w"> 12 <br> </td>
+	<TD headers="msq_cmd_opis"> Podobne do IPC_INFO, zwraca inne wartości w niektórych polach (<span class="b">man semctl</span>)
+		Zwraca numer ostatniego używanego elementu w tablicy jądra. <br> </td> </TR>
+</TABLE>
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Podfunkcje dla arch_prctl">
+<caption><a name="archprctl" id="archprctl">Podfunkcje dla arch_prctl</a> (numer 158 w x86-64) z
+<span class="b">linux/arch/x86/include/asm/prctl.h</span></caption>
+
+<TR> <TH id="aprctl_n"> nazwa </TH> <TH id="aprctl_w"> wartość </TH> <TH id="aprctl_opis"> znaczenie i wartość zwracana </TH> </TR>
+<TR class="c"> <TD headers="aprctl_n"> ARCH_SET_FS <br> </td> <TD headers="aprctl_w"> 0x1002 <br> </td>
+	<TD headers="aprctl_opis"> Ustaw adres bazowy deskryptora FS na podany adres <br> </td> </TR>
+<TR class="c"> <TD headers="aprctl_n"> ARCH_GET_FS <br> </td> <TD headers="aprctl_w">  0x1003<br> </td>
+	<TD headers="aprctl_opis"> Pobierz adres bazowy deskryptora FS do zmiennej pod podanym adresem <br> </td> </TR>
+<TR class="c"> <TD headers="aprctl_n"> ARCH_SET_GS <br> </td> <TD headers="aprctl_w"> 0x1001 <br> </td>
+	<TD headers="aprctl_opis"> Ustaw adres bazowy deskryptora GS na podany adres <br> </td> </TR>
+<TR class="c"> <TD headers="aprctl_n"> ARCH_GET_GS <br> </td> <TD headers="aprctl_w"> 0x1004 <br> </td>
+	<TD headers="aprctl_opis"> Pobierz adres bazowy deskryptora GS do zmiennej pod podanym adresem <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="getcpu_cache" id="getcpu_cache"
+>Struktura getcpu_cache</a> (funkcja 318) z <span class="b">linux/include/linux/getcpu.h</span>:</P>
+<PRE>
+		struct getcpu_cache {
+			unsigned long blob[128 / sizeof(long)];
+		};</pre>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="robust_list_head" id="robust_list_head"
+>Struktura robust_list_head</a> (funkcja 312) z <span class="b">/usr/include/linux/futex.h</span>:</P>
+<PRE>
+		struct robust_list {
+		        struct robust_list *next;
+		};
+
+		struct robust_list_head {
+
+		        struct robust_list list;
+
+        		long futex_offset;
+
+        		struct robust_list *list_op_pending;
+		};</pre>
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Podfunkcje dla keyctl">
+<caption><a name="keyctl_cmd" id="keyctl_cmd">Podfunkcje dla keyctl</a> (numer 288) z
+<span class="b">/usr/include/linux/keyctl.h</span></caption>
+
+<TR> <TH id="keyctl_n"> nazwa </TH> <TH id="keyctl_w"> wartość </TH> <TH id="keyctl_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_GET_KEYRING_ID <br> </td> <TD headers="keyctl_w"> 0 <br> </td>
+	<TD headers="keyctl_opis"> Pobierz identyfikator zbioru kluczy <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_JOIN_SESSION_KEYRING <br> </td> <TD headers="keyctl_w"> 1 <br> </td>
+	<TD headers="keyctl_opis"> Podłącz lub zacznij sesyjny zbiór kluczy <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_UPDATE <br> </td> <TD headers="keyctl_w"> 2 <br> </td>
+	<TD headers="keyctl_opis"> Zaktualizuj klucz <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_REVOKE <br> </td> <TD headers="keyctl_w"> 3 <br> </td>
+	<TD headers="keyctl_opis"> Unieważnij klucz <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_CHOWN <br> </td> <TD headers="keyctl_w"> 4 <br> </td>
+	<TD headers="keyctl_opis"> Zmień właściciela klucza <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_SETPERM <br> </td> <TD headers="keyctl_w"> 5 <br> </td>
+	<TD headers="keyctl_opis"> Ustaw uprawnienia do klucza <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_DESCRIBE <br> </td> <TD headers="keyctl_w"> 6 <br> </td>
+	<TD headers="keyctl_opis"> Opisz klucz <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_CLEAR <br> </td> <TD headers="keyctl_w"> 7 <br> </td>
+	<TD headers="keyctl_opis"> Wyczyść zawartość zbioru kluczy <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_LINK <br> </td> <TD headers="keyctl_w"> 8 <br> </td>
+	<TD headers="keyctl_opis"> Połącz klucz ze zbiorem kluczy <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_UNLINK <br> </td> <TD headers="keyctl_w"> 9 <br> </td>
+	<TD headers="keyctl_opis"> Odłącz klucz od zbioru kluczy <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_SEARCH <br> </td> <TD headers="keyctl_w"> 10 <br> </td>
+	<TD headers="keyctl_opis"> Znajdź klucz w zbiorze kluczy <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_READ <br> </td> <TD headers="keyctl_w"> 11 <br> </td>
+	<TD headers="keyctl_opis"> Odczytaj zawartość klucza lub zbioru kluczy <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_INSTANTIATE <br> </td> <TD headers="keyctl_w"> 12 <br> </td>
+	<TD headers="keyctl_opis"> Stwórz częściowo skonstruowany klucz <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_NEGATE <br> </td> <TD headers="keyctl_w"> 13 <br> </td>
+	<TD headers="keyctl_opis"> Zaneguj częściowo skonstruowany klucz <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_SET_REQKEY_KEYRING <br> </td> <TD headers="keyctl_w"> 14 <br> </td>
+	<TD headers="keyctl_opis"> Ustaw domyslny zbiór kluczy dla zapytań o klucz <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_SET_TIMEOUT <br> </td> <TD headers="keyctl_w"> 15 <br> </td>
+	<TD headers="keyctl_opis"> Ustaw czas trwania klucza <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_ASSUME_AUTHORITY <br> </td> <TD headers="keyctl_w"> 16 <br> </td>
+	<TD headers="keyctl_opis"> Załóż uprawnienie do stworzenia klucza <br> </td> </TR>
+<TR class="c"> <TD headers="keyctl_n"> KEYCTL_GET_SECURITY <br> </td> <TD headers="keyctl_w"> 17 <br> </td>
+	<TD headers="keyctl_opis"> Pobierz etykietę bezpieczeństwa klucza <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Specjalne zbiory kluczy">
+<caption><a name="reqkey_set" id="reqkey_set">Specjalne zbiory kluczy</a> dla
+<span lang="en">request_key</span> (numer 287) z
+<span class="b">/usr/include/linux/keyctl.h</span></caption>
+
+<TR> <TH id="reqkey_n"> nazwa </TH> <TH id="reqkey_w"> wartość </TH> <TH id="reqkey_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="reqkey_n"> KEY_SPEC_THREAD_KEYRING <br> </td> <TD headers="reqkey_w"> -1 <br> </td>
+	<TD headers="reqkey_opis"> Zbiór kluczy specyficzny dla wątku <br> </td> </TR>
+<TR class="c"> <TD headers="reqkey_n"> KEY_SPEC_PROCESS_KEYRING <br> </td> <TD headers="reqkey_w"> -2 <br> </td>
+	<TD headers="reqkey_opis"> Zbiór kluczy specyficzny dla procesu <br> </td> </TR>
+<TR class="c"> <TD headers="reqkey_n">  KEY_SPEC_SESSION_KEYRING<br> </td> <TD headers="reqkey_w"> -3 <br> </td>
+	<TD headers="reqkey_opis"> Zbiór kluczy specyficzny dla sesji <br> </td> </TR>
+<TR class="c"> <TD headers="reqkey_n"> KEY_SPEC_USER_KEYRING <br> </td> <TD headers="reqkey_w"> -4 <br> </td>
+	<TD headers="reqkey_opis"> Zbiór kluczy specyficzny dla użytkownika <br> </td> </TR>
+<TR class="c"> <TD headers="reqkey_n"> KEY_SPEC_USER_SESSION_KEYRING <br> </td> <TD headers="reqkey_w"> -5 <br> </td>
+	<TD headers="reqkey_opis"> Zbiór kluczy specyficzny dla użytkownika i sesji <br> </td> </TR>
+<TR class="c"> <TD headers="reqkey_n"> KEY_SPEC_GROUP_KEYRING <br> </td> <TD headers="reqkey_w"> -6 <br> </td>
+	<TD headers="reqkey_opis"> Zbiór kluczy specyficzny dla grupy <br> </td> </TR>
+<TR class="c"> <TD headers="reqkey_n"> KEY_SPEC_REQKEY_AUTH_KEY <br> </td> <TD headers="reqkey_w"> -7 <br> </td>
+	<TD headers="reqkey_opis"> ID klucza dla przewidywanego klucza uwierzytelnienia dla <span lang="en">request_key</span> <br> </td> </TR>
+<TR class="c"> <TD headers="reqkey_n"> KEY_SPEC_REQUESTOR_KEYRING <br> </td> <TD headers="reqkey_w"> -8 <br> </td>
+	<TD headers="reqkey_opis"> ID klucza dla zbioru docelowego dla <span lang="en">request_key</span> <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="kexec_segment" id="kexec_segment"
+>Struktura kexec_segment</a> (funkcja 283) z <span class="b">man 2 kexec_load</span>:</P>
+<PRE>
+	struct kexec_segment
+	{
+		void   *buf;        /* bufor w przestrzeni użytkownika */
+		size_t  bufsz;      /* długość bufora w przestrzeni użytkownika */
+		void   *mem;        /* fizyczny adres jądra */
+		size_t  memsz;      /* długość fizycznego adresu */
+	};</pre>
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Flagi dla kexec_load">
+<caption><a name="kexec_flagi" id="kexec_flagi">Flagi dla kexec_load</a>
+(numer 283) z
+<span class="b">linux-X.Y.Z/include/linux/kexec.h</span></caption>
+
+<TR> <TH id="kexecf_n"> nazwa </TH> <TH id="kexecf_w"> wartość </TH> <TH id="kexecf_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ON_CRASH <br> </td> <TD headers="kexecf_w"> 0x00000001 <br> </td>
+	<TD headers="kexecf_opis"> Uruchom nowe jądro po awarii systemu <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_PRESERVE_CONTEXT <br> </td> <TD headers="kexecf_w"> 0x00000002 <br> </td>
+	<TD headers="kexecf_opis"> Zachowaj stan oprogramowania i sprzętu przed uruchomieniem nowego jądra <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_DEFAULT <br> </td> <TD headers="kexecf_w"> ( 0 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to architektura domyślna <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_386 <br> </td> <TD headers="kexecf_w"> ( 3 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to i386 <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_X86_64 <br> </td> <TD headers="kexecf_w"> (62 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to x86-64 (AMD64) <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_PPC <br> </td> <TD headers="kexecf_w"> (20 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to PowerPC <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_PPC64 <br> </td> <TD headers="kexecf_w"> (21 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to PowerPC64 <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_IA_64 <br> </td> <TD headers="kexecf_w"> (50 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to IA-64 <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_ARM <br> </td> <TD headers="kexecf_w"> (40 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to ARM <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_S390 <br> </td> <TD headers="kexecf_w"> (22 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to S390 <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_SH <br> </td> <TD headers="kexecf_w"> (42 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to SH <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_MIPS <br> </td> <TD headers="kexecf_w"> (10 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to MIPS <br> </td> </TR>
+<TR class="c"> <TD headers="kexecf_n"> KEXEC_ARCH_MIPS_LE. <br> </td> <TD headers="kexecf_w"> ( 8 &lt;&lt; 16) <br> </td>
+	<TD headers="kexecf_opis"> Architektura nowego jądra to MIPS LE <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE class="c" summary="Typy przestrzeni nazw dla sys_setns">
+<caption><a name="setns_nstype" id="setns_nstype">Typy przestrzeni nazw dla sys_setns</a>
+(numer 346) z
+<span class="b">linux-X.Y.Z/include/linux/sched.h</span></caption>
+
+<TR> <TH id="nstype_n"> nazwa </TH> <TH id="nstype_w"> wartość </TH> <TH id="nstype_opis"> znaczenie </TH> </TR>
+<TR class="c"> <TD headers="nstype_n"> CLONE_NEWIPC <br> </td> <TD headers="nstype_w"> 0x08000000 <br> </td>
+	<TD headers="nstype_opis"> deskryptor musi odnosić się do przestrzeni nazw IPC <br> </td> </TR>
+<TR class="c"> <TD headers="nstype_n"> CLONE_NEWNET <br> </td> <TD headers="nstype_w"> 0x40000000 <br> </td>
+	<TD headers="nstype_opis"> deskryptor musi odnosić się do sieciowej przestrzeni nazw <br> </td> </TR>
+<TR class="c"> <TD headers="nstype_n"> CLONE_NEWUTS <br> </td> <TD headers="nstype_w"> 0x04000000 <br> </td>
+	<TD headers="nstype_opis"> deskryptor musi odnosić się do przestrzeni nazw UTS <br> </td> </TR>
+</TABLE>
+
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+<P><a name="mmsghdr" id="mmsghdr"
+>Struktura mmsghdr</a> (funkcje 337 i 345) z <span class="b">man 2 recvmmsg</span>:</P>
+<PRE>
+	struct mmsghdr {
+		struct msghdr msg_hdr;  /* Nagłówek wiadomości */
+		unsigned int  msg_len;  /* Liczba otrzymanych bajtów nagłówka */
+	};</pre>
+Struktura <a href="#sendmsghdr" hreflang="pl">msghdr</a> została opisana wcześniej.
+
+
+
+
+
+
+
+
+<br><br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

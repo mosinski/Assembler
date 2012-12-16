@@ -1,0 +1,439 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: opis syscall (5) </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="syscall64_4.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="syscall64_6.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="przer80h_5.html"
+	hreflang="pl" lang="pl" title="Funkcje x86-32: 201-250">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kursy programowania w assemblerze - opis syscall">
+<META NAME="Keywords" CONTENT="Assembler, asembler, kurs, nauka, linux, syscall, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Sun, Sep 16 2012 12:57:59 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Opis funkcji systemowych <span lang="en">syscall</span>: 201-250</h1>
+
+<P>
+Jeśli jakaś funkcja zakończy się błędem, w RAX zwracana jest wartość ujemna z przedziału
+od -4096 do -1 włącznie.</P>
+<P>
+Z drugiej strony, opisy funkcji na stronach manuala mówią, że zwracane jest -1,
+a wartość błędu jest zapisywana do zmiennej errno z biblioteki GLIBC. Dzieje się tak
+tylko w przypadku, gdy korzystamy z interfejsu języka C (czyli deklarujemy i
+uruchamiamy zewnętrzne funkcje odpowiadające wywołaniom systemowym i linkujemy
+nasz program z biblioteką języka C), a nie bezpośrednio z wywołań systemowych (czyli
+<span lang="en">syscall</span>).
+</P>
+<P>
+Najbardziej aktualne informacje o funkcjach systemowych można znaleźć zazwyczaj
+w sekcji 2 (lub 3) manuala, na przykład <code class="b">man 2 open</code>.
+</P>
+<P>
+Najnowsze wersje jądra można znaleźć na <A HREF="http://www.kernel.org" hreflang="en"
+>www.kernel.org</A>, a pliki z listą funkcji i ich numerów są pod ścieżkami:
+</P>
+<ul>
+ <li>arch/x86/include/asm/unistd_64.h (w starszych wersjach kodów)</li>
+ <li>arch/x86/syscalls/syscall_64.tbl (w wersjach bieżących)</li>
+</ul>
+
+<P>
+Najnowsze wersje stron manuala można znaleźć tu: <A HREF="http://www.kernel.org/pub/linux/docs/man-pages/"
+	>www.kernel.org/pub/linux/docs/man-pages</A>.
+</P>
+<P>
+Napis ASCIIZ oznacza łańcuch znaków
+ <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+ zakończony znakiem/bajtem Zerowym.
+</P>
+<P>
+Jeśli potrzeba, przy każdej funkcji jest odnośnik do opisu argumentów i innych
+ <A HREF="dodatk80.html" hreflang="pl" tabindex="1">dodatkowych informacji</a>: typów danych,
+ wartości błędów, możliwych wartości parametrów itp.
+</P>
+
+<TABLE summary="Ta tabela opisuje funkcje od 201 do 250 linuksowego wywołania systemowego syscall">
+<CAPTION> Podstawowe funkcje <span lang="en">syscall</span>: 201-250</CAPTION>
+<thead>
+<TR><TH style="WIDTH:5%;" id="rax">Numer/ RAX</TH>
+	<TH style="WIDTH:20%;" id="opis">Opis</TH>
+	<TH id="arg">Argumenty</TH><TH style="WIDTH:30%;" id="ret">Zwraca</TH></TR>
+
+</thead><tbody>
+<TR class="c">  <TD headers="rax"><a name="x64f201">201</a><br> </td>
+	<TD headers="opis"> Pobierz czas (<span lang="en">sys_time</span>)  <br> </td>
+	<TD headers="arg">RDI = NULL lub adres bufora, który otrzyma kopię wyniku<br> </td>
+	<TD headers="ret">RAX = liczba sekund od 1 Stycznia 1970 minus 1<BR>RAX = błąd EFAULT<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f202">202</a><br> </td>
+	<TD headers="opis"> Szybka funkcja blokowania (<span lang="en">sys_futex</span>)  <br> </td>
+	<TD headers="arg">RDI = sprawdzany adres<BR>
+		RSI = <A HREF="dodatk80.html#futex">operacja</A><BR>
+		RDX = wartość<BR>
+		R10 = adres struktury <A HREF="dodatk80.html#timespec">timespec</A> (czas oczekiwania) lub 0<br> </td>
+	<TD headers="ret"> RAX zależy od operacji <BR>RAX = błąd EINVAL, EFAULT <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f203">203</a><br> </td>
+	<TD headers="opis"> Ustaw maskę procesorów dla procesu (<span lang="en">sys_sched_setaffinity</span>)  <br> </td>
+	<TD headers="arg">RDI = PID procesu, którego maskę ustawiamy (0=bieżący)<BR>
+		RSI = długość maski pod [RDX]<BR>
+		RDX = adres maski bitowej. Najmłodszy bit maski oznacza, czy proces może być wykonany na pierwszym procesorze logicznym i tak dalej<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EINVAL, EFAULT, ESRCH, EPERM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f204">204</a><br> </td>
+	<TD headers="opis"> Pobierz maskę procesorów dla procesu (<span lang="en">sys_sched_getaffinity</span>)  <br> </td>
+	<TD headers="arg">RDI = PID procesu, którego maskę pobieramy (0=bieżący)<BR>
+		RSI = długość maski pod [RDX]<BR>
+		RDX = adres maski bitowej. Najmłodszy bit maski oznacza, czy proces może być wykonany na pierwszym procesorze logicznym i tak dalej<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EINVAL, EFAULT, ESRCH, EPERM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f205">205</a><br> </td>
+	<TD headers="opis"> Ustaw wpis w obszarze lokalnym wątku TLS (<span lang="en">sys_set_thread_area</span>)  <br> </td>
+	<TD headers="arg">RDI = adres struktury <A HREF="dodatk80.html#user_desc">user_desc</A> <br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = -EINVAL, -EFAULT, -ESRCH <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f206">206</a><br> </td>
+	<TD headers="opis"> Utwórz asynchroniczny kontekst we/wy (<span lang="en">sys_io_setup</span>)  <br> </td>
+	<TD headers="arg">RDI = liczba zdarzeń, które kontekst może otrzymać<BR>
+ 		RSI = adres DWORDa (o wartości zero), który otrzyma uchwyt do nowego kontekstu<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd -EINVAL, -EFAULT, -ENOSYS, -ENOMEM, -EAGAIN <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f207">207</a><br> </td>
+	<TD headers="opis"> Zniszcz asynchroniczny kontekst we/wy (<span lang="en">sys_io_destroy</span>)  <br> </td>
+	<TD headers="arg">RDI = uchwyt do usuwanego kontekstu<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd -EINVAL, -EFAULT, -ENOSYS <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f208">208</a><br> </td>
+	<TD headers="opis"> Pobierz zdarzenia we/wy (<span lang="en">sys_io_getevents</span>)  <br> </td>
+	<TD headers="arg">RDI = uchwyt do kontekstu <BR>
+		RSI = minimalna liczba zdarzeń do pobrania<BR>
+		RDX = maksymalna liczba zdarzeń do pobrania<BR>
+		R10 = adres tablicy struktur <A HREF="dodatk80.html#io_event">io_event</A> <BR>
+		R8 = adres struktury <A HREF="dodatk80.html#timespec">timespec</A> (czas oczekiwania) lub 0<br> </td>
+	<TD headers="ret"> RAX = liczba odczytanych zdarzeń <BR>RAX = błąd -EINVAL, -EFAULT, -ENOSYS <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f209">209</a><br> </td>
+	<TD headers="opis"> Wyślij zdarzenia we/wy do przetworzenia (<span lang="en">sys_io_submit</span>)  <br> </td>
+	<TD headers="arg">RDI = uchwyt do kontekstu <BR>
+		RSI = liczba adresów struktur pod [RDX]<BR>
+		RDX = adres tablicy adresów struktur <A HREF="dodatk80.html#iocb">iocb</A> opisujących zdarzenia do przetworzenia <br> </td>
+	<TD headers="ret"> RAX = liczba wysłanych bloków we/wy <BR>RAX = błąd -EINVAL, -EFAULT, -ENOSYS, -EBADF, -EAGAIN <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f210">210</a><br> </td>
+	<TD headers="opis"> Przerwij operację we/wy (<span lang="en">sys_io_cancel</span>)  <br> </td>
+	<TD headers="arg">RDI = uchwyt do kontekstu <BR>
+		RSI = adres struktury <A HREF="dodatk80.html#iocb">iocb</A>, opisującej operację do przerwania<BR>
+		RDX = adres struktury <A HREF="dodatk80.html#io_event">io_event</A>, która otrzyma przerwane działanie<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd -EINVAL, -EFAULT, -ENOSYS, -EBADF, -EAGAIN <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f211">211</a><br> </td>
+	<TD headers="opis"> Pobierz wpis w obszarze lokalnym wątku TLS (<span lang="en">sys_get_thread_area</span>)  <br> </td>
+	<TD headers="arg">RDI = adres struktury <A HREF="dodatk80.html#user_desc">user_desc</A> <br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EINVAL, EFAULT <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="rax"><a name="x64f212">212</a><br> </td>
+	<TD headers="opis"> Pobierz ścieżkę wejścia do katalogu (<span lang="en">sys_lookup_dcookie</span>)  <br> </td>
+	<TD headers="arg"> RDI? = wartość opisująca wpis o katalogu<BR>
+ 		RSI? = adres bufora, który otrzyma ścieżkę <BR>
+		RDX? = długość tego bufora<br> </td>
+	<TD headers="ret"> RAX = długość ścieżki <BR> RAX = błąd ENAMETOOLONG, EPERM, EINVAL, ENOMEM, ERANGE, EFAULT <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f213">213</a><br> </td>
+	<TD headers="opis"> Utwórz deskryptor pliku epoll (<span lang="en">sys_epoll_create</span>)  <br> </td>
+	<TD headers="arg"> RDI = liczba deskryptorów do zarezerwowania<br> </td>
+	<TD headers="ret"> RAX = nowy deskryptor pliku <BR> RAX = błąd ENOMEM, EINVAL, EMFILE, ENFILE <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f214">214</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_epoll_ctl_old</span> <br> </td>
+	<TD headers="arg"> <span class="b">niezaimplementowane</span> </td>
+	<TD headers="ret"> zawsze RAX = ENOSYS <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f215">215</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_epoll_wait_old</span> <br> </td>
+	<TD headers="arg"> <span class="b">niezaimplementowane</span> </td>
+	<TD headers="ret"> zawsze RAX = ENOSYS <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f216">216</a><br> </td>
+	<TD headers="opis"> Przemapuj strony pamięci / stwórz nieliniowe mapowanie pliku (<span lang="en">sys_remap_file_pages</span>)  <br> </td>
+	<TD headers="arg"> RDI = początkowy adres stron pamięci<BR>
+ 		RSI = rozmiar przemapowywanego obszaru pamięci <BR>
+		RDX = 0 (już nieużywane, musi być 0) <BR>
+		R10 = offset w pliku mierzony w jednostkach strony systemowej<BR>
+		R8 = flagi (znaczenie takie, jak w <span lang="en">sys_mmap</span>, ale tu tylko MAP_NONBLOCK jest uznawane)<br> </td>
+	<TD headers="ret"> RAX = 0 <BR> RAX = błąd EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f217">217</a><br> </td>
+	<TD headers="opis"> Pobierz wpisy o katalogach, wersja 64-bitowa (<span lang="en">sys_getdents64</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu<BR>
+	        RSI = adres obszaru pamięci na struktury <A HREF="dodatk80.html#dirent">dirent</A><BR>
+		RDX = rozmiar obszaru pamięci pod [RSI]<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EBADF, EFAULT, EINVAL, ENOENT, ENOTDIR <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f218">218</a><br> </td>
+	<TD headers="opis"> Utwórz wskaźnik do ID wątku (<span lang="en">sys_set_tid_address</span>) <br> </td>
+	<TD headers="arg"> RDI = wskaźnik (adres), na którego wartość ma być ustawiona zmienna
+		 <span lang="en">clear_child_tid</span> jądra<br> </td>
+	<TD headers="ret"> RAX = PID bieżącego procesu<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f219">219</a><br> </td>
+	<TD headers="opis"> Wywołaj ponownie (<span lang="en">sys_restart_syscall</span>) <br> </td>
+	<TD headers="arg"> brak </td>
+	<TD headers="ret"> to, co zwróci ponowione wywołanie systemowe <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f220">220</a><br> </td>
+	<TD headers="opis"> Operacja na semaforze z czasem (<span lang="en">sys_semtimedop</span>) <br> </td>
+	<TD headers="arg"> RDI = identyfikator zestawu semaforów<BR>
+		RSI = adres tablicy struktur <A HREF="dodatk80.html#sembuf">sembuf</a><BR>
+		RDX = liczba elementów w tablicy spod RSI<br>
+		R10 = adres struktury <A HREF="dodatk80.html#timespec">timespec</a>, zawierającej maksymalny czas oczekiwania </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd E2BIG, EACCES, EAGAIN, EFAULT, EFBIG, EIDRM, EINTR, EINVAL, ENOMEM, ERANGE <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f221">221</a><br> </td>
+	<TD headers="opis"> Zadeklaruj wzorce dostępu (<span lang="en">sys_fadvise64_64</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku <br>
+		RSI = początek obszaru w pliku (offset)<br>
+		RDX = długość obszaru pliku<br>
+		R10 = <A HREF="dodatk80.html#fadvice">wzorzec dostępu</a> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, ESPIPE, EINVAL<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f222">222</a><br> </td>
+	<TD headers="opis"> Utwórz POSIX-owy licznik czasu (<span lang="en">sys_timer_create</span>)  <br> </td>
+	<TD headers="arg"> RDI = ID zegara, który będzie podstawą mierzenia czasu<BR>
+		RSI = 0 lub adres struktury <A HREF="dodatk80.html#sigevent">sigevent</A> <BR>
+		RDX = adres zmiennej trzymającej adres DWORDa, który otrzyma ID nowego zegara<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd EAGAIN, EINVAL, ENOTSUPP<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f223">223</a><br> </td>
+	<TD headers="opis"> Nastaw POSIX-owy licznik czasu (<span lang="en">sys_timer_settime</span>)  <br> </td>
+	<TD headers="arg"> RDI = ID zegara<BR>
+		RSI = flagi (patrz: manual)<BR>
+		RDX = adres struktury <A HREF="dodatk80.html#itimerspec">itimerspec</A> <BR>
+		R10 = adres struktury <A HREF="dodatk80.html#itimerspec">itimerspec</A> <br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f224">224</a><br> </td>
+	<TD headers="opis"> Pobierz pozostały czas na POSIX-owym liczniku czasu (<span lang="en">sys_timer_gettime</span>)  <br> </td>
+	<TD headers="arg"> RDI = ID zegara<BR>
+		RSI = adres struktury <A HREF="dodatk80.html#itimerspec">itimerspec</A>, która otrzyma wynik<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f225">225</a><br> </td>
+	<TD headers="opis"> Pobierz liczbę przekroczeń POSIX-owego licznika czasu (<span lang="en">sys_timer_getoverrun</span>)  <br> </td>
+	<TD headers="arg"> RDI = ID zegara<br> </td>
+	<TD headers="ret"> RAX = liczba przekroczeń<BR> RAX = błąd EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f226">226</a><br> </td>
+	<TD headers="opis"> Usuń POSIX-owy licznik czasu (<span lang="en">sys_timer_delete</span>)  <br> </td>
+	<TD headers="arg"> RDI = ID zegara<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f227">227</a><br> </td>
+	<TD headers="opis"> Ustaw czas na danym zegarze (<span lang="en">sys_clock_settime</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#zegar">ID zegara</A> <BR>
+		RSI = adres struktury <A HREF="dodatk80.html#timespec">timespec</A> zawierającej czas do ustawienia <br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd EINVAL, EFAULT, EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f228">228</a><br> </td>
+	<TD headers="opis"> Pobierz czas na danym zegarze (<span lang="en">sys_clock_gettime</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#zegar">ID zegara</A> <BR>
+		RSI = adres struktury <A HREF="dodatk80.html#timespec">timespec</A>, która otrzyma czas <br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd EINVAL, EFAULT, EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f229">229</a><br> </td>
+	<TD headers="opis"> Pobierz precyzję danego zegara (<span lang="en">sys_clock_getres</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#zegar">ID zegara</A> <BR>
+		RSI = adres struktury <A HREF="dodatk80.html#timespec">timespec</A> <br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd EINVAL, EFAULT, EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f230">230</a><br> </td>
+	<TD headers="opis"> Przerwa w oparciu o dany zegar (<span lang="en">sys_clock_nanosleep</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#zegar">ID zegara</A> <BR>
+		RSI = flagi (TIMER_ABSTIME=1) kontrolujące rodzaj czasu oczekiwania (względny lub nie) <BR>
+		RDX = adres struktury <A HREF="dodatk80.html#timespec">timespec</A>, która zawiera czas czekania <BR>
+		R10 = adres struktury <A HREF="dodatk80.html#timespec">timespec</A> (lub NULL),
+			która otrzyma pozostały czas<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd EINTR, EFAULT, ENOTSUPP<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f231">231</a><br> </td>
+	<TD headers="opis"> Zakończ wszystkie wątki procesu (<span lang="en">sys_exit_group</span>)  <br> </td>
+	<TD headers="arg"> RDI = status (kod wyjścia)<br> </td>
+	<TD headers="ret"> nigdy nie powraca <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f232">232</a><br> </td>
+	<TD headers="opis"> Czekaj na deskryptorze pliku epoll (<span lang="en">sys_epoll_wait</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor epoll <BR>
+ 		RSI = adres tablicy struktur <A HREF="dodatk80.html#epoll_event">epoll_event</A> <BR>
+		RDX = maksymalna liczba zdarzeń, na które będziemy czekać <BR>
+		R10 = czas czekania w milisekundach (-1 = nieskończoność)<br> </td>
+	<TD headers="ret"> RAX = liczba deskryptorów gotowych <BR> RAX = błąd EFAULT, EINTR, EBADF, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f233">233</a><br> </td>
+	<TD headers="opis"> Kontroluj deskryptor pliku epoll (<span lang="en">sys_epoll_ctl</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor epoll <BR>
+ 		RSI = kod <A HREF="dodatk80.html#epoll_op">operacji</A> <BR>
+		RDX = deskryptor pliku <BR>
+		R10 = adres struktury <A HREF="dodatk80.html#epoll_event">epoll_event</a> <br> </td>
+	<TD headers="ret"> RAX = 0 <BR> RAX = błąd ENOMEM, EBADF, EPERM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f234">234</a><br> </td>
+	<TD headers="opis"> Wyślij sygnał do pojedynczego procesu (<span lang="en">sys_tgkill</span>) <br> </td>
+	<TD headers="arg"> RDI = identyfikator grupy wątków (niekoniecznie całego procesu)<BR>
+		RSI = identyfikator wątku, który ma otrzymać sygnał<br>
+		RDX = <A HREF="dodatk80.html#signal">numer sygnału</A> do wysłania </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EINVAL, ESRCH, EPERM <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f235">235</a><br> </td>
+	<TD headers="opis"> Zmień czas dostępu do pliku (<span lang="en">sys_utimes</span>) <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku (ASCIIZ)<BR>
+		RSI = adres tablicy 2 struktur <A HREF="dodatk80.html#timeval">timeval</A>, NULL gdy chcemy bieżący czas.
+		 Pierwsza struktura opisuje czas dostępu, druga - czas zmiany<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EACCES, ENOENT, EPERM, EROFS<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f236">236</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_vserver</span>  <br> </td>
+	<TD headers="arg"> <span class="b">niezaimplementowane</span> <br> </td>
+	<TD headers="ret"> <span class="b">zawsze RAX =  ENOSYS</span> <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f237">237</a><br> </td>
+	<TD headers="opis"> Ustaw politykę dla zakresu pamięci (<span lang="en">sys_mbind</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres początku obszaru<BR>
+		RSI = długość obszaru<BR>
+		RDX = <A HREF="dodatk80.html#mbind_polityka">polityka</A><BR>
+		R10 = adres DWORDa zawierającego maskę bitową węzłów<BR>
+		R8 = długość maski w bitach<BR>
+		R9 = <A HREF="dodatk80.html#mbind_flagi">flagi polityki</A> <br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EFAULT, EINVAL, ENOMEM, EIO<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f238">238</a><br> </td>
+	<TD headers="opis"> Ustaw politykę pamięci NUMA (<span lang="en">sys_set_mempolicy</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#mbind_polityka">polityka</A> <BR>
+		RSI = adres DWORDa zawierającego maskę bitową węzłów<BR>
+		RDX = długość maski w bitach<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f239">239</a><br> </td>
+	<TD headers="opis"> Pobierz politykę pamięci NUMA (<span lang="en">sys_get_mempolicy</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres DWORDa, który otrzyma politykę<BR>
+		RSI = NULL lub adres DWORDa, który otrzyma maskę węzłów<BR>
+		RDX = maksymalna długość maski w bitach + 1<BR>
+		R10 = sprawdzany adres, jeśli potrzebny<BR>
+		R8 = NULL lub MPOL_F_ADDR=2 (wtedy będzie zwrócona polityka dotycząca podanego adresu)<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f240">240</a><br> </td>
+	<TD headers="opis"> Otwórz kolejkę wiadomości (<span lang="en">sys_mq_open</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres nazwy, która musi zaczynać się ukośnikiem <BR>
+		RSI = <A HREF="dodatk80.html#bity_dostepu">flagi dostępu</A><BR>
+		(RDX = <A HREF="dodatk80.html#tryb">tryb</A>)<BR>
+		(R10 = adres struktury <A HREF="dodatk80.html#mq_attr">mq_attr</A> lub NULL)<br> </td>
+	<TD headers="ret"> RAX = deskryptor kolejki <BR>RAX = błąd EACCES, EINVAL, EEXIST, EMFILE,
+		ENAMETOOLONG, ENFILE, ENOENT, ENOMEM, ENOSPC <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f241">241</a><br> </td>
+	<TD headers="opis"> Usuń kolejkę wiadomości (<span lang="en">sys_mq_unlink</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres nazwy, która musi zaczynać się ukośnikiem<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EACCES, ENAMETOOLONG, ENOENT <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f242">242</a><br> </td>
+	<TD headers="opis"> Wyślij wiadomość do kolejki (<span lang="en">sys_mq_timedsend</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor kolejki <BR>
+		RSI = adres napisu - treści wiadomości<BR>
+		RDX = długość wiadomości<BR>
+		R10 = priorytet (&lt;=32768, wiadomości o większym numerze są przed tymi o mniejszym)<BR>
+		R8 = adres struktury <A HREF="dodatk80.html#timespec">timespec</A>, opisującej
+			czas BEZWZGLĘDNY przedawnienia<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EAGAIN, EBADF, EINTR, EINVAL, EMSGSIZE, ETIMEOUT <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f243">243</a><br> </td>
+	<TD headers="opis"> Odbierz wiadomość z kolejki (<span lang="en">sys_mq_timederceive</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor kolejki <BR>
+		RSI = adres bufora na treść wiadomości<BR>
+		RDX = długość bufora<BR>
+		R10 = NULL lub adres DWORDa, który otrzyma priorytet wiadomości<BR>
+		R8 = adres struktury <A HREF="dodatk80.html#timespec">timespec</A>, opisującej
+			czas BEZWZGLĘDNY przedawnienia<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EAGAIN, EBADF, EINTR, EINVAL, EMSGSIZE, ETIMEOUT, EBADMSG <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f244">244</a><br> </td>
+	<TD headers="opis"> Powiadamianie o wiadomościach (<span lang="en">sys_mq_notify</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor kolejki<BR>
+		RSI = NULL (brak powiadomień) lub adres struktury <A HREF="dodatk80.html#sigevent">sigevent</a> <br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, EBUSY, EINVAL, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f245">245</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_mq_getsetattr</span>  <br> </td>
+	<TD headers="arg"> <span class="b">NIE UŻYWAĆ</span><br> Interfejs do mq_getattr, mq_setattr<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f246">246</a><br> </td>
+	<TD headers="opis"> Załaduj nowe jądro do późniejszego uruchomienia (<span lang="en">sys_kexec_load</span>)  <br> </td>
+	<TD headers="arg"> RDI = fizyczny adres, gdzie załadować jądro<BR>
+		RSI = liczba segmentów podanych w RDX<BR>
+		RDX = adres tablicy struktur <A HREF="dodatk80.html#kexec_segment">kexec_segment</A><BR>
+		R10 = zORowane <A HREF="dodatk80.html#kexec_flagi">flagi</A> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBUSY, EINVAL, EPERM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f247">247</a><br> </td>
+	<TD headers="opis"> Czekaj na zmianę stanu innego procesu (<span lang="en">sys_waitid</span>)  <br> </td>
+	<TD headers="arg"> RDI = typ identyfikatora (0=czekaj na dowolnego potomka, 1=czekaj na proces o danym PID,
+			2=czekaj na członka grupy o danym GID)<BR>
+		RSI = identyfikator: PID lub GID (nieważny dla RDI=0)<BR>
+		RDX = adres struktury <A HREF="dodatk80.html#siginfo">siginfo</A><BR>
+		R10 = <A HREF="dodatk80.html#wait_opcje">opcje</A> opisujące, na jakie zmiany czekamy<br> </td>
+	<TD headers="ret"> RAX = 0, wypełniona struktura siginfo <BR>RAX = błąd ECHILD, EINTR, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f248">248</a><br> </td>
+	<TD headers="opis"> Dodanie klucza (<span lang="en">sys_add_key</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres nazwy klucza do dodania ASCIIZ<BR>
+		RSI = adres opisu klucza do dodania ASCIIZ<BR>
+		RDX = adres danych klucza<BR>
+		R10 = długość danych klucza w RDX<BR>
+		R8 = identyfikator zbioru kluczy, do którego dodać znaleziony klucz. Można
+			podać <A HREF="dodatk80.html#reqkey_set">specjalny zbiór</A>. </td>
+	<TD headers="ret"> RAX = numer dodanego klucza<br> RAX = błąd EACCES, EINTR, EKEYEXPIRED,
+		EKEYREVOKED, ENOMEM, ENOKEY, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f249">249</a><br> </td>
+	<TD headers="opis">Pobranie klucza (<span lang="en">sys_request_key</span>) <br> </td>
+	<TD headers="arg"> RDI = adres nazwy klucza do pobrania ASCIIZ<BR>
+		RSI = adres opisu klucza do pobrania ASCIIZ<BR>
+		RDX = adres informacji służących do gfenerowania klucza, gdy go nie znaleziono (ASCIIZ)<BR>
+		R10 = identyfikator zbioru kluczy, do którego dodać znaleziony klucz. Można
+			podać <A HREF="dodatk80.html#reqkey_set">specjalny zbiór</A>. </td>
+	<TD headers="ret"> RAX = numer znalezionego klucza<br> RAX = błąd EACCES, EINTR, EDQUOT, EKEYEXPIRED,
+		EKEYREJECTED, EKEYREVOKED, ENOMEM, ENOKEY <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f250">250</a><br> </td>
+	<TD headers="opis">Zarządzanie kluczami (<span lang="en">sys_keyctl</span>) <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#keyctl_cmd">polecenie</A><BR>
+		ECX/RSI, EDX/RDX, ... - dalsze parametry </td>
+	<TD headers="ret"> RAX = numer znalezionego klucza<br> RAX = błąd EACCES, EDQUOT,
+		EKEYEXPIRED, EKEYREJECTED, EKEYREVOKED, ENOKEY <hr> <br> </td> </TR>
+
+</TABLE>
+
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="syscall64_4.html">Poprzednia część</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="syscall64_6.html">Kolejna część</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

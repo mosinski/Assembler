@@ -1,0 +1,666 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Dostęp do ekranu </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="tryb_txt_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Dostęp do pamięci ekranu pod Linuksem">
+<META NAME="Keywords" CONTENT="Ekran, pamięć, asm, assembler, asembler, linux, znaki kontrolne, xterm">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 18:00:00 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Bezpośredni dostęp do ekranu pod Linuksem</h1>
+
+<P>
+Jeśli chodzi o wyświetlanie informacji na ekranie, nie jesteśmy ograniczeni tylko
+ do pisania w miejscu, gdzie akurat znajduje się kursor. Na pewno widzieliście
+ jakiś program, który mimo iż miał tekstowy interfejs, to jednak pisał po ekranie,
+ gdzie mu się podobało. Tym właśnie się teraz zajmiemy.</P>
+
+
+
+
+
+
+
+<BR>
+<HR>
+<h2 class="nag">Pisanie z wykorzystaniem sekwencji kontrolnych terminala</h2>
+
+	<BR><a href="#vcsa" class="bezdruk" tabindex="1">(przeskocz sekwencje kontrolne)</a>
+
+<P>
+Każdy program terminala ma inne sekwencje kontrolne i jeśli chcecie pisać programy, które
+ będą działać na każdym terminalu, zainteresujcie się biblioteką
+ <span class="b">ncurses</span>. Tutaj opiszę tylko kilka sekwencji standardowego terminala
+ <span class="b">xterm</span>.</P>
+<P>
+Pierwsza sprawa: co to właściwie jest znak kontrolny (sekwencja kontrolna)?<BR>
+ Jest to specjalny ciąg znaków określających zachowanie się terminala. Kilka już na pewno znacie:
+ BEL (dźwięk), CR/LF (przechodzenie do nowej linii), TAB (tabulator). Teraz dojdą jeszcze dwa:
+ zmiana koloru tekstu i tła oraz przechodzenie do wyznaczonej pozycji na ekranie.</P>
+<P>
+Korzystałem z pliku
+<A HREF="http://www.cs.utk.edu/~shuford/terminal/xterm_controls.txt" hreflang="en"
+>xterm_controls.txt</A>. Możecie skorzystać także z tego pliku lub z informacji na
+ stronie podręcznika - <span class="b">man 4 console_codes</span>.</P>
+
+
+
+
+
+
+
+
+<BR>
+<h2 class="nag">Kolorowanie tekstu</h2>
+
+	<BR><a href="#pozycja" class="bezdruk">(przeskocz kolorowanie)</a>
+
+<P>
+Sekwencja kontrolna odpowiedzialna za kolor tekstu i tła wygląda tak:<BR>
+<CODE>ESC[(atr);(lit);(tło)m</CODE>,<br>
+
+gdzie:</P>
+<UL>
+ <LI>ESC to kod klawisza <span lang="en">Escape</span>, czyli 1Bh.
+ 	Jeśli ktoś jest ciekawy, to z klawiatury otrzymuje się
+ 	ten znak wciskając Ctrl+V, po czym ESC.<BR><BR></LI>
+
+ <LI>(atr) = atrybut znaku. Jest to jedna z poniższych wartości (jako tekst, nie binarnie):
+  <UL>
+   <LI>0 - przywróć wszystkie atrybuty (powrót do trybu normalnego)</LI>
+   <LI>1 - jasny (zwykle włącza też wytłuszczoną czcionkę)</LI>
+   <LI>2 - przyciemnienie znaku</LI>
+   <LI>3 - podkreślenie</LI>
+   <LI>5 - mruganie znaku</LI>
+   <LI>7 - odwrócenie kolorów</LI>
+   <LI>8 - ukryty</LI>
+  </UL><BR></LI>
+
+ <LI>(lit) = kolor litery:
+  <UL>
+   <LI>30 - czarny</LI>
+   <LI>31 - czerwony</LI>
+   <LI>32 - zielony</LI>
+   <LI>33 - żółty</LI>
+   <LI>34 - niebieski</LI>
+   <LI>35 - magenta (różowy)</LI>
+   <LI>36 - <span lang="en">cyan</span> (błękitny)</LI>
+   <LI>37 - biały</LI>
+  </UL><BR></LI>
+
+ <LI>(tło) = kolor tła:
+  <UL>
+   <LI>40 - czarny</LI>
+   <LI>41 - czerwony</LI>
+   <LI>42 - zielony</LI>
+   <LI>43 - żółty</LI>
+   <LI>44 - niebieski</LI>
+   <LI>45 - magenta (różowy)</LI>
+   <LI>46 - <span lang="en">cyan</span> (błękitny)</LI>
+   <LI>47 - biały</LI>
+  </UL><BR></LI>
+
+ <LI>m - dosłownie: mała litera m</LI>
+
+</UL>
+<P>
+Na przykład, aby napisać coś na czerwono i przywrócić oryginalne kolory konsoli, należy normalnie
+ (czyli przy użyciu int 80h z EAX=4, EBX=1, ECX=adres, EDX=długość) wyświetlić taki oto ciąg znaków:</P>
+<P><CODE>1bh, &quot;[0;31;40m Napis&quot;, 1bh, &quot;[0;37;40m&quot;</CODE>.</P>
+<P>
+ Ten ostatni ciąg przywraca domyślne kolory terminala (szarobiały na czarnym tle). Jeśli używacie
+ terminala używającego innego zestawu kolorów niż szarobiały na czarnym tle, możecie wstawić
+ własne wartości, tak samo jak dla zwykłych napisów - terminal zapamięta ustawienia. Możecie też
+ spróbować takiej sekwencji:</P>
+<P><CODE>1bh, &quot;[0;31;40m Napis&quot;, 1bh, &quot;[0;39;49m&quot;</CODE>.</P>
+<P>
+ Wartości 39 i 49 przywracają domyślne kolory, odpowiednio dla znaków i tła.<br>
+ Można też spróbować przywrócenia domyślnych wartości wszystkich atrybutów (nie tylko kolorów)
+ bez ustawiania nowych wartości:</P>
+<P><CODE>1bh, &quot;[0;31;40m Napis&quot;, 1bh, &quot;[0m&quot;</CODE>.</P>
+
+
+
+
+
+
+
+
+<BR>
+<h2 class="nag"><a name="pozycja" id="pozycja">Zmiana bieżącej pozycji kursora</a></h2>
+
+	<BR><a href="#tryb_txt_linux02" class="bezdruk">(przeskocz teorię)</a>
+
+<P>
+Sekwencja kontrolna odpowiedzialna za ustalanie pozycji kursora wygląda tak:<BR>
+<CODE>ESC [ w ; k H</CODE>,<BR>
+gdzie:</P>
+
+<UL>
+ <LI>ESC to kod klawisza <span lang="en">Escape</span>, czyli 1Bh.<BR><BR></LI>
+ <LI>w = numer wiersza (jeśli nie podano, przyjmuje się 1)<BR><BR></LI>
+ <LI>k = numer kolumny (jeśli nie podano, przyjmuje się 1)<BR><BR></LI>
+ <LI>H - dosłownie: litera wielkie H</LI>
+
+</UL>
+
+<P>Na przykład, jeśli chcemy coś napisać w dziesiątym wierszu dziesiątej kolumny, należy normalnie
+ (czyli przy użyciu int 80h z EAX=4, EBX=1, ECX=adres, EDX=długość) wyświetlić ciąg znaków:</P>
+<P><CODE>1bh, &quot;[10;10HNapis&quot;</CODE></P>
+
+<HR>
+<P><a name="tryb_txt_linux02" id="tryb_txt_linux02">A oto obiecany program</a> do rysowania ramek:</P>
+	<BR><a href="#vcsa" class="bezdruk">(przeskocz program)</a>
+<PRE>
+; Rysowanie okienek z ramka
+;
+; Autor: Bogdan D.
+;
+; nasm -O999 -o ramki.o -f elf ramki.asm
+; ld -s -o ramki ramki.o
+
+section .text
+global _start
+
+
+_start:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, czysc
+	mov	edx, czysc_dl
+	int	80h			; wyświetlamy sekwencję,
+					; która wyczyści ekran
+
+	mov	ax, (36&lt;&lt;8)+44		; kolor znaków, kolor tła:
+					; żółty na niebieskim
+	mov	bx, 1			; kolumna Lewa-Górna (L-G)
+	mov	cx, 1			; wiersz L-G
+	mov	si, 9			; kolumna Prawa-Dolna (P-D)
+	mov	bp, 9			; wiersz P-D
+	call	rysuj_okienko
+
+	mov	ax, (37&lt;&lt;8)+40		; biały na czarnym
+	mov	bx, 10
+	mov	cx, 10
+	mov	si, 20
+	mov	bp, 16
+	call	rysuj_okienko
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, nwln
+	mov	edx, 1
+	int	80h			; wyświetlamy znak przejścia
+					; do nowej linii
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h			; wyjście z programu
+
+
+rysuj_okienko:
+
+; wejście:
+;
+;  AH = atrybut znaku (kolor)
+;  AL = kolor tła
+;  BX = kolumna lewego górnego rogu
+;  CX = wiersz lewego górnego rogu
+;  SI = kolumna prawego dolnego rogu
+;  BP = wiersz prawego dolnego rogu
+;
+; wyjście:
+;  nic
+
+; podwójne ramki ASCII
+;r_p	equ	0bah			; prawa boczna
+;r_pg	equ	0bbh			; prawa górna (narożnik)
+;r_pd	equ	0bch			; prawa dolna
+
+;r_g	equ	0cdh			; górna
+;r_d	equ	r_g			; dolna
+
+;r_l	equ	r_p			; lewa boczna
+;r_lg	equ	0c9h			; lewa górna
+;r_ld	equ	0c8h			; lewa dolna
+
+
+r_p	equ	&quot;|&quot;			; prawa boczna
+r_pg	equ	&quot;\&quot;			; prawa górna (narożnik)
+r_pd	equ	&quot;/&quot;			; prawa dolna
+
+r_g	equ	&quot;=&quot;			; górna
+r_d	equ	r_g			; dolna
+
+r_l	equ	r_p			; lewa boczna
+r_lg	equ	&quot;/&quot;			; lewa górna
+r_ld	equ	&quot;\&quot;			; lewa dolna
+
+spacja	equ	20h
+
+
+	push	bx
+	push	cx
+
+	mov	dl, r_lg
+	call	znak			; rysujemy lewy górny narożnik
+
+	push	bx
+	mov	dl, r_g			; będziemy rysować górną krawędź
+
+					;dopóki BX&lt;SI, rysuj górną krawędź
+.rysuj_gora:
+	inc	bx
+	cmp	bx, si
+	je	.dalej
+	call	znak
+	jmp	short .rysuj_gora
+
+.dalej:
+	mov	dl, r_pg
+	call	znak			; rysujemy prawy górny narożnik
+	pop	bx
+	push	bx
+
+					; rysujemy środek
+					;dopóki CX&lt;BP, rysuj wnętrze ramki
+.rysuj_srodek:
+	inc	cx
+	cmp	cx, bp
+	je	.ostatni
+
+	mov	dl, r_l
+	call	znak			; zaczynamy od lewego brzegu ramki
+
+	push	bx
+	mov	dl, spacja		; w środku będą spacje
+.rysuj_srodek2:
+	inc	bx
+	cmp	bx, si		; dopóki BX&lt;SI, rysuj wnętrze (spacje)
+	je	.dalej2
+	call	znak
+	jmp	short .rysuj_srodek2
+
+.dalej2:
+	mov	dl, r_p
+	call	znak			; rysujemy prawy brzeg
+	pop	bx
+
+	jmp	short .rysuj_srodek
+
+.ostatni:
+	mov	dl, r_ld
+	call	znak			; rysujemy lewy dolny narożnik
+	pop	bx
+
+	mov	dl, r_d		; będziemy rysować dolną krawędź ramki
+.rysuj_dol:
+	inc	bx
+	cmp	bx, si			;dopóki BX&lt;SI, rysuj dolną krawędź
+	je	.dalej3
+	call	znak
+	jmp	short .rysuj_dol
+
+.dalej3:
+	mov	dl, r_pd
+	call	znak			; rysujemy prawy dolny narożnik
+
+	pop	cx
+	pop	bx
+
+	ret
+
+
+znak:
+
+;  AH = atrybut znaku (kolor)
+;  AL = kolor tła
+;  BX = kolumna znaku
+;  CX = wiersz znaku
+;  DL = znak
+
+	push	eax
+	push	ebx
+	push	ecx
+	push	edx
+
+	push	ax
+	mov	dh, 10
+	shr	ax, 8			; AX = kolor znaku
+	div	dh			; AL = AL/10, AH = AL mod 10
+	add	ax, &quot;00&quot;		; do ilorazu i reszty dodajemy
+					; kod ASCII cyfry zero
+	mov	[fg], ax		; do [fg] zapisujemy numer
+					; koloru znaku
+
+	pop	ax
+	and	ax, 0FFh		; AX = kolor tła
+	div	dh			; dzielimy przez 10
+	add	ax, &quot;00&quot;
+	mov	[bg], ax
+
+	mov	ax, bx			; AX = kolumna znaku
+	and	ax, 0FFh
+	div	dh			; dzielimy przez 10
+	add	ax, &quot;00&quot;
+	mov	[kolumna], ax
+
+	mov	ax, cx			; AX = wiersz znaku
+	and	ax, 0FFh
+	div	dh			; dzielimy przez 10
+	add	ax, &quot;00&quot;
+	mov	[wiersz], ax
+
+	mov	[znaczek], dl		; zapisujemy, jaki znak
+					; mamy wyświetlić
+
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, pozycja
+	mov	edx, napis_dl
+	int	80h			; wyświetlamy napis wraz z
+					; przejściem na odpowiednią pozycję
+
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+
+	ret
+
+
+section .data
+
+ESC		equ	1Bh
+
+pozycja		db	ESC, &quot;[&quot;	; sekwencja zmiany pozycji kursora
+wiersz		db	&quot;00;&quot;
+kolumna		db	&quot;00H&quot;
+napis		db	ESC, &quot;[&quot;	; sekwencja zmiany koloru
+atr		db	&quot;0;&quot;
+fg		db	&quot;00;&quot;
+bg		db	&quot;00m&quot;
+znaczek		db	&quot;x&quot;		; znak, który będziemy wyświetlać
+napis_dl	equ	$ - pozycja
+
+czysc		db	ESC, &quot;[2J&quot;	; sekwencja czyszcząca cały ekran
+czysc_dl	equ	$ - czysc
+
+nwln		db	10</PRE>
+
+
+
+
+
+
+
+
+
+<HR>
+<h2 class="nag"><a name="vcsa" id="vcsa">Pisanie z wykorzystaniem</a> urządzeń znakowych /dev/vcsaN</h2>
+
+	<BR><a href="#mmap" class="bezdruk">(przeskocz vcsa)</a>
+
+<P>
+Innym sposobem na poruszanie się po ekranie jest zapis do specjalnych urządzeń znakowych -
+ plików <span class="b">/dev/vcsaN</span> (możliwe, że potrzebne będą uprawnienia roota).</P>
+<P>
+Na stronach podręcznika <span class="b">man vcsa</span> (a konkretnie to w przykładowym programie)
+ widać, że format tych plików jest dość prosty -
+ na początku są 4 bajty, odpowiadające: liczbie wierszy, liczbie kolumn (bo przecież mogą
+ być różne rozdzielczości) oraz pozycji x i y kursora. Potem idą kolejno znaki widoczne na ekranie
+ (od lewego górnego rogu wzdłuż wierszy) i ich atrybuty. Atrybuty te są takie same, jak
+ w <A HREF="../dos/tryb_txt.htm" hreflang="pl">kursie dla DOSa</A> i podobnie jak tam, starsze 4 bity
+ oznaczają kolor tła, a młodsze - kolor znaku.</P>
+<P>
+Teraz widzicie, że to nic trudnego - wystarczy otworzyć plik, odczytać wymiary ekranu i zapisywać
+ odpowiednie bajty na odpowiednich pozycjach (używając funkcji poruszania się po pliku lub, po
+ zmapowaniu pliku do pamięci, po prostu pisać po pamięci).</P>
+<P>Oto przykładowy program:</P>
+	<BR><a href="#mmap" class="bezdruk">(przeskocz program z vcsa)</a>
+<PRE>
+; Program bezpośrednio zapisujący do pliku konsoli
+;
+; Autor: Bogdan D., bogdandr MAŁPKA op KROPKA pl
+;
+; kompilacja:
+;
+; nasm -O999 -f elf -o konsola.o konsola.asm
+; ld -s -o konsola konsola.o
+
+
+%idefine	sys_exit		1
+%idefine	sys_read		3
+%idefine	sys_write		4
+%idefine	sys_open		5
+%idefine	sys_close		6
+%idefine	sys_lseek		19
+%define         SEEK_SET		0
+%define		O_RDWR			02o
+
+; pozycja, pod którą coć wyświetlimy
+%define		nasz_wiersz		10
+%define		nasza_kolumna		10
+
+section .text
+
+global _start
+
+_start:
+	mov	eax, sys_open		; otwieranie pliku
+	mov	ebx, plik		; nazwa pliku
+	mov	ecx, O_RDWR		; odczyt i zapis
+	mov	edx, 600q		; odczyt i zapis dla użytkownika
+	int	80h			; otwieramy plik
+
+	cmp	eax, 0
+	jl	.koniec
+
+	mov	ebx, eax		; uchwyt do pliku
+
+	mov	eax, sys_read		; czytanie z pliku (najpierw
+					; atrybuty konsoli)
+	mov	ecx, konsola		; dokąd czytać
+	mov	edx, 4			; ile czytać
+	int	80h
+
+
+	mov	eax, sys_lseek		; przejście na właściwa pozycję
+
+	movzx	ecx, byte [l_kolumn]
+	imul	ecx, nasz_wiersz
+	add	ecx, nasza_kolumna	;ECX=wiersz*długość wiersza+kolumna
+
+	shl	ecx, 1			; ECX *= 2, bo na ekranie są: bajt
+					; znaku i bajt atrybutu
+	add	ecx, 4			; +4, bo będziemy szli
+					; od początku pliku
+
+	mov	edx, SEEK_SET		; od początku pliku
+	int	80h
+
+	mov	eax, sys_write		; pisanie do pliku
+	mov	ecx, znak		; co zapisać
+	mov	edx, 2			; ile zapisać
+	int	80h
+
+	mov	eax, sys_close		; zamknięcie pliku
+	int	80h
+
+	xor	eax, eax		; EAX = 0 = bez błędu
+
+.koniec:
+	mov	ebx, eax
+	mov	eax, sys_exit
+	int	80h			;wyjście z kodem zero lub z błędem,
+					; który był przy otwarciu pliku
+
+
+section .data
+
+plik	db	&quot;/dev/vcsa1&quot;, 0	; plik pierwszej konsoli tekstowej
+
+					; atrybuty czytanej konsoli:
+konsola:
+l_wierszy	db	0
+l_kolumn	db	0
+kursor_x	db	0
+kursor_y	db	0
+
+				; znak z atrybutem, który wyświetlimy:
+znak		db	&quot;*&quot;
+atrybut		db	43h		; błękit na czerwonym</PRE>
+
+
+
+
+
+<HR>
+<h2 class="nag"><a name="mmap" id="mmap">Pisanie z wykorzystaniem</a> mapowania pamięci</h2>
+	<BR><a href="#tryb_txt_linux03" class="bezdruk">(przeskocz mapowanie pamięci)</a>
+
+<P>
+Jeszcze jednym sposobem na pisanie po ekranie jest zapisywanie bezpośrednio do pamięci
+trybu tekstowego. Pamięć ta znajduje się w segmencie B800, co odpowiada liniowemu
+adresowi B8000, licząc od adresu 0. Oczywiście system, ze względów bezpieczeństwa, nie
+pozwoli nam bezpośrednio pisać pod ten adres, więc musimy sobie poradzić w inny sposób.
+Sposób ten polega na otwarciu specjalnego pliku urządzenia, który symbolizuje całą pamięć
+w komputerze - <span class="b">/dev/mem</span>. Na większości systemów otwarcie tego pliku
+wymaga uprawnień administratora.</P>
+<P>
+Po otwarciu pliku mamy dwie możliwości. Pierwsza to
+poruszać się po nim funkcjami do zmiany pozycji w pliku, oraz odczytywać i zapisywać
+funkcjami odczytu i zapisu danych z i do pliku. Może to być powolne, ale sposób jest.
+Druga możliwość to zmapować plik do pamięci, po czym korzystać z niego jak ze zwykłej
+tablicy. Tę możliwość opiszę teraz szczegółowo.</P>
+<P>
+Otwieranie pliku odbywa się za pomocą tradycyjnego wywołania:</P>
+<pre>
+	mov	eax, 5		; sys_open
+	mov	ebx, pamiec	; adres nazwy pliku "/dev/mem", 0
+	mov	ecx, 2		; O_RDWR, zapis i odczyt
+	mov	edx, 666o	; pełne prawa
+	int	80h
+	...
+	pamiec		db	"/dev/mem", 0</pre>
+
+<P>Drugim krokiem jest zmapowanie naszego otwartego pliku do pamięci. Odbywa się to za
+pomocą funkcji systemowej <span class="b">sys_mmap2</span>. Przyjmuje ona 6 argumentów:</P>
+<ol>
+ <li>EBX = adres, pod jaki chcielibyśmy zmapować plik. Najlepiej podać zero, wtedy system sam
+ 	wybierze dogodny adres</li>
+ <li>ECX = długość mapowanego obszaru pliku, w bajtach. Podamy to 100000h, by na pewno
+ 	objąć obszar zaczynający się B8000 i długości 4000 bajtów (tyle, ile trzeba na jeden
+ 	ekran w trybie tekstowym, na znaki i ich atrybuty)</li>
+ <li>EDX = tryb dostępu do zmapowanej pamięci. Jeśli chcemy odczyt i zapis, podamy tutaj
+ 	PROT_READ=1 + PROT_WRITE=2</li>
+ <li>ESI = tryb współdzielenia zmapowanej pamięci. Podamy tu MAP_SHARED=1 (współdzielona,
+ 	nie prywatna)</li>
+ <li>EDI = deskryptor otwartego pliku, który chcemy zmapować</li>
+ <li>EBP = adres początkowy w pliku, od którego mapować. Adres ten jest podawany w
+ 	jednostkach strony systemowej, której wielkość może być różna na różnych systemach.
+ 	Najłatwiej podać tu zero, a do adresów dodawać potem B8000</li>
+</ol>
+<P>Po pomyślnym wykonaniu, system zwróci nam w EAX adres zmapowanego obszaru pamięci, którego
+możemy używać (w przypadku błędu otrzymujemy wartość od -4096 do -1 włącznie).
+Przykładowe wywołanie wygląda więc tak:</P>
+<pre>
+	mov	eax, 192		; sys_mmap2
+	xor	ebx, ebx		; jądro wybierze adres
+	mov	ecx, 100000h		; długość mapowanego obszaru
+	mov	edx, 3			; PROT_READ | PROT_WRITE, możliwość
+					; zapisu i odczytu
+	mov	esi, 1			; MAP_SHARED - tryb współdzielenia
+	mov	edi, [deskryptor]	; deskryptor pliku pamięci, otrzymany
+					; z sys_open w poprzednim kroku
+	mov	ebp, 0			; adres początkowy w pliku
+	int	80h
+</pre>
+<P>Teraz wystarczy już korzystać z otrzymanego wskaźnika, na przykład:</P>
+<pre>	mov	byte [eax+0b8000h], 'A'</pre>
+
+<P>Ekran w trybie tekstowym składa się z 80*25=2000 znaków, a każdy z nich ma po sobie bajt
+argumentu, mówiący o kolorze znaku i tła:</P>
+<P>
+b8000 - znak 1, w lewym górnym rogu<BR>
+b8001 - atrybut znaku 1<BR>
+b8002 - znak 2, znajdujący się o 1 pozycję w prawo od znaku 1<BR>
+b8003 - atrybut znaku 2<BR>
+i tak dalej</P>
+
+<P>Czym zaś jest atrybut?<BR>
+Jest to bajt mówiący o kolorze danego znaku i kolorze tła dla tego znaku. Bity w tym bajcie
+oznaczają:</P>
+<UL>
+ <LI>3-0 - kolor znaku (16 możliwości)<BR><BR></LI>
+ <LI>6-4 - kolor tła (8 możliwości)<BR><BR></LI>
+ <LI>7 - miganie znaku (jeśli nie działa, to oznacza, że mamy 16 kolorów tła zamiast 8)<BR></LI>
+</UL>
+<P>
+Wartości kolorów:<br>
+Czarny - 0, niebieski - 1, zielony - 2, błękitny - 3, czerwony - 4, różowy - 5,
+brązowy - 6, jasnoszary (ten standardowy) - 7, ciemnoszary - 8, jasnoniebieski - 9,
+jasnozielony - 10, jasnobłękitny - 11, jasnoczerwony - 12, jasnoróżowy - 13,
+żółty - 14, biały - 15.</P>
+<P>
+Zmiany, które zapiszemy w pamięci, mogą jednak nie od razu pojawić się w pliku (czyli
+na ekranie w tym przypadku). Aby wymusić fizyczny zapis danych, korzysta się z funkcji
+<span class="b">sys_msync</span>. Przyjmuje ona 3 argumenty:</P>
+<ol>
+ <li>EBX = adres początku danych do synchronizacji</li>
+ <li>ECX = liczba bajtów do zsynchronizowania</li>
+ <LI>EDX = 0 lub zORowane flagi: MS_ASYNC=1 (wykonaj asynchronicznie), MS_INVALIDATE=2
+ 	(unieważnij obszar po zapisaniu), MS_SYNC (wykonaj synchronicznie)</li>
+</ol>
+<P>Przykładowe wywołanie wygląda więc tak:</P>
+<pre>
+	mov	eax, 144		; sys_msync
+	mov	ebx, 0b8000h		; adres startowy
+	mov	ecx, 4000		; ile zsynchronizować
+	mov	edx, 0			; flagi
+	int	80h</pre>
+
+<P>Po zakończeniu pracy z plikiem, możemy go odmapować:</P>
+<pre>
+	mov	eax, 91			; sys_munmap
+	mov	ebx, [wskaznik]		; wskaźnik otrzymany z sys_mmap2
+	mov	ecx, 100000h		; liczba bajtów
+	int	80h</pre>
+
+<P>i zamknąć:</P>
+<pre>
+	mov	eax, 6			; sys_close
+	mov	ebx, [deskryptor]	; deskryptor pliku "/dev/mem"
+	int	80h</pre>
+
+<P>Jak widać, mapowanie plików do pamięci jest wygodne, gdyż nie trzeba ciągle skakać po pliku
+funkcją <span class="b">sys_lseek</span> i wykonywać kosztownych czasowo wywołań innych funkcji
+systemowych. Warto więc się z tym zaznajomić. Należy jednak pamiętać, że nie wszystkie
+pliki czy urządzenia dają się zmapować do pamięci - nie należy wtedy zamykać swojego
+programu z błędem, lecz korzystać z tradycyjnego interfejsu funkcji plikowych.</P>
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm" name="tryb_txt_linux03" id="tryb_txt_linux03">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

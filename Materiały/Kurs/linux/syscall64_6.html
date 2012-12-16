@@ -1,0 +1,492 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: opis syscall (6) </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="syscall64_5.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="syscall64_7.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="przer80h_6.html"
+	hreflang="pl" lang="pl" title="Funkcje x86-32: 251-300">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kursy programowania w assemblerze - opis syscall">
+<META NAME="Keywords" CONTENT="Assembler, asembler, kurs, nauka, linux, syscall, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Sun, Sep 16 2012 12:57:59 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Opis funkcji systemowych <span lang="en">syscall</span>: 251-300</h1>
+
+<P>
+Jeśli jakaś funkcja zakończy się błędem, w RAX zwracana jest wartość ujemna z przedziału
+od -4096 do -1 włącznie.</P>
+<P>
+Z drugiej strony, opisy funkcji na stronach manuala mówią, że zwracane jest -1,
+a wartość błędu jest zapisywana do zmiennej errno z biblioteki GLIBC. Dzieje się tak
+tylko w przypadku, gdy korzystamy z interfejsu języka C (czyli deklarujemy i
+uruchamiamy zewnętrzne funkcje odpowiadające wywołaniom systemowym i linkujemy
+nasz program z biblioteką języka C), a nie bezpośrednio z wywołań systemowych (czyli
+<span lang="en">syscall</span>).
+</P>
+<P>
+Najbardziej aktualne informacje o funkcjach systemowych można znaleźć zazwyczaj
+w sekcji 2 (lub 3) manuala, na przykład <code class="b">man 2 open</code>.
+</P>
+<P>
+Najnowsze wersje jądra można znaleźć na <A HREF="http://www.kernel.org" hreflang="en"
+>www.kernel.org</A>, a pliki z listą funkcji i ich numerów są pod ścieżkami:
+</P>
+<ul>
+ <li>arch/x86/include/asm/unistd_64.h (w starszych wersjach kodów)</li>
+ <li>arch/x86/syscalls/syscall_64.tbl (w wersjach bieżących)</li>
+</ul>
+
+<P>
+Najnowsze wersje stron manuala można znaleźć tu: <A HREF="http://www.kernel.org/pub/linux/docs/man-pages/"
+	>www.kernel.org/pub/linux/docs/man-pages</A>.
+</P>
+<P>
+Napis ASCIIZ oznacza łańcuch znaków
+ <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+ zakończony znakiem/bajtem Zerowym.
+</P>
+<P>
+Jeśli potrzeba, przy każdej funkcji jest odnośnik do opisu argumentów i innych
+ <A HREF="dodatk80.html" hreflang="pl" tabindex="1">dodatkowych informacji</a>: typów danych,
+ wartości błędów, możliwych wartości parametrów itp.
+</P>
+
+<TABLE summary="Ta tabela opisuje funkcje od 251 do 300 linuksowego wywołania systemowego syscall">
+<CAPTION> Podstawowe funkcje <span lang="en">syscall</span>: 251-300</CAPTION>
+<thead>
+<TR><TH style="WIDTH:5%;" id="rax">Numer/ RAX</TH>
+	<TH style="WIDTH:20%;" id="opis">Opis</TH>
+	<TH id="arg">Argumenty</TH><TH style="WIDTH:30%;" id="ret">Zwraca</TH></TR>
+
+</thead><tbody>
+<TR class="c">  <TD headers="rax"><a name="x64f251">251</a><br> </td>
+	<TD headers="opis"> Ustaw priorytet kolejkowania We/wy procesu (<span lang="en">sys_ioprio_set</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#ioprio_typ">typ</A> <br>
+		RSI = informacja zależna od typu <br>
+		RDX = nowy priorytet <br> </td>
+	<TD headers="ret"> RAX = 0<br> RAX = błąd ESRCH, EPERM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f252">252</a><br> </td>
+	<TD headers="opis"> Pobierz priorytet kolejkowania We/wy procesu (<span lang="en">sys_ioprio_get</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#ioprio_typ">typ</A> <br>
+		RSI = informacja zależna od typu <br> </td>
+	<TD headers="ret"> RAX = priorytet <br> RAX = błąd ESRCH, EPERM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f253">253</a><br> </td>
+	<TD headers="opis"> Inicjalizacja kolejki zdarzeń inotify (<span lang="en">sys_inotify_init</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret"> RAX = deskryptor kolejki <BR>RAX = błąd EMFILE, ENFILE, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f254">254</a><br> </td>
+	<TD headers="opis"> Dodaj obiekt obserwowany kolejki zdarzeń inotify (<span lang="en">sys_inotify_add_watch</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor kolejki inotify<BR>
+	 	RSI = adres nazwy pliku ASCIIZ<BR>
+	 	RDX = <A HREF="dodatk80.html#inotify_fl">flagi inotify</A> <br> </td>
+	<TD headers="ret"> RAX = deskryptor <q>obserwacji</q> danego pliku <BR>RAX =
+		błąd EACCES, EBADF, EFAULT, EINVAL, ENOMEM, ENOSPC <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f255">255</a><br> </td>
+	<TD headers="opis"> Usuń obserwację obiektu z kolejki zdarzeń inotify (<span lang="en">sys_inotify_rm_watch</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor kolejki inotify<BR>
+	 	RSI = deskryptor obserwacji<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f256">256</a><br> </td>
+	<TD headers="opis"> Przenieś strony pamięci procesu (<span lang="en">sys_migrate_pages</span>)  <br> </td>
+	<TD headers="arg"> RDI = PID procesu, którego strony przenieść<BR>
+		RSI = największy numer węzła +1<BR>
+		RDX = adres tablicy DWORDów z co najmniej ECX/RSI bitami oznaczającymi stare węzły<BR>
+		R10 = adres tablicy DWORDów z co najmniej ECX/RSI bitami oznaczającymi nowe węzły </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EPERM, ESRCH <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f257">257</a><br> </td>
+	<TD headers="opis"> Otwórz plik względnie do katalogu (<span lang="en">sys_openat</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+	 	RSI = adres nazwy pliku ASCIIZ. Jeśli ścieżka jest względna, jest brana jako względna
+	 		względem podanego katalogu zamiast bieżącego katalogu procesu<BR>
+		RDX = <A HREF="dodatk80.html#bity_dostepu">bity dostępu</A><BR>
+		R10 = <A HREF="dodatk80.html#tryb">prawa dostępu / tryb</a> <br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, ENOTDIR <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f258">258</a><br> </td>
+	<TD headers="opis"> Utwórz katalog względnie do katalogu (<span lang="en">sys_mkdirat</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres ścieżki/nazwy ASCIIZ. Jeśli ścieżka jest względna, jest brana jako względna
+	 		względem podanego katalogu zamiast bieżącego katalogu procesu<BR>
+		RDX = <A HREF="dodatk80.html#tryb">prawa dostępu / tryb</a> <br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd - każdy związany z systemem plików lub prawami dostępu<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f259">259</a><br> </td>
+	<TD headers="opis"> Utworzenie pliku specjalnego względnie do katalogu (<span lang="en">sys_mknodat</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres ścieżki/nazwy ASCIIZ. Jeśli ścieżka jest względna, jest brana jako względna
+	 		względem podanego katalogu zamiast bieżącego katalogu procesu<BR>
+		RDX = <A HREF="dodatk80.html#mknod_typ">typ urządzenia</A> OR <A HREF="dodatk80.html#tryb">prawa dostępu</A>
+		<BR>R10, R8 - wynik działania (zmodyfikowanego) makra <A HREF="dodatk80.html#makedev">makedev</A> <br> </td>
+	<TD headers="ret">RAX = 0<BR> RAX = błąd EACCES, EEXIST, EFAULT, EINVAL, ELOOP, ENAMETOOLONG, ENOENT,
+		ENOMEM, ENOSPC, ENOTDIR, EPERM, EROFS<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f260">260</a><br> </td>
+	<TD headers="opis"> Zmiana właściciela obiektu położonego względnie do katalogu (<span lang="en">sys_fchownat</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres ścieżki/nazwy ASCIIZ. Jeśli ścieżka jest względna, jest brana jako względna
+	 		względem podanego katalogu zamiast bieżącego katalogu procesu<BR>
+	 	RDX = identyfikator UID nowego właściciela obiektu<Br>
+	 	R10 = identyfikator GID grupy, która stanie się właścicielem obiektu<br>
+	 	R8 = 0 lub wartość AT_SYMLINK_NOFOLLOW=100h, wtedy nie będzie podążał za dowiązaniami symbolicznymi
+	 		<br></td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, ENOTDIR, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f261">261</a><br> </td>
+	<TD headers="opis"> Zmiana czasów dostępu i zmian pliku położonego względnie do katalogu (<span lang="en">sys_futimesat</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres ścieżki/nazwy ASCIIZ. Jeśli ścieżka jest względna, jest brana jako względna
+	 		względem podanego katalogu zamiast bieżącego katalogu procesu<BR>
+	 	RDX = adres tablicy 2 struktur <A HREF="dodatk80.html#timeval">timeval</A>, NULL gdy chcemy bieżący czas.
+		 Pierwsza struktura opisuje czas dostępu, druga - czas zmiany<Br></td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, ENOTDIR <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f262">262</a><br> </td>
+	<TD headers="opis"> Pobierz status obiektu położonego względnie do katalogu (<span lang="en">sys_fstatat64</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres ścieżki/nazwy ASCIIZ. Jeśli ścieżka jest względna, jest brana jako względna
+	 		względem podanego katalogu zamiast bieżącego katalogu procesu<BR>
+	 	RDX = adres struktury <A HREF="dodatk80.html#stat">stat</A> na dane<Br>
+		R10 = 0 lub AT_SYMLINK_NOFOLLOW (=0x100), gdy nie chcemy dereferencjonować dowiązań
+	 		</td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, ENOTDIR, EINVAL, błędy sys_stat <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f263">263</a><br> </td>
+	<TD headers="opis"> Usuń obiekt względnie do katalogu  (<span lang="en">sys_ulinkat</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres ścieżki/nazwy ASCIIZ. Jeśli ścieżka jest względna, jest brana jako względna
+	 		względem podanego katalogu zamiast bieżącego katalogu procesu<BR>
+		RDX = 0 lub AT_REMOVEDIR (=0x200), gdy chcemy usuwać katalogi
+	 		</td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, ENOTDIR, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f264">264</a><br> </td>
+	<TD headers="opis"> Przenieś plik/Zmień nazwę pliku względnie do katalogu (<span lang="en">sys_renameat</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu źródłowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres starej nazwy (i ewentualnie ścieżki) ASCIIZ<BR>
+		RDX = deskryptor otwartego katalogu docelowego<BR>
+		R10 = adres nowej nazwy (i ewentualnie ścieżki) ASCIIZ<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBUSY, EEXIST, EISDIR, ENOTEMPTY, EXDEV (i inne błędy systemu plików), EBADF, ENOTDIR
+	<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f265">265</a><br> </td>
+	<TD headers="opis"> Utworzenie twardego dowiązania do pliku względnie do katalogu (<span lang="en">sys_linkat</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu źródłowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres nazwy istniejącego pliku ASCIIZ<BR>
+		RDX = deskryptor otwartego katalogu docelowego<BR>
+		R10 = adres nazwy nowego pliku ASCIIZ<BR>
+		R8 = 0 (flagi)<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX=błąd EACCES, EIO, EPERM, EEXIST, EFAULT, ELOOP, EMLINK, ENAMETOOLONG,
+		ENOENT, ENOMEM, ENOSPC, ENOTDIR, EROFS, EXDEV<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f266">266</a><br> </td>
+	<TD headers="opis"> Stwórz dowiązanie symboliczne do pliku względnie do katalogu (<span lang="en">sys_symlinkat</span>) <br> </td>
+	<TD headers="arg"> RDI = adres nazwy pliku ASCIIZ<BR>
+		RSI = deskryptor otwartego katalogu docelowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RDX = adres nazwy linku ASCIIZ<br> </td>
+	<TD headers="ret"> RAX = 0 <BR> RAX = błędy związane z uprawnieniami lub systemem plików<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f267">267</a><br> </td>
+	<TD headers="opis"> Przeczytaj zawartość linku symbolicznego względnie do katalogu (<span lang="en">sys_readlinkat</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu źródłowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres nazwy dowiązania symbolicznego ASCIIZ<BR>
+		RDX = adres bufora, który otrzyma przeczytaną informację<BR>
+		R10 = długość bufora<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, ENOTDIR <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f268">268</a><br> </td>
+	<TD headers="opis"> Zmiana uprawnień obiektu względnie do katalogu (<span lang="en">sys_fchmodat</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu źródłowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres nazwy pliku ASCIIZ<BR>
+		RDX = nowe <A HREF="dodatk80.html#tryb">prawa dostępu</a> <br>
+		R10 = flagi, musi być zero </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, ENOTDIR <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f269">269</a><br> </td>
+	<TD headers="opis"> Sprawdź uprawnienia dostępu do pliku (<span lang="en">sys_faccessat</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu źródłowego lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres nazwy pliku ASCIIZ<BR>
+		RDX = <A HREF="dodatk80.html#tryb">prawa dostępu / tryb</A> (wartości R_OK, W_OK, X_OK)<br>
+		R10 = flagi: 0 lub AT_SYMLINK_NOFOLLOW=100h (nie podążaj za dowiązaniami symbolicznymi) lub AT_EACCESS=0x200
+			(sprawdzanie według efektywnych UID i GID)
+		<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBADF, ENOTDIR, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f270">270</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_pselect6</span>  <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f271">271</a><br> </td>
+	<TD headers="opis"> Czekaj na zdarzenia na deskryptorze (<span lang="en">sys_ppoll</span>) <br> </td>
+	<TD headers="arg"> RDI = adres tablicy struktur <A HREF="dodatk80.html#pollfd">pollfd</A><BR>
+		RSI = liczba struktur pollfd w tablicy<BR>
+		RDX = adres struktury <A HREF="dodatk80.html#timespec">timespec</A> - czas oczekiwania lub 0 (nieskończoność)<BR>
+		R10 = adres struktury <A HREF="dodatk80.html#sigset_t">sigset_t</a> <br> </td>
+	<TD headers="ret"> RAX = liczba odpowiednich deskryptorów<BR>RAX = 0, gdy czas upłynął<BR>RAX = błąd
+		 EFAULT, EINTR, EINVAL, EBADF, ENOMEM<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f272">272</a><br> </td>
+	<TD headers="opis"> Cofnij współdzielanie (<span lang="en">sys_unshare</span>) <br> </td>
+	<TD headers="arg"> RDI = CLONE_FILES, CLONE_FS lub CLONE_NEWNS spośród
+		<A HREF="dodatk80.html#flagi_klonowania">flag</A> <br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX=błąd EPERM, ENOMEM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f273">273</a><br> </td>
+	<TD headers="opis">Ustaw listę sprawnych futeksów (<span lang="en">sys_set_robust_list</span>) <br> </td>
+	<TD headers="arg"> RDI = adres pierwszego elementu listy struktur
+			typu <A HREF="dodatk80.html#robust_list_head">robust_list_head</A><BR>
+		RSI = rozmiar elementu listy podanej przez RDI </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f274">274</a><br> </td>
+	<TD headers="opis">Pobierz listę sprawnych futeksów (<span lang="en">sys_get_robust_list</span>) <br> </td>
+	<TD headers="arg"> RDI = PID procesu<BR>
+		RSI = adres zmiennej, która otrzyma adres pierwszego elementu listy struktur
+			typu <A HREF="dodatk80.html#robust_list_head">robust_list_head</A><BR>
+		RDX = adres zmiennej, która otrzyma rozmiar elementu listy podanej przez RSI </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EPERM, ESRCH, EFAULT <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f275">275</a><br> </td>
+	<TD headers="opis"> Spleć dane z/do potoku (<span lang="en">sys_splice</span>)  <br> </td>
+	<TD headers="arg"> RDI = wejściowy deskryptor pliku<BR>
+		RSI = offset w pliku wejściowym, skąd czytać dane (0 dla potoków)<BR>
+		RDX = wyjściowy deskryptor pliku<BR>
+		R10 = offset w pliku wyjściowym, dokąd zapisać dane (0 dla potoków)<br>
+		R8 = maksymalna liczba bajtów do przeniesienia<br>
+		R9 = <A HREF="dodatk80.html#flagi_splice">flagi</a> </td>
+	<TD headers="ret"> RAX = liczba przeniesionych bajtów<BR> RAX=błąd EBADF, ESPIPE, ENOMEM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f276">276</a><br> </td>
+	<TD headers="opis"> Duplikowanie zawartości potoku (<span lang="en">sys_tee</span>)  <br> </td>
+	<TD headers="arg"> RDI = wejściowy deskryptor pliku<BR>
+		RSI = wyjściowy deskryptor pliku<BR>
+		RDX = maksymalna liczba bajtów do przeniesienia<br>
+		R10 = <A HREF="dodatk80.html#flagi_splice">flagi</a> (te same, co dla sys_splice)</td>
+	<TD headers="ret"> RAX = liczba zduplikowanych bajtów<BR> RAX=błąd ENOMEM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f277">277</a><br> </td>
+	<TD headers="opis"> Synchronizuj segment pliku z dyskiem  (<span lang="en">sys_sync_file_range</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor pliku<br>
+		RSI = początek zakresu danych do synchronizacji / RSI wskazuje na 64 bity adresu początku danych?<Br>
+		RDX = liczba bajtów do zsynchronizowania / RDX wskazuje na 64-bitową0 liczbę bajtów do zsynchronizowania?<br>
+		R10 = <A HREF="dodatk80.html#flagi_sync_file_range">flagi synchronizacji</a>
+		<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX=błąd EBADF, EIO, EINVAL, ENOMEM, ENOSPC, ESPIPE <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f278">278</a><br> </td>
+	<TD headers="opis"> Spleć strony pamięci do potoku (<span lang="en">sys_vmsplice</span>)  <br> </td>
+	<TD headers="arg"> RDI = wejściowy deskryptor potoku<BR>
+		RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</a><BR>
+		RDX = liczba elementów w tablicy pod [RSI]<br>
+		R10 = <A HREF="dodatk80.html#flagi_splice">flagi</a> (te same, co dla sys_splice)
+		</td>
+	<TD headers="ret"> RAX = liczba bajtów przeniesionych do potoku<BR> RAX=błąd EBADF, ENOMEM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f279">279</a><br> </td>
+	<TD headers="opis"> Przesuń strony pamięci procesu (<span lang="en">sys_move_pages</span>) <br> </td>
+	<TD headers="arg"> RDI = PID procesu<BR>
+		RSI = liczba stron do przeniesienia <BR>
+		RDX = adres tablicy adresów stron<BR>
+		R10 = adres tablicy liczb całkowitych określających żądane miejsce dla danej strony<br>
+		R8 = adres tablicy na liczby całkowite, które otrzymają status wykonanej operacji<br>
+		R9 = flagi określające typ stron do przeniesienia (MPOL_MF_MOVE=2 oznacza tylko strony procesu,
+			MPOL_MF_MOVE_ALL=4 oznacza wszystkie strony)<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX=błąd E2BIG, EACCES, EFAULT, EINVAL, ENODEV, ENOENT, EPERM, ESRCH <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f280">280</a><br> </td>
+	<TD headers="opis"> Zmień znaczniki czasu pliku (<span lang="en">sys_utimensat</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego katalogu lub wartość AT_FDCWD=-100
+			oznaczająca katalog bieżący<BR>
+		RSI = adres nazwy pliku <BR>
+		RDX = adres dwuelementowej tablicy struktur <A HREF="dodatk80.html#timespec">timespec</a>,
+			opisujących czas dostępu i zmiany<BR>
+		R10 = flagi: 0 lub AT_SYMLINK_NOFOLLOW=0x100 (nie podążaj za dowiązaniami symbolicznymi)<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX=błąd EACCES, EBADF, EFAULT, EINVAL, ELOOP, ENAMETOOLONG, ENOENT, ENOTDIR, EPERM, EROFS, ESRCH<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f281">281</a><br> </td>
+	<TD headers="opis"> Czekaj na deskryptorze pliku epoll (<span lang="en">sys_epoll_pwait</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor epoll <BR>
+ 		RSI = adres tablicy struktur <A HREF="dodatk80.html#epoll_event">epoll_event</A> <BR>
+		RDX = maksymalna liczba zdarzeń, na które będziemy czekać <BR>
+		R10 = czas czekania w milisekundach (-1 = nieskończoność)<br>
+		R8 = adres zestawu sygnałów (tablicy 32 DWORDów), które też przerwą czekanie</td>
+	<TD headers="ret"> RAX = liczba deskryptorów gotowych <BR> RAX = błąd EFAULT, EINTR, EBADF, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f282">282</a><br> </td>
+	<TD headers="opis"> Stwórz deskryptor pliku do otrzymywania sygnałów (<span lang="en">sys_signalfd</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor: -1, gdy tworzymy nowy lub nieujemny, gdy zmieniamy istniejący <BR>
+ 		RSI = adres <A HREF="dodatk80.html#sigaction">maski sygnałów (sigset)</a>, które chcemy otrzymywać <BR> </td>
+	<TD headers="ret"> RAX = deskryptor pliku<BR> RAX=błąd EBADF, EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f283">283</a><br> </td>
+	<TD headers="opis"> Stwórz nowy czasomierz (<span lang="en">sys_timerfd_create</span>) <br> </td>
+	<TD headers="arg"> RDI = identyfikator zegara (CLOCK_REALTIME=0 lub CLOCK_MONOTONIC=1) <BR>
+ 		RSI = flagi: 0 lub zORowane wartości TFD_NONBLOCK (=04000 ósemkowo, operacje mają być nieblokujące),
+			TFD_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)<br> </td>
+	<TD headers="ret"> RAX = deskryptor pliku<BR> RAX=błąd EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f284">284</a><br> </td>
+	<TD headers="opis"> Stwórz deskryptor pliku do otrzymywania zdarzeń (<span lang="en">sys_eventfd</span>) <br> </td>
+	<TD headers="arg"> RDI = wstępna wartość licznika zdarzeń </td>
+	<TD headers="ret"> RAX = deskryptor pliku<BR> RAX=błąd EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f285">285</a><br> </td>
+	<TD headers="opis"> Manipulacja przestrzenią pliku (<span lang="en">sys_fallocate</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor pliku <BR>
+ 		RSI = tryb = FALLOC_FL_KEEP_SIZE (alokuje i zeruje przestrzeń na dysku w podanym zakresie bajtów) = 1 <BR>
+		RDX = offset początku zakresu bajtów w pliku<BR>
+		R10 = liczba bajtów w zakresie<br> </td>
+	<TD headers="ret"> RAX = liczba deskryptorów gotowych <BR> RAX = błąd EFAULT, EINTR, EBADF, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f286">286</a><br> </td>
+	<TD headers="opis"> Uruchom lub zatrzymaj czasomierz (<span lang="en">sys_timerfd_settime</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor pliku czasomierza <BR>
+ 		RSI = flagi (0 uruchamia czasomierz względy, TFD_TIMER_ABSTIME=1 - bezwzględny) <BR>
+		RDX = adres struktury <A HREF="dodatk80.html#itimerspec">itimerspec</A>, zawierającej początkowy czas<BR>
+		R10 = adres struktury <A HREF="dodatk80.html#itimerspec">itimerspec</A>, która otrzyma aktualny czas<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX=błąd EINVAL, EFAULT, EBADF <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f287">287</a><br> </td>
+	<TD headers="opis"> Pobierz czas na czasomierzu (<span lang="en">sys_timerfd_gettime</span>)  <br> </td>
+	<TD headers="arg"> RDI = deskryptor pliku czasomierza <BR>
+ 		RSI = adres struktury <A HREF="dodatk80.html#itimerspec">itimerspec</A>, która otrzyma aktualny czas<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX=błąd EINVAL, EFAULT, EBADF <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f288">288</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_paccept</span>  <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f289">289</a><br> </td>
+	<TD headers="opis"> Stwórz deskryptor pliku do otrzymywania sygnałów (<span lang="en">sys_signalfd4</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor: -1, gdy tworzymy nowy lub nieujemny, gdy zmieniamy istniejący <BR>
+ 		RSI = adres <A HREF="dodatk80.html#sigaction">maski sygnałów (sigset)</a>, które chcemy otrzymywać <BR>
+		RDX = flagi: 0 lub zORowane wartości SFD_NONBLOCK (=04000 ósemkowo, operacje mają być nieblokujące),
+			SFD_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)<br> </td>
+	<TD headers="ret"> RAX = deskryptor pliku<BR> RAX=błąd EBADF, EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f290">290</a><br> </td>
+	<TD headers="opis"> Stwórz deskryptor pliku do otrzymywania zdarzeń (<span lang="en">sys_eventfd2</span>) <br> </td>
+	<TD headers="arg"> RDI = wstępna wartość licznika zdarzeń <BR>
+ 		RSI = flagi: 0 lub zORowane wartości EFD_NONBLOCK (=04000 ósemkowo, operacje mają być nieblokujące),
+			EFD_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)<br> </td>
+	<TD headers="ret"> RAX = deskryptor pliku<BR> RAX=błąd EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f291">291</a><br> </td>
+	<TD headers="opis"> Utwórz deskryptor pliku epoll (<span lang="en">sys_epoll_create1</span>)  <br> </td>
+	<TD headers="arg"> RDI = flagi: 0 lub EPOLL_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)<br> </td>
+	<TD headers="ret"> RAX = nowy deskryptor pliku <BR> RAX = błąd ENOMEM, EINVAL, EMFILE, ENFILE <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f292">292</a><br> </td>
+	<TD headers="opis"> Zamień deskryptor zduplikowanym deskryptorem pliku (<span lang="en">sys_dup3</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor do zduplikowania<BR>
+		RSI = deskryptor, do którego powinien być przyznany duplikat<br>
+		RDX = flagi: 0 lub O_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)</td>
+	<TD headers="ret">RAX = zduplikowany deskryptor<BR>RAX = błąd EBADF, EMFILE, EBUSY, EINTR, EINVAL<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f293">293</a><br> </td>
+	<TD headers="opis"> Utwórz potok (<span lang="en">sys_pipe2</span>)  <br> </td>
+	<TD headers="arg">RDI = adres tablicy dwóch DWORDów<br>
+		RSI = flagi: 0 lub zORowane wartości O_NONBLOCK (=04000 ósemkowo, operacje mają być nieblokujące),
+			O_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec) </td>
+	<TD headers="ret">RAX = 0 i pod [RDI]: deskryptor odczytu z potoku fd(0) pod [RDI], deskryptor zapisu do potoku
+		fd(1) pod [RDI+4]<BR>RAX = błąd EFAULT, EMFILE, ENFILE, EINVAL<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f294">294</a><br> </td>
+	<TD headers="opis"> Inicjalizacja kolejki zdarzeń inotify (<span lang="en">sys_inotify_init1</span>)  <br> </td>
+	<TD headers="arg"> RDI = flagi: 0 lub zORowane wartości IN_NONBLOCK (=04000 ósemkowo, operacje mają być nieblokujące),
+			IN_CLOEXEC (=02000000 ósemkowo, zamknij w czasie wywołania exec)<br> </td>
+	<TD headers="ret"> RAX = deskryptor kolejki <BR>RAX = błąd EMFILE, ENFILE, ENOMEM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f295">295</a><br> </td>
+	<TD headers="opis">Odczyt danych do wielu buforów (<span lang="en">sys_preadv</span>) <br> </td>
+	<TD headers="arg">RDI = deskryptor otwartego pliku<BR>
+		RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A>, do których zapisać dane<BR>
+		RDX = liczba struktur iovec spod [RSI]<BR>
+		R10 = numer bajtu, od którego czytać (offset w pliku) </td>
+	<TD headers="ret"> RAX = liczba odczytanych bajtów<BR>RAX = błąd funkcji sys_read, sys_lseek lub EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f296">296</a><br> </td>
+	<TD headers="opis">Zapis danych z wielu buforów (<span lang="en">sys_pwritev</span> <br> </td>
+	<TD headers="arg">RDI = deskryptor otwartego pliku<BR>
+		RSI = adres tablicy struktur <A HREF="dodatk80.html#iovec">iovec</A>,
+			z których brać dane do zapisania<BR>
+		RDX = liczba struktur iovec spod [RSI]<BR>
+		R10 = numer bajtu, od którego zapisywać (offset w pliku) </td>
+	<TD headers="ret"> RAX = liczba zapisanych bajtów<BR>RAX = błąd funkcji sys_write, sys_lseek lub EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f297">297</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_rt_tgsigqueueinfo</span> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f298">298</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_perf_counter_open</span> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f299">299</a><br> </td>
+	<TD headers="opis"> Odbierz wiele wiadomości z gniazda (<span lang="en">sys_recvmmsg</span>) <br> </td>
+	<TD headers="arg"> RDI = deskryptor otwartego gniazda<BR>
+		RSI = adres tablicy struktur <A HREF="dodatk80.html#mmsghdr">mmsghdr</A>,
+			do których zapisać dane<BR>
+		RDX = liczba struktur mmsghdr spod [RSI]<BR>
+		R10 = 0 lub zORowane <a href="dodatk80.html#sendto_fl"
+			hreflang="pl">flagi funkcji recvmsg</a> i dodatkowa flaga
+			MSG_WAITFORONE (=0x10000) oznaczająca czekanie na jedną wiadomość<br>
+		R8 = adres struktury <A HREF="dodatk80.html#timespec">timespec</A>
+			oznaczającej czas czekania lub 0 (czekanie bez końca) </td>
+	<TD headers="ret"> RAX = liczba otrzymanych wiadomości<BR>RAX = błąd funkcji recvmsg lub EINVAL <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f300">300</a><br> </td>
+	<TD headers="opis"> <span lang="en">sys_fanotify_init</span> <br> </td>
+	<TD headers="arg"> brak danych<br> </td>
+	<TD headers="ret"> brak danych <hr> <br> </td> </TR>
+
+</TABLE>
+
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="syscall64_5.html">Poprzednia część</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="syscall64_7.html">Kolejna część</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks, część 9 - Narzędzia </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="linux08.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="linux10.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kurs języka asembler">
+<META NAME="Keywords" CONTENT="linux, linuks, kurs, asm, asembler, assembler, debugger,
+	debuger, debug, gdb, Private ICE, make">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Mon, Feb 21 2011 16:00:56 CEST">
+</HEAD><BODY>
+
+<div class="c">Jak pisać programy w języku asembler pod Linuksem?<BR>
+	<h1 class="nag">Część 9 - Narzędzia programisty, czyli co może nam pomagać w programowaniu</h1>
+	</div>
+
+<HR>
+<h2 class="nag">Debugery</h2>
+
+	<BR><a href="#ide" tabindex="1" class="bezdruk">(przeskocz debugery)</a>
+<P>
+Wszystkim się może zdarzyć, że nieustanne, wielogodzinne gapienie się w kod programu nic nie
+daje i program ciągle nie chce nam działać. Wtedy z pomocą przychodzą debugery. W tej części
+zaprezentuję kilka wartych uwagi programów tego typu.
+</P>
+
+<P>
+Debugery programów Linuksowych:</P>
+<OL>
+ <LI>GDB, czyli Gnu Debugger + nakładki, na przykład DDD
+	<P>Podstawowy debuger pracujący w trybie tekstowym (nakładka DDD - w graficznym).
+	Składnia podstawowa to <span lang="en">AT&amp;T</span>
+	(odwrotna do zwykłej składni Intela), podobnie jak w Gnu as i GCC.<BR>
+	Aby używać GDB, nasz program musimy skompilować <em class="wazne">BEZ opcji
+	<code>-s</code></em> u linkera (aby zostały
+	zachowane symbole).</P>
+
+	<P>Krótki kurs obsługi:</P>
+	<ul>
+	<li>Uruchomienie jest proste - wystarczy <code>gdb naszprog</code>.</li>
+	<li>Aby gdb stanął na wybranej funkcji, należy wpisać <code>break nazwa_funkcji</code>.
+	To powinno ustawić pułapkę (<span lang="en">breakpoint</span>) na pierwszej instrukcji
+	tej funkcji.
+	Nie zawsze jednak breakpoint działa na procedurze początkowej _start - wtedy tuż po
+	<code>_start:</code> (w naszym programie) należy
+	wstawić instrukcję <code>nop</code> i tuż po niej postawić
+	etykietę, na której już bez problemów ustawimy działający breakpoint.</li>
+	<li>Aby zdisasemblować konkretną funkcję, piszemy <code>disassemble nazwa_funkcji</code>.
+	Zostanie wyświetlony kod podanej funkcji do najbliższej etykiety.
+	Jeśli wolimy składnię Intela, piszemy <code>set disassembly-flavor intel</code>.
+	Jeśli nie, to <code>set disassembly-flavor att</code>.</li>
+	<li>Aby wyświetlić rejestry, piszemy <code>info r</code>, aby wyświetlić
+	konkretny rejestr, piszemy na przykład <code>print /x $eax</code>.</li>
+	<li>Aby zmienić wartość rejestru, piszemy na przykład <code>set $ebx=33</code>.</li>
+	<li>Aby wyświetlić rejestry koprocesora, piszemy <code>info float</code>.</li>
+	<li>Aby wyświetlić zawartość pamięci, piszemy na przykład <code>x 0x08048081</code>
+	lub <code>print /x zmienna</code>.
+	Aby wyświetlić więcej niż jedno 32-bitowe słowo, dajemy liczbę słów po ukośniku
+	po komendzie <code>x</code>, na przykład <code>x/8 0x08048081</code>.
+	Zamiast adresu można podać etykietę.</li>
+	<li>Aby zmienić wartość zmiennej w pamięci, używamy na przykład
+	<code>set variable var1 = 0x1</code> lub
+	<code>set variable *0x8049094 = 0x2</code>, jeśli znamy tylko adres.</li>
+	<li>Aby pobrać adres zmiennej, używamy na przykład <code>print /x &amp;var1</code>.</li>
+	<li>Listę zdefiniowanych funkcji dostajemy po <code>info functions</code>.</li>
+	<li>Bieżący stos wywołań można otrzymać komendą <code>info stack</code>.</li>
+	<li>Aby przejść o 1 instrukcję dalej, piszemy <code>stepi</code>.</li>
+	<li>Pomoc możemy wyświetlić, wpisując <code>help</code>.</li>
+	</ul>
+	<br>
+  </LI>
+
+ <LI><span lang="en">Private ICE - PICE</span>
+	<P>Ze zrzutów ekranowych na jego stronie domowej
+	(<A HREF="http://pice.sourceforge.net/" hreflang="en">pice.sf.net</A>)
+	 wygląda całkiem obiecująco. Poza tym, jest to
+	<span lang="en">system-level debugger</span>,
+	 czyli może on wnikać w zakamarki systemu. Szczegółów obsługi
+	również niestety nie znam, gdyż kompilacja wymaga zabawy z kodem i posiadania źródeł jądra.
+  </P></LI>
+
+ <li><a href="http://bochs.sourceforge.net/" hreflang="en">Bochs</a>
+	<P>
+	Jest to emulator procesora, przydatny zwłaszcza w pisaniu i testowaniu bootsektorów i
+	miniaturowych systemów operacyjnych, ale nie tylko. Posiada
+	<a href="http://bochs.sourceforge.net/doc/docbook/user/internal-debugger.html"
+	hreflang="en">wbudowany debuger</a>, dzięki któremu można debugować programy w
+	takich środowiskach, w których nie da się uruchomić tradycyjnego debugera (na przykład
+	właśnie w czasie bootowania systemu).
+	</P>
+ </LI>
+
+ <li><a href="http://www.valgrind.org/" hreflang="en">Valgrind</a>
+	<P>Może nie do końca jest to debuger, ale narzędzie do analizy pamięci. Pozwala wykryć
+	między innymi wycieki pamięci, miejsca spowalniające program oraz poprawić
+	wydajność pamięci podręcznej.</P>
+ </li>
+
+</OL>
+
+
+<P>
+Wiem, że nie wszyscy od razu z entuzjazmem rzucą się do ściągania i testowania przedstawionych
+wyżej programów i do debugowania własnych.<BR>
+Niektórzy mogą uważać, że
+odpluskwiacz nie jest im potrzebny. Może i tak być, ale nie zawsze i nie u wszystkich. Czasem
+(zwykle po długim sterczeniu przed ekranem) przychodzi chęć do użycia czegoś, co tak
+bardzo może ułatwić nam wszystkim życie.<BR>
+Pomyślcie, że gdyby nie było debugerów, znajdowanie błędów w programie musielibyśmy pozostawić
+naszej nie zawsze wyćwiczonej wyobraźni. Dlatego zachęcam Was do korzystania z programów tego
+typu (tylko tych posiadanych legalnie, oczywiście).
+</P>
+<P>
+Warto jeszcze wspomnieć o dwóch programach: strace i ltrace.
+ Pozwalają one na śledzenie, których funkcji systemowych i kiedy dany program używa.
+ Jeśli coś Wam nie działa, można spojrzeć, na których wywołaniach funkcji są jakieś problemy.
+ Uruchomienie jest proste: <CODE>strace ./waszprogram</CODE>
+</P>
+
+
+
+
+
+
+
+<HR>
+<h2 class="nag"><a name="ide" id="ide">Edytory i disasemblery</a>/hex-edytory</h2>
+
+	<BR><a href="#make" class="bezdruk">(przeskocz ten dział)</a>
+<P>
+Do pisania programów w asemblerze wystarczy najzwyklejszy edytor tekstu (Emacs, VI, Joe,
+PICO, LPE, ...), ale jeśli nie podoba się Wam żaden z edytorów, to możecie wejść na stronę
+<A HREF="http://www.thefreecountry.com/programming/editors.shtml" hreflang="en" lang="en"
+><span lang="en">The Free Country.com</span> - edytory</A>, gdzie przedstawionych jest
+wiele edytorów dla programistów. Może znajdziecie coś dla siebie.<BR>
+Zawsze można też przeszukać <A HREF="http://www.sf.net" hreflang="en" lang="en">SourceForge.net</A>
+</P>
+<P>
+Kolejną przydatną rzeczą może okazać się disasembler lub hex-edytor. Jest to program, który
+podobnie jak debugger czyta plik i ewentualnie tłumaczy zawarte w nim bajty na instrukcje asemblera,
+jednak bez możliwości uruchomienia czytanego programu.<BR>
+Disasemblery mogą być przydatne w wielu sytuacjach, na przykład gdy chcemy modyfikować pojedyncze
+bajty po kompilacji programu, zobaczyć adresy zmiennych, itp.<BR>
+Oto 2 przykłady programów tego typu:</P>
+
+<UL>
+ <LI>Biew: <A HREF="http://biew.sourceforge.net/en/biew.html" hreflang="en"
+	>biew.sf.net</A></LI>
+ <LI>HTE: <A HREF="http://hte.sourceforge.net/" hreflang="en">hte.sf.net</A></LI>
+</UL>
+
+<P>I ponownie, jeśli nie spodoba się Wam żaden z wymienionych, to możecie wejść na stronę
+<A HREF="http://www.thefreecountry.com/programming/disasemblers.shtml" hreflang="en" lang="en"
+><span lang="en">The Free Country.com</span> - disasemblery</A> lub na
+<A HREF="http://www.sf.net" hreflang="en" lang="en">SourceForge.net</A> aby poszukać wśród pokazanych
+tam programów czegoś dla siebie.
+</P>
+
+
+
+
+
+
+
+<HR>
+<h2 class="nag"><a name="make" id="make">Programy typu <span lang="en">MAKE</span></a></h2>
+
+<P>
+Programy typu <span lang="en">MAKE</span> służą do automatyzacji budowania dużych i małych projektów.
+Taki program działa dość prosto: uruchamiamy go, a on szuka pliku o nazwie <q lang="en">Makefile</q> w
+bieżącym katalogu i wykonuje komendy w nim zawarte. Teraz zajmiemy się omówieniem podstaw
+składni pliku <q lang="en">Makefile</q>.</P>
+<P>
+W pliku takim są zadania do wykonania. Nazwa zadania zaczyna się w pierwszej kolumnie, kończy
+dwukropkiem. Po dwukropku są podane nazwy zadań (lub plików) , od wykonania których zależy wykonanie
+tego zadania. W kolejnych wierszach są komendy służące do wykonania danego zadania.<BR>
+<em class="wazne">UWAGA:</em> komendy NIE MOGĄ zaczynać się od pierwszej kolumny!
+ Należy je pisać je po jednym tabulatorze (ale nie wolno zamiast tabulatora stawiać ośmiu spacji).<BR>
+Aby wykonać dane zadanie, wydajemy komendę <code><span lang="en">make</span> nazwa_zadania</code>.
+ Jeśli nie podamy nazwy zadania
+(co jest często spotykane), wykonywane jest zadanie o nazwie <q lang="en">all</q> (wszystko).</P>
+
+<P>A teraz krótki przykład:</P>
+	<BR><a href="#make1" class="bezdruk">(przeskocz przykład)</a>
+<PRE title="prosty Makefile">
+all:	kompilacja linkowanie
+	echo &quot;Wszystko zakonczone pomyslnie&quot;
+
+kompilacja:
+	nasm -O999 -f elf -o plik1.o plik1.asm
+	nasm -O999 -f elf -o plik2.o plik2.asm
+	nasm -O999 -f elf -o plik3.o plik3.asm
+
+	fasm plik4.asm plik4.o
+	fasm plik5.asm plik5.o
+	fasm plik6.asm plik6.o
+
+linkowanie:	plik1.o plik2.o plik3.o plik4.o plik5.o plik6.o
+	ld -s -o wynik plik1.o plik2.o plik3.o plik4.o \
+		 plik5.o plik6.o
+
+help:
+	echo &quot;Wpisz make bez argumentow&quot;</PRE>
+
+<P><a name="make1" id="make1">Ale <span lang="en">MAKE</span> jest mądrzejszy</a>, niż może się to wydawać!<BR>
+Mianowicie: jeśli stwierdzi, że wynik     został stworzony PÓŹNIEJ niż pliki .o   podane w
+linii zależności, to nie wykona bloku <q>linkowanie</q>, bo nie ma to sensu skoro program wynikowy
+i tak jest aktualny. <span lang="en">MAKE</span> robi tylko to, co
+trzeba. Oczywiście, niezależnie od <q>wieku</q> plików .o  , dział <q>kompilacja</q> i tak zostanie
+wykonany (bo nie ma zależności, więc <span lang="en">MAKE</span> nie będzie sprawdzał wieku plików).
+</P>
+<P>
+Znak odwrotnego ukośnika <q>\</q> powoduje zrozumienie, że następna linia jest kontynuacją bieżącej,
+znak krzyżyka <q>#</q> powoduje traktowanie reszty linijki jako komentarza.</P>
+<P>
+Jeśli w czasie wykonywanie któregokolwiek z poleceń w bloku wystąpi błąd (ściśle mówiąc, to
+gdy błąd zwróci wykonywane polecenie, jak u nas FASM czy NASM), to <span lang="en">MAKE</span>
+ <em class="wazne">natychmiast przerywa
+działanie</em> z informacją o błędzie i nie wykona żadnych dalszych poleceń (pamiętajcie więc
+o umieszczeniu w zmiennej środowiskowej <span lang="en">PATH</span> ścieżki do kompilatorów).
+</P>
+<P>
+W powyższym pliku widać jeszcze jedno: zmiana nazwy któregoś z plików lub jakieś opcji sprawi,
+że trzeba ją będzie zmieniać wielokrotnie, w wielu miejscach pliku. Bardzo niewygodne w
+utrzymaniu, prawda?<BR>
+Na szczęście z pomocą przychodzą nam ... zmienne, które możemy deklarować w <q lang="en">Makefile</q>
+ i które zrozumie program <span lang="en">MAKE</span>.<BR>
+Składnia deklaracji zmiennej jest wyjątkowo prosta i wygląda tak:</P>
+<PRE>		NAZWA_ZMIENNEJ = wartość</PRE>
+<P>A użycie:</P>
+<PRE>		$(NAZWA_ZMIENNEJ)</PRE>
+
+<P>Polecam nazwy zmiennych pisać wielkimi literami w celu odróżnienia ich od innych elementów. Pole
+wartości zmiennej może zawierać dowolny ciąg znaków.</P>
+
+<P>Jeśli chcemy, aby treść polecenia NIE pojawiała się na ekranie, do nazwy tego polecenia
+dopisujemy z przodu znak małpki <q>@</q>, na przykład</P>
+<PRE>		@echo &quot;Wszystko zakonczone pomyslnie&quot;</PRE>
+
+<P>Uzbrojeni w te informacje, przepisujemy nasz wcześniejszy <q lang="en">Makefile</q>:</P>
+	<BR><a href="#make2" class="bezdruk">(przeskocz drugi przykład)</a>
+<PRE title="bardziej rozbudowany Makefile">
+# Mój pierwszy Makefile
+
+FASM		= fasm	# ale można tu w przyszłości wpisać pełną ścieżkę
+
+NASM		= nasm
+NASM_OPCJE	= -O999 -f elf
+
+LD		= ld
+LD_OPCJE	= -s
+
+PLIKI_O		= plik1.o plik2.o plik3.o plik4.o plik5.o plik6.o
+PROGRAM		= wynik
+
+all:	kompilacja linkowanie
+	@echo &quot;Wszystko zakonczone pomyslnie&quot;
+
+kompilacja:
+	$(NASM) $(NASM_OPCJE) -o plik1.o plik1.asm
+	$(NASM) $(NASM_OPCJE) -o plik2.o plik2.asm
+	$(NASM) $(NASM_OPCJE) -o plik3.o plik3.asm
+
+	$(FASM) plik4.asm plik4.o
+	$(FASM) plik5.asm plik5.o
+	$(FASM) plik6.asm plik6.o
+
+linkowanie:	$(PLIKI_O)
+	$(LD) $(LD_OPCJE) -o $(PROGRAM) $(PLIKI_O)
+
+help:
+	@echo &quot;Wpisz make bez argumentow&quot;</PRE>
+
+<P><a name="make2" id="make2">Oczywiście, w końcowym <q lang="en">Makefile</q></a>
+ należy napisać takie regułki,
+ które pozwolą na ewentualną kompilację pojedynczych plików, na przykład</P>
+<PRE title="regułki do kompilacji pojedynczych plików">
+plik1.o:	plik1.asm plik1.inc
+	$(NASM) $(NASM_OPCJE) -o plik1.o plik1.asm</PRE>
+<P>
+Choć na razie być może niepotrzebna, umiejętność pisania <q lang="en">Makefile</q>'ów
+ może się przydać już
+przy projektach zawierających tylko kilka modułów (bo nikt nigdy nie pamięta, które pliki są
+aktualne, a które nie).<BR>
+O tym, ile <q lang="en">Makefile</q> może zaoszczędzić czasu przekonałem się sam, pisząc swoją bibliotekę -
+kiedyś kompilowałem każdy moduł z osobna, teraz wydaję jedno jedyne polecenie
+<code lang="en">make</code> i
+wszystko się samo robi. <q lang="en">Makefile</q> z biblioteki jest spakowany razem
+ z nią i możecie go sobie zobaczyć.</P>
+
+<br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="linux08.html">Poprzednia część kursu</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="linux10.html">Kolejna część kursu</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

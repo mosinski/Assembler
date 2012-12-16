@@ -1,0 +1,411 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: opis syscall (4) </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="syscall64_3.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="syscall64_5.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="przer80h_4.html"
+	hreflang="pl" lang="pl" title="Funkcje x86-32: 151-200">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kursy programowania w assemblerze - opis syscall">
+<META NAME="Keywords" CONTENT="Assembler, asembler, kurs, nauka, linux, syscall, linuks">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Sun, Sep 16 2012 12:57:59 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Opis funkcji systemowych <span lang="en">syscall</span>: 151-200</h1>
+
+<P>
+Jeśli jakaś funkcja zakończy się błędem, w RAX zwracana jest wartość ujemna z przedziału
+od -4096 do -1 włącznie.</P>
+<P>
+Z drugiej strony, opisy funkcji na stronach manuala mówią, że zwracane jest -1,
+a wartość błędu jest zapisywana do zmiennej errno z biblioteki GLIBC. Dzieje się tak
+tylko w przypadku, gdy korzystamy z interfejsu języka C (czyli deklarujemy i
+uruchamiamy zewnętrzne funkcje odpowiadające wywołaniom systemowym i linkujemy
+nasz program z biblioteką języka C), a nie bezpośrednio z wywołań systemowych (czyli
+<span lang="en">syscall</span>).
+</P>
+<P>
+Najbardziej aktualne informacje o funkcjach systemowych można znaleźć zazwyczaj
+w sekcji 2 (lub 3) manuala, na przykład <code class="b">man 2 open</code>.
+</P>
+<P>
+Najnowsze wersje jądra można znaleźć na <A HREF="http://www.kernel.org" hreflang="en"
+>www.kernel.org</A>, a pliki z listą funkcji i ich numerów są pod ścieżkami:
+</P>
+<ul>
+ <li>arch/x86/include/asm/unistd_64.h (w starszych wersjach kodów)</li>
+ <li>arch/x86/syscalls/syscall_64.tbl (w wersjach bieżących)</li>
+</ul>
+
+<P>
+Najnowsze wersje stron manuala można znaleźć tu: <A HREF="http://www.kernel.org/pub/linux/docs/man-pages/"
+	>www.kernel.org/pub/linux/docs/man-pages</A>.
+</P>
+<P>
+Napis ASCIIZ oznacza łańcuch znaków
+ <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+ zakończony znakiem/bajtem Zerowym.
+</P>
+<P>
+Jeśli potrzeba, przy każdej funkcji jest odnośnik do opisu argumentów i innych
+ <A HREF="dodatk80.html" hreflang="pl" tabindex="1">dodatkowych informacji</a>: typów danych,
+ wartości błędów, możliwych wartości parametrów itp.
+</P>
+
+<TABLE summary="Ta tabela opisuje funkcje od 151 do 200 linuksowego wywołania systemowego syscall">
+<CAPTION> Podstawowe funkcje <span lang="en">syscall</span>: 151-200</CAPTION>
+<thead>
+<TR><TH style="WIDTH:5%;" id="rax">Numer/ RAX</TH>
+	<TH style="WIDTH:20%;" id="opis">Opis</TH>
+	<TH id="arg">Argumenty</TH><TH style="WIDTH:30%;" id="ret">Zwraca</TH></TR>
+
+</thead><tbody>
+<TR class="c">  <TD headers="rax"><a name="x64f151">151</a><br> </td>
+	<TD headers="opis"> Zablokowanie całej pamięci procesu (<span lang="en">sys_mlockall</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#mlockall">flagi blokowania pamięci</a> <br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EINVAL, ENOMEM, EAGAIN, EPERM<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f152">152</a><br> </td>
+	<TD headers="opis"> Odblokowanie całej pamięci procesu (<span lang="en">sys_munlockall</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd.<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f153">153</a><br> </td>
+	<TD headers="opis"> Wirtualnie odłącz bieżący terminal (<span lang="en">sys_vhangup</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd EPERM<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f154">154</a><br> </td>
+	<TD headers="opis"> Zmień tablicę LDT (<span lang="en">sys_modify_ldt</span>)   <br> </td>
+	<TD headers="arg">RDI = <A HREF="dodatk80.html#modify_ldt">numer funkcji</A><BR>
+	        RSI = adres miejsca na przechowanie danych<BR>
+		RDX = liczba bajtów obszaru pod [RSI]
+		<br> </td>
+	<TD headers="ret"> RAX = liczba przeczytanych bajtów lub 0 (gdy zapisywano)<BR>RAX = błąd EINVAL,
+	         ENOSYS, EFAULT <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f155">155</a><br> </td>
+	<TD headers="opis"> Zmień główny system plików/katalog (<span lang="en">sys_pivot_root</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres łańcucha znaków - nowy główny katalog bieżącego procesu<BR>
+ 		RSI = adres łańcucha znaków - otrzyma stary główny katalog bieżącego procesu<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd EBUSY, EINVAL, EPERM, ENOTDIR + błędy <span lang="en">sys_stat</span> <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f156">156</a><br> </td>
+	<TD headers="opis"> Zmień parametry jądra (<span lang="en">sys_sysctl</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres struktury <A HREF="dodatk80.html#sysctl_args">sysctl_args</a> <br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EPERM, ENOTDIR, EFAULT<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f157">157</a><br> </td>
+	<TD headers="opis"> Działania na procesie (<span lang="en">sys_prctl</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#prctl">opcja</A><BR>
+		RSI, RDX, R10, R8 = argumenty<BR></TD>
+	<TD headers="ret"> RAX = 0 lub 1<BR>RAX = błąd EINVAL<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f158">158</a><br> </td>
+	<TD headers="opis"> Ustaw stan wątku zależny od architektury (<span lang="en">sys_arch_prctl</span>) <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#archprctl">kod podfunkcji</a><BR>
+ 		RSI = parametr podfunkcji (wartość do wstawienia lub adres zmiennej w przypadku pobierania) </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EFAULT, EINVAL, EPERM <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f159">159</a><br> </td>
+	<TD headers="opis"> Dopasowanie zegara w jądrze (<span lang="en">sys_adjtimex</span>)   <br> </td>
+	<TD headers="arg">RDI = adres struktury <A HREF="dodatk80.html#timex">timex</a> <br> </td>
+	<TD headers="ret"> RAX = stan zegara (patrz <A HREF="dodatk80.html#timex">timex</A>)<BR>
+	        RAX = błąd EINVAL, EPERM, EFAULT <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f160">160</a><br> </td>
+	<TD headers="opis"> Ustaw limity zasobów (<span lang="en">sys_setrlimit</span>)   <br> </td>
+	<TD headers="arg"> RDI = numer <A HREF="dodatk80.html#rlimit">zasobu</A><BR>
+		RSI = adres struktury <A HREF="dodatk80.html#rlimit">rlimit</A> <br> </td>
+	 <TD headers="ret"> RAX = 0 <BR>RAX = błąd EFAULT, EINVAL, EPERM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f161">161</a><br> </td>
+	<TD headers="opis"> Zmień katalog główny (<span lang="en">sys_chroot</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy/ścieżki nowego katalogu głównego<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd - każdy zależny od systemu plików<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f162">162</a><br> </td>
+	<TD headers="opis"> Zapisz pamięć podręczną na dysku (<span lang="en">sys_sync</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret">RAX zawsze = 0 i nie ma żadnych błędów<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f163">163</a><br> </td>
+	<TD headers="opis"> Włącz/wyłącz zapisywanie kończonych procesów (<span lang="en">sys_acct</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy pliku, gdzie ma być zapisywana informacja o kończonych procesach lub
+		NULL, gdy chcemy wyłączyć takie zapisywanie.<br> </td>
+	<TD headers="ret">RAX = 0 <BR>RAX = błąd ENOSYS, ENOMEM, EPERM, EACCES, EIO, EUSERS<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f164">164</a><br> </td>
+	<TD headers="opis"> Ustaw czas (<span lang="en">sys_settimeofday</span>)   <br> </td>
+	<TD headers="arg"> RDI = adres struktury <A HREF="dodatk80.html#timeval">timeval</A><BR>
+		RSI = adres struktury <A HREF="dodatk80.html#timezone">timezone</A> <br> </td>
+	 <TD headers="ret"> RAX = 0 <BR>RAX = błąd EFAULT, EINVAL, EPERM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f165">165</a><br> </td>
+	<TD headers="opis"> Montowanie systemu plików (<span lang="en">sys_mount</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy urządzenia/pliku specjalnego<BR>
+		RSI = adres ścieżki do punktu montowania<BR>
+		RDX = adres nazwy systemu plików<BR>
+		R10 = <A HREF="dodatk80.html#flagi_mont">flagi montowania</A><BR>
+		R8 = adres dodatkowych danych, niezależne od urządzenia<br> </td>
+	<TD headers="ret"> RAX = 0 <BR> RAX = błąd - każdy, który może się zdarzyć w systemie plików lub jądrze<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f166">166</a><br> </td>
+	<TD headers="opis"> Odmontowanie systemu plików 2 (<span lang="en">sys_umount2</span>)  <br> </td>
+	<TD headers="arg">RDI = adres nazwy zamontowanego pliku specjalnego/katalogu ASCIIZ<BR>
+		RSI = flaga = 1, by siłą odmonotwać, inaczej 0<br> </td>
+	<TD headers="ret">RAX = 0<BR>RAX = błąd - każdy związany z systemem plików<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f167">167</a><br> </td>
+	<TD headers="opis"> Uruchomienie pliku wymiany (<span lang="en">sys_swapon</span>)   <br> </td>
+	<TD headers="arg"> RDI = adres ścieżki do pliku/urządzenia swap<BR>
+		RSI = <A HREF="dodatk80.html#swap_flagi">flagi wymiany</a> <br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f168">168</a><br> </td>
+	<TD headers="opis"> Wyłączenie pliku wymiany (<span lang="en">sys_swapoff</span>)   <br> </td>
+	<TD headers="arg"> RDI = adres ścieżki i nazwy  pliku/urządzenia swap<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f169">169</a><br> </td>
+	<TD headers="opis"> Reboot systemu (<span lang="en">sys_reboot</span>)   <br> </td>
+	<TD headers="arg"> RDI = pierwsza liczba magiczna = 0FEE1DEADh<BR>
+		RSI = druga liczba magiczna = 672274793 lub 85072278 lub 369367448 <BR>
+		RDX = <A HREF="dodatk80.html#reboot_flagi">flaga</A><BR>
+		R10 = adres dodatkowego argumentu (tylko przy RESTART2)<br> </td>
+	<TD headers="ret"> RAX = 0<BR> RAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f170">170</a><br> </td>
+	<TD headers="opis"> Ustaw nazwę hosta dla systemu (<span lang="en">sys_sethostname</span>)   <br> </td>
+	<TD headers="arg"> RDI = adres nazwy hosta<BR>
+		RSI = długość nazwy<br> </td>
+	 <TD headers="ret"> RAX = 0 <BR>RAX = błąd EFAULT, EINVAL, EPERM<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f171">171</a><br> </td>
+	<TD headers="opis"> Ustal nazwę domeny (<span lang="en">sys_setdomainname</span>)   <br> </td>
+	<TD headers="arg">RDI = adres łańcucha znaków, zawierającego domenę<BR>
+	        RSI = długość tego łańcucha znaków<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EINVAL, EPERM, EFAULT <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f172">172</a><br> </td>
+	<TD headers="opis"> Ustaw prawa dostępu do wszystkich portów (<span lang="en">sys_iopl</span>)  <br> </td>
+	<TD headers="arg"> RDI = poziom IOPL od 0 (normalny proces) do 3<br> </td>
+	<TD headers="ret"> RAX = 0 <BR> RAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f173">173</a><br> </td>
+	<TD headers="opis"> Zmień prawa dostępu do portów (<span lang="en">sys_ioperm</span>)  <br> </td>
+	<TD headers="arg">RDI = początkowy numer portu<BR>
+		RSI = liczba bajtów, które będzie można wysłać/odebrać<BR>
+		RDX = końcowy numer portu<br> </td>
+	<TD headers="ret"> RAX = 0 <BR>RAX = błąd<hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f174">174</a><br> </td>
+	<TD headers="opis"> Utwórz wpis ładowalnego modułu jądra (<span lang="en">sys_create_module</span>)   <br> </td>
+	<TD headers="arg">RDI = adres nazwy modułu<BR>
+	        RSI = długość nazwy<br> </td>
+	<TD headers="ret"> RAX = adres modułu w jądrze<BR>
+	        RAX = błąd EINVAL, EPERM, EFAULT, EEXIST, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f175">175</a><br> </td>
+	<TD headers="opis"> Inicjalizacja modułu jądra (<span lang="en">sys_init_module</span>)   <br> </td>
+	<TD headers="arg">RDI = adres nazwy modułu<BR>
+	        RSI = adres struktury <A HREF="dodatk80.html#module">module</a> <br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EINVAL, EPERM, EFAULT, ENOENT, EBUSY <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f176">176</a><br> </td>
+	<TD headers="opis"> Usuń wpis nieużywanego modułu jądra (<span lang="en">sys_delete_module</span>)   <br> </td>
+	<TD headers="arg">RDI = adres nazwy modułu (0 oznacza usunięcie wpisów wszystkich nieużywanych modułów,
+	        które można usunąć automatycznie)<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EINVAL, EPERM, EFAULT, ENOENT, EBUSY <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f177">177</a><br> </td>
+	<TD headers="opis"> Pobierz symbole eksportowane przez jądro i moduły (<span lang="en">sys_get_kernel_syms</span>)   <br> </td>
+	<TD headers="arg">RDI = adres struktury <A HREF="dodatk80.html#kernel_sym">kernel_sym</A>
+	        (0 oznacza, że chcemy tylko pobrać liczbę symboli)<br> </td>
+	<TD headers="ret"> RAX = liczba symboli<BR>RAX = błąd EINVAL, EPERM, EFAULT, ENOENT, EBUSY <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f178">178</a><br> </td>
+	<TD headers="opis"> Zapytaj o moduł (<span lang="en">sys_query_module</span>)  <br> </td>
+	<TD headers="arg"> RDI = adres nazwy modułu lub NULL (jądro)<BR>
+		RSI = numer <A HREF="dodatk80.html#query_sub">podfunkcji</A><BR>
+		RDX = adres bufora<BR>
+		R10 = rozmiar bufora<BR>
+		R8 = adres DWORDa<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EFAULT, ENOSPC, EINVAL, ENOENT<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f179">179</a><br> </td>
+	<TD headers="opis"> Zarządzanie limitami dyskowymi (<span lang="en">sys_quotactl</span>)   <br> </td>
+	<TD headers="arg">RDI = <A HREF="dodatk80.html#quotactl">komenda limitu</A><BR>
+	        RSI = adres nazwy pliku urządzenia blokowego, który ma być zarządzany<BR>
+		RDX = identyfikator UID lub GID<BR>
+		R10 = adres dodatkowej struktury danych (zależy od komendy w RDI)<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EINVAL, EPERM, EFAULT, ENOENT, EBUSY,
+	        ENOTBLK, ESRCH, EUSERS, EACCES <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f180">180</a><br> </td>
+	<TD headers="opis"> Interfejs demona NFS (<span lang="en">sys_nfsservctl</span>)  <br> </td>
+	<TD headers="arg"> RDI = <A HREF="dodatk80.html#nfs">komenda</A><BR>
+		RSI = adres struktury <A HREF="dodatk80.html#nfs">nfsctl_arg</A><BR>
+		RDX = adres unii union <A HREF="dodatk80.html#nfs">nfsctl_res</a> <br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f181">181</a><br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_getpmsg</span>  <br> </td>
+	<TD headers="arg">zarezerwowane dla LiS/STREAMS </td>
+	<TD headers="ret"> <span class="b">zawsze RAX =  ENOSYS</span> <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f182">182</a><br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_putpmsg</span>  <br> </td>
+	<TD headers="arg"> zarezerwowane dla LiS/STREAMS </td>
+	<TD headers="ret"> <span class="b">zawsze RAX =  ENOSYS</span> <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f183">183</a><br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_afs_syscall</span>  <br> </td>
+	<TD headers="arg"> <span class="b">niezaimplementowane</span> <br> </td>
+	<TD headers="ret"> <span class="b">zawsze RAX =  ENOSYS</span> <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f184">184</a><br> </td>
+	<TD headers="opis"> Zarezerwowane (<span lang="en">sys_tuxcall</span>) <br> </td>
+	<TD headers="arg"> <span class="b">niezaimplementowane</span> </td>
+	<TD headers="ret"> <span class="b">zawsze RAX =  ENOSYS</span> <hr> <br> </td></TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f185">185</a><br> </td>
+	<TD headers="opis"> Funkcja systemowa <span lang="en">sys_security</span>  <br> </td>
+	<TD headers="arg"> <span class="b">niezaimplementowane</span> <br> </td>
+	<TD headers="ret"> <span class="b">zawsze RAX =  ENOSYS</span> <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f186">186</a><br> </td>
+	<TD headers="opis"> Pobierz identyfikator wątku (<span lang="en">sys_gettid</span>)  <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret"> RAX = id wątku <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f187">187</a><br> </td>
+	<TD headers="opis"> Czytaj kilka stron pliku z wyprzedzeniem do pamięci podręcznej (<span lang="en">sys_readahead</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<BR>
+		RSI = miejsce w pliku, od którego zacząć<BR>
+		RDX = liczba bajtów do przeczytania<br> </td>
+	<TD headers="ret"> RAX = -EBADF, gdy błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f188">188</a><br> </td>
+	<TD headers="opis"> Ustaw wartość atrybutu rozszerzonego (<span lang="en">sys_setxattr</span>)  <br> </td>
+	<TD headers="arg">RDI = adres ścieżki pliku<BR>
+		RSI = adres nazwy atrybutu<BR>
+		RDX = wartość atrybutu<BR>
+ 		R10 = długość atrybutu<BR>
+		R8 = flaga (1=utwórz, 2=zamień)<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f189">189</a><br> </td>
+	<TD headers="opis"> Ustaw wartość atrybutu rozszerzonego (<span lang="en">sys_lsetxattr</span>)  <br> </td>
+	<TD headers="arg">RDI = adres ścieżki pliku, funkcja <span class="b">nie</span> podąża za dowiązaniami symbolicznymi<BR>
+		RSI = adres nazwy atrybutu<BR>
+		RDX = wartość atrybutu<BR>
+ 		R10 = długość atrybutu<BR>
+		R8 = flaga (1=utwórz, 2=zamień)<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f190">190</a><br> </td>
+	<TD headers="opis"> Ustaw wartość atrybutu rozszerzonego (<span lang="en">sys_fsetxattr</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<BR>
+		RSI = adres nazwy atrybutu<BR>
+		RDX = wartość atrybutu<BR>
+ 		R10 = długość atrybutu<BR>
+		R8 = flaga (1=utwórz, 2=zamień)<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f191">191</a><br> </td>
+	<TD headers="opis"> Pobierz wartość atrybutu rozszerzonego (<span lang="en">sys_getxattr</span>)  <br> </td>
+	<TD headers="arg">RDI = adres ścieżki pliku<BR>
+		RSI = adres nazwy atrybutu<BR>
+		RDX = wartość atrybutu<BR>
+ 		R10 = długość atrybutu<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f192">192</a><br> </td>
+	<TD headers="opis"> Pobierz wartość atrybutu rozszerzonego (<span lang="en">sys_lgetxattr</span>)  <br> </td>
+	<TD headers="arg">RDI = adres ścieżki pliku, funkcja <span class="b">nie</span> podąża za dowiązaniami symbolicznymi<BR>
+		RSI = adres nazwy atrybutu<BR>
+		RDX = wartość atrybutu<BR>
+ 		R10 = długość atrybutu<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f193">193</a><br> </td>
+	<TD headers="opis"> Pobierz wartość atrybutu rozszerzonego (<span lang="en">sys_fgetxattr</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<BR>
+		RSI = adres nazwy atrybutu<BR>
+		RDX = wartość atrybutu<BR>
+ 		R10 = długość atrybutu<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f194">194</a><br> </td>
+	<TD headers="opis"> Pobierz listę nazw atrybutów rozszerzonych pliku (<span lang="en">sys_listxattr</span>)  <br> </td>
+	<TD headers="arg">RDI = adres ścieżki pliku<BR>
+		RSI = adres tablicy na nazwy<BR>
+		RDX = długość tablicy<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f195">195</a><br> </td>
+	<TD headers="opis"> Pobierz listę nazw atrybutów rozszerzonych pliku (<span lang="en">sys_llistxattr</span>)  <br> </td>
+	<TD headers="arg">RDI = adres ścieżki pliku, funkcja <span class="b">nie</span> podąża za dowiązaniami symbolicznymi<BR>
+		RSI = adres tablicy na nazwy<BR>
+		RDX = długość tablicy<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f196">196</a><br> </td>
+	<TD headers="opis"> Pobierz listę nazw atrybutów rozszerzonych pliku (<span lang="en">sys_flistxattr</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<BR>
+		RSI = adres tablicy na nazwy<BR>
+		RDX = długość tablicy<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f197">197</a><br> </td>
+	<TD headers="opis"> Usuń atrybut rozszerzony pliku (<span lang="en">sys_removexattr</span>)  <br> </td>
+	<TD headers="arg">RDI = adres ścieżki pliku<BR>
+		RSI = adres nazwy atrybutu do usunięcia<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f198">198</a><br> </td>
+	<TD headers="opis"> Usuń atrybut rozszerzony pliku (<span lang="en">sys_lremovexattr</span>)  <br> </td>
+	<TD headers="arg">RDI = adres ścieżki pliku, funkcja <span class="b">nie</span> podąża za dowiązaniami symbolicznymi<BR>
+		RSI = adres nazwy atrybutu do usunięcia<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f199">199</a><br> </td>
+	<TD headers="opis"> Usuń atrybut rozszerzony pliku (<span lang="en">sys_fremovexattr</span>)  <br> </td>
+	<TD headers="arg">RDI = deskryptor pliku<BR>
+		RSI = adres nazwy atrybutu do usunięcia<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c">  <TD headers="rax"><a name="x64f200">200</a><br> </td>
+	<TD headers="opis"> Zabij pojedyncze zadanie (<span lang="en">sys_tkill</span>)  <br> </td>
+	<TD headers="arg">RDI = PID zadania (niekoniecznie całego procesu)<BR>
+		RSI = <A HREF="dodatk80.html#signal">numer sygnału</A> do wysłania<br> </td>
+	<TD headers="ret"> RAX = 0<BR>RAX = błąd EINVAL, ESRCH, EPERM <hr> <br> </td> </TR>
+
+</TABLE>
+
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="syscall64_3.html">Poprzednia część</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="syscall64_5.html">Kolejna część</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

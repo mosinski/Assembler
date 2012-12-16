@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Dynamiczna alokacja pamięci </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="alloc_tut_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Dynamiczna alokacja pamięci pod Linuksem">
+<META NAME="Keywords" CONTENT="asm, assembler, asembler, Linux, Linuks, alokacja pamięci,
+	malloc, sys_brk, brk()">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:56 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Dynamiczna alokacja pamięci pod Linuksem</h1>
+
+<P>
+Już w średnio zaawansowanych programach pojawia się potrzeba dynamicznego rezerwowania pamięci,
+w czasie działania programu, nie wiedząc z góry, ile pamięci będzie potrzeba. Na
+ przykład, użytkownik podaje nam rozmiar tablicy a my musimy taką tablicę utworzyć i na niej operować
+ (nie znając wcześniej nawet maksymalnego jej rozmiaru). Rozwiązaniem takich problemów jest
+ właśnie dynamiczna alokacja pamięci. Pod Linuksem pamięć alokuje się funkcją <span class="b">sys_brk</span>
+ (ustalającą najwyższy dostępny adres w sekcji danych). Przyjmuje ona jeden argument:</P>
+ <UL>
+  <LI>EBX = 0, jeśli chcemy otrzymać aktualny najwyższy dostępny dla nas adres w sekcji danych.
+      Tę wartość powiększymy potem o żądany rozmiar pamięci.</LI>
+  <LI>EBX różny od 0, jeśli chcemy ustawić nowy najwyższy adres w sekcji danych. Adres musi być
+  	 rozsądny co do wartości i taki, by rezerwowana pamięć nie wchodziła na biblioteki
+  	 załadowane dynamicznie podczas samego uruchamiania programu.</LI>
+ </UL>
+<P>Jeśli coś się nie udało, sys_brk zwróci -1 (i ustawi odpowiednio zmienną errno) lub też zwróci
+ujemny kod błędu.</P>
+<P>
+Oczywiście, argument funkcji może być większy (alokacja) lub mniejszy (zwalnianie pamięci) od
+ wartości zwróconej przez sys_brk przy EBX=0.
+</P>
+<P>
+Jak widać, teoria nie jest skomplikowana. Przejdźmy więc może do przykładu. Ten krótki programik
+ ma za zadanie zaalokować 16<abbr title="kilobajt">kB</abbr> pamięci
+ (specjalnie tak dużo, żeby przekroczyć 4kB - rozmiar jednej strony pamięci
+ - i udowodnić, że pamięć rzeczywiście została przydzielona) i wyzerować ją (normalnie zapisywanie
+ po nieprzydzielonej pamięci skończy się zamknięciem programu przez system).
+</P>
+	<BR><a href="#alloc_tut_linux01" tabindex="1" class="bezdruk">(przeskocz program)</a>
+<PRE title="program ilustrujący dynamiczną alokację pamięci">
+; Dynamiczna alokacja pamięci pod Linuksem
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+;
+; nasm -f elf -o alok_linux.o alok_linux.asm
+; ld  -o alok_linux alok_linux.o
+
+
+section	.text
+global	_start
+
+_start:
+
+	mov	eax, 45		; sys_brk
+	xor	ebx, ebx
+	int	80h
+
+	add	eax, 16384	; tyle chcemy zarezerwować
+	mov	ebx, eax
+	mov	eax, 45		; sys_brk
+	int	80h
+
+	cmp	eax, 0
+	jl	.problem	; jeśli błąd, to wychodzimy i nic się
+				; nie wyświetli
+
+	mov	edi, eax	; EDI = najwyższy dostępny adres
+
+	sub	edi, 4		; EDI wskazuje na ostatni dostępny DWORD
+	mov	ecx, 4096	; tyle DWORDów zaalokowaliśmy
+	xor	eax, eax	; będziemy zapisywać zera
+	std			; idziemy wspak
+	rep	stosd		; zapisujemy cały zarezerwowany obszar
+	cld			; przywracamy flagę DF do normalnego stanu
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, info
+	mov	edx, info_dl
+	int	80h		; wyświetlenie napisu
+
+.problem:
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h
+
+
+
+section	.data
+
+info		db	&quot;Udana alokacja pamieci.&quot;, 10
+info_dl		equ	$ - info</PRE>
+
+<br><br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm" name="alloc_tut_linux01" id="alloc_tut_linux01">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

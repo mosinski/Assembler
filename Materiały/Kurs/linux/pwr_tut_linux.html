@@ -1,0 +1,254 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Zarządzanie zasilaniem komputera </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="pwr_tut_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Zarządzanie zasilaniem programami napisanymi w assemblerze">
+<META NAME="Keywords" CONTENT="Power Management, zarządzanie energią, assembler, asm, asembler">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:59 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Zarządzanie zasilaniem komputera</h1>
+
+<P>
+Jeśli zastanawialiście się kiedyś, jak wyłączać dyski twarde lub resetować komputer
+używając tylko oprogramowania (nie naciskając żadnych przycisków), to w tym artykule
+powinniście znaleźć odpowiedź na wszystkie wasze pytania.
+</P>
+
+
+
+
+
+
+<BR>
+<HR>
+
+<h2 class="nag">Dyski twarde.</h2>
+	<BR><a href="#reset" class="bezdruk" tabindex="1">(przeskocz dyski twarde)</a>
+
+<P>
+ Oczywiście, jak na porządny system przystało, nie możemy
+operować bezpośrednio na dysku twardym. Ale umożliwi na to sam system, poprzez funkcję systemową
+<span class="b">sys_ioctl</span>.</P>
+<P>
+ Poniżej przedstawiam działający (choć, aby otworzyć plik urządzenia dysku twardego, musiałem
+mieć uprawnienia roota) kod zatrzymujący dysk twardy. Kod ten napisałem dzięki analizie kodu źródłowego
+programu hdparm (i tam, oraz do stron podręcznika man: <span class="b">ioctl, ioctl_list</span>,
+ odsyłam po szczegóły). Dla tych, którzy nie korzystają z mojej biblioteki, podaję liczbowe
+ odpowiedniki stałych.</P>
+<P>Oto program (składnia NASM):</P>
+	<BR><a href="#pwr_tut_linux01" class="bezdruk">(przeskocz program zatrzymujący dysk twardy)</a>
+<PRE>
+%include &quot;bibl/incl/linuxbsd/nasm/n_system.inc&quot;		; stałe systemowe
+
+section .text
+
+global _start
+
+_start:
+	mov	eax, sys_open			; =5. otwieramy plik....
+	mov	ebx, dysk			; ....twardego dysku
+	mov	ecx, O_RDONLY|O_NONBLOCK	; 04000q ósemkowo
+	int	80h
+
+	cmp	eax, 0
+	jle	koniec				; jeśli wystąpił błąd,
+						; wychodzimy od razu
+
+	mov	ebx, eax		; zachowujemy deskryptor pliku
+
+	mov	eax, sys_ioctl			; =54
+	; EBX = deskryptor pliku
+	mov	ecx, 0x031f			; komenda specjalna dysku
+	mov	edx, args1			; pierwsze argumenty
+	int	80h
+
+	mov	eax, sys_ioctl
+	; EBX = deskryptor pliku
+	mov	ecx, 0x031f			; komenda specjalna dysku
+	mov	edx, args2			; drugie argumenty
+	int	80h
+
+	mov	eax, sys_close			; =6
+	; EBX = deskryptor pliku
+	int	80h				; zamykamy otwarty plik
+
+koniec:
+	mov	eax, sys_exit			; =1
+	xor	ebx, ebx
+	int	80h				; wychodzimy z programu
+
+section .data
+args1	db	0e6h, 0, 0, 0			; skopiowane z hdparm.c
+args2	db	99h, 0, 0, 0			; też skopiowane
+dysk	db	&quot;/dev/hda&quot;,0			; pierwszy dysk,hdb = drugi</PRE>
+
+<P><a name="pwr_tut_linux01" id="pwr_tut_linux01"><em class="wazne">UWAGA:</em> należy odczekać chwilę</a>,
+aż program się zakończy. Przez czas działania programu komputer może przestać reagować.<BR>
+Po zatrzymaniu twardego dysku można go uruchomić wykonując dowolną operację na systemie plików
+(na przykład wyświetlić zawartość bieżącego katalogu).
+</P>
+
+
+
+
+
+
+
+
+
+<HR>
+<h2 class="nag"><a name="reset" id="reset">Resetowanie komputera</a> lub wyłączanie go.</h2>
+	<BR><a href="#monitor" class="bezdruk">(przeskocz resetowanie komputera)</a>
+
+<P>
+Do zresetowania komputera posłuży nam funkcja systemowa <span class="b">sys_<span lang="en">reboot</span></span>,
+ której podamy odpowiednie parametry. Oto program natychmiast resetujący komputer:</P>
+	<BR><a href="#pwr_tut_linux02" class="bezdruk">(przeskocz program resetujący komputer)</a>
+<PRE>
+%include &quot;bibl/incl/linuxbsd/nasm/n_system.inc&quot;
+
+section .text
+
+global _start
+
+_start:
+	mov	eax, sys_reboot			; =88
+	mov	ebx, 0fee1deadh			; wymagana stała
+	mov	ecx, 672274793			; wymagana stała
+				; EDX = tryb restartu. U nas: zwykły reset
+	mov	edx, LINUX_REBOOT_CMD_RESTART	; =0x01234567
+	int	80h
+
+	; to, co jest poniżej nigdy nie zostanie wykonane.
+	mov	eax, sys_exit			; =1
+	xor	ebx, ebx
+	int	80h</PRE>
+
+<P><a name="pwr_tut_linux02" id="pwr_tut_linux02">A oto program natychmiast wyłączający</a> komputer:</P>
+	<BR><a href="#pwr_tut_linux03" class="bezdruk">(przeskocz program wyłączający komputer)</a>
+<PRE>
+%include &quot;bibl/incl/linuxbsd/nasm/n_system.inc&quot;
+
+section .text
+
+global _start
+
+_start:
+	mov	eax, sys_reboot			; =88
+	mov	ebx, 0fee1deadh			; wymagana stała
+	mov	ecx, 672274793			; wymagana stała
+			; EDX = tryb restartu. U nas: wyłączenie prądu
+	mov	edx, LINUX_REBOOT_CMD_POWER_OFF	; =0x4321FEDC
+	int	80h
+
+	; to, co jest poniżej nigdy nie zostanie wykonane.
+	mov	eax, sys_exit			; =1
+	xor	ebx, ebx
+	int	80h</PRE>
+
+<P><a name="pwr_tut_linux03" id="pwr_tut_linux03"><em class="wazne">UWAGA:</em> ze względu na to</a>,
+ że podane programy wyłączają/resetują
+ komputer natychmiast po uruchomieniu, <em class="wazne">NIE</em> zalecam ich stosowania,
+ gdyż może to być <em class="wazne">niezdrowe dla systemu plików</em>.</P>
+
+
+
+
+
+
+
+
+
+
+<BR>
+<HR>
+
+<h2 class="nag"><a name="monitor" id="monitor">Wyłączanie monitora</a>.</h2>
+
+<P>
+No może nie zupełnie będzie to wyłączenie monitora, ale istotnie, obrazu nie będzie.
+ Do wyłączenia obrazu wykorzystamy bibliotekę svgalib (do kompilacji potrzebny będzie
+ też pakiet svgalib-devel).</P>
+<P>
+Całość jest bardzo prosta: inicjujemy bibliotekę funkcją <span class="b">vga_init</span>,
+ wyłączamy obraz funkcją
+ <span class="b">vga_<span lang="en">screen</span>off</span>, czekamy na klawisz (funkcja systemowa
+ sys_read czytająca ze standardowego wejścia) i ponownie włączamy obraz funkcją
+ <span class="b">vga_<span lang="en">screen</span>on</span>.
+ Funkcje vga nie przyjmują żadnych argumentów.</P>
+<P>Cały program wygląda tak:</P>
+
+	<BR><a href="#pwr_tut_linux04" class="bezdruk">(przeskocz program wyłączający monitor)</a>
+<PRE>
+; Program wyłączający monitor z wykorzystaniem SVGAlib
+;
+; Autor: Bogdan D., bogdandr (at) op.pl
+; kompilacja:
+;   nasm -O999 -f elf -o mon_off.o mon_off.asm
+;   gcc -o mon_off mon_off.o -lvga
+
+section .text
+global	main
+
+extern	vga_screenoff
+extern	vga_screenon
+extern	vga_init
+
+%idefine	stdin		0
+%idefine	sys_read	3
+
+main:
+	call	vga_init
+	call	vga_screenoff
+
+	mov	eax, sys_read	; funkcja czytania z pliku
+	mov	ebx, stdin	; standardowe wejście
+	mov	ecx, znak	; adres, dokąd czytać
+	mov	edx, 1		; wczytaj 1 bajt
+	int	80h
+
+	call	vga_screenon
+
+	ret
+
+section .data
+
+znak		db	0</PRE>
+
+<P><a name="pwr_tut_linux04" id="pwr_tut_linux04">Zwróćcie uwagę na sposób kompilacji</a>.
+ Skoro korzystamy z bibliotek języka C, to do kompilacji użyjemy GCC.
+ Wtedy zaś funkcja główna musi się nazywać <span lang="en" class="b">main</span> - tak samo,
+ jak w programach w języku C (i tak samo, jak w C, można
+ ją zakończyć instrukcją <code>RET</code>). Potrzebne funkcje po prostu deklarujemy jako zewnętrzne (extern).</P>
+<P>
+Program ten uruchomiłem też w środowisku graficznym. Nic złego się nie stało, ale po zakończeniu programu
+ należy przejść na konsolę tekstową i wrócić na graficzną, aby odzyskać obraz.</P>
+<P>Do działania programu pod X-ami potrzebne mogą być uprawnienia do pliku <span class="b">/dev/console</span>
+ a pod konsolą tekstową - do pliku <span class="b">/dev/mem</span>.</P>
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+
+</BODY></HTML>

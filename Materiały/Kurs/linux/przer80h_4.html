@@ -1,0 +1,419 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: opis przerwania int 80h (4) </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Prev"     hreflang="pl" lang="en" href="przer80h_3.html" >
+<link rel="Next"     hreflang="pl" lang="en" href="przer80h_5.html" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="syscall64_4.html"
+	hreflang="pl" lang="pl" title="Funkcje x86-64: 151-200">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Kursy programowania w assemblerze - opis przerwania int 80h">
+<META NAME="Keywords" CONTENT="Assembler, asembler, kurs, nauka, linux, syscall, linuks, int 80h">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Sun, Sep 16 2012 12:57:58 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Opis funkcji przerwania int 80h: 151-200</h1>
+
+<P>
+Jeśli jakaś funkcja zakończy się błędem, w EAX/RAX zwracana jest wartość ujemna z przedziału
+od -4096 do -1 włącznie.</P>
+<P>
+Z drugiej strony, opisy funkcji na stronach manuala mówią, że zwracane jest -1,
+a wartość błędu jest zapisywana do zmiennej errno z biblioteki GLIBC. Dzieje się tak
+tylko w przypadku, gdy korzystamy z interfejsu języka C (czyli deklarujemy i
+uruchamiamy zewnętrzne funkcje odpowiadające wywołaniom systemowym i linkujemy
+nasz program z biblioteką języka C), a nie bezpośrednio z wywołań systemowych (czyli przerwania
+int 80h).
+</P>
+<P>
+Najbardziej aktualne informacje o funkcjach systemowych można znaleźć zazwyczaj
+w sekcji 2 (lub 3) manuala, na przykład <code class="b">man 2 open</code>.
+</P>
+<P>
+Najnowsze wersje jądra można znaleźć na <A HREF="http://www.kernel.org" hreflang="en"
+>www.kernel.org</A>, a pliki z listą funkcji i ich numerów są pod ścieżkami:
+</P>
+<ul>
+ <li>arch/x86/include/asm/unistd_{32,64}.h (w starszych wersjach kodów)</li>
+ <li>arch/x86/syscalls/syscall_{32,64}.tbl (w wersjach bieżących)</li>
+</ul>
+
+<P>
+Najnowsze wersje stron manuala można znaleźć tu: <A HREF="http://www.kernel.org/pub/linux/docs/man-pages/"
+	>www.kernel.org/pub/linux/docs/man-pages</A>.
+</P>
+<P>
+Napis ASCIIZ oznacza łańcuch znaków
+ <acronym title="American Standard Code for Information Interchange" lang="en">ASCII</acronym>
+ zakończony znakiem/bajtem Zerowym.
+</P>
+<P>
+Jeśli potrzeba, przy każdej funkcji jest odnośnik do opisu argumentów i innych
+ <A HREF="dodatk80.html" hreflang="pl" tabindex="1">dodatkowych informacji</a>: typów danych,
+ wartości błędów, możliwych wartości parametrów itp.
+</P>
+
+<TABLE summary="Ta tabela opisuje funkcje od 151 do 200 linuksowego przerwania systemowego int 80h">
+<CAPTION> Podstawowe funkcje przerwania 80h: 151-200</CAPTION>
+<thead>
+<TR><TH style="WIDTH:5%;" id="eax">Numer/ EAX</TH>
+	<TH style="WIDTH:5%;" id="rax">x86-64 RAX</TH> <TH style="WIDTH:20%;" id="opis">Opis</TH>
+	<TH id="arg">Argumenty</TH><TH style="WIDTH:30%;" id="ret">Zwraca</TH></TR>
+
+</thead><tbody>
+<TR class="c"> <TD headers="eax">151<br> </td>  <TD headers="rax"><a name="x64f150">150</a><br> </td>
+	<TD headers="opis"><A NAME="f0151"> Odblokowanie stron pamięci (<span lang="en">sys_munlock</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = adres obszaru pamięci (wyrównany do wielokrotności rozmiaru strony pamięci)<BR>
+		ECX/RSI = długość obszaru pamięci<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EINVAL, ENOMEM<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">152<br> </td>  <TD headers="rax"><a name="x64f151">151</a><br> </td>
+	<TD headers="opis"><A NAME="f0152"> Zablokowanie całej pamięci procesu (<span lang="en">sys_mlockall</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = <A HREF="dodatk80.html#mlockall">flagi blokowania pamięci</a> <br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EINVAL, ENOMEM, EAGAIN, EPERM<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">153<br> </td>  <TD headers="rax"><a name="x64f152">152</a><br> </td>
+	<TD headers="opis"><A NAME="f0153"> Odblokowanie całej pamięci procesu (<span lang="en">sys_munlockall</span>) </a> <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd.<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">154<br> </td>  <TD headers="rax"><a name="x64f142">142</a><br> </td>
+	<TD headers="opis"><A NAME="f0154"> Ustaw parametry szeregowania zadań (<span lang="en">sys_sched_setparam</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = PID procesu<BR>
+	 	ECX/RSI = adres struktury <A HREF="dodatk80.html#sched_param">sched_param</A>, zawierającej dane<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EINVAL, ESRCH, EPERM<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">155<br> </td>  <TD headers="rax"><a name="x64f143">143</a><br> </td>
+	<TD headers="opis"><A NAME="f0155"> Pobierz parametry szeregowania zadań (<span lang="en">sys_sched_getparam</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = PID procesu<BR>
+	 	ECX/RSI = adres struktury <A HREF="dodatk80.html#sched_param">sched_param</A>, która otrzyma wynik<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EINVAL, ESRCH, EPERM<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">156<br> </td>  <TD headers="rax"><a name="x64f144">144</a><br> </td>
+	<TD headers="opis"><A NAME="f0156"> Ustaw parametry/algorytm szeregowania zadań (<span lang="en">sys_sched_setsheduler</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = PID procesu<BR>
+		ECX/RSI = <A HREF="dodatk80.html#sched_policy">polityka</A><BR>
+	 	ECX/RSI = adres struktury <A HREF="dodatk80.html#sched_param">sched_param</A>, zawierającej dane<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EINVAL, ESRCH, EPERM<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">157<br> </td>  <TD headers="rax"><a name="x64f145">145</a><br> </td>
+	<TD headers="opis"><A NAME="f0157"> Pobierz parametry/algorytm szeregowania zadań (<span lang="en">sys_sched_getsheduler</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = PID procesu<br> </td>
+	<TD headers="ret"> EAX = polityka<BR>EAX = błąd EINVAL, ESRCH, EPERM<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">158<br> </td>  <TD headers="rax"><a name="x64f24">24</a><br> </td>
+	<TD headers="opis"><A NAME="f0158"> Oddanie procesora innym procesom (<span lang="en">sys_sched_yield</span>) </a> <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd.<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">159<br> </td>  <TD headers="rax"><a name="x64f146">146</a><br> </td>
+	<TD headers="opis"><A NAME="f0159"> Pobierz maksymalny priorytet statyczny (<span lang="en">sys_sched_get_priority_max</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = <A HREF="dodatk80.html#sched_policy">polityka</a> <br> </td>
+	<TD headers="ret"> EAX = maksymalny priorytet dla tej polityki<BR>EAX = błąd EINVAL<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">160<br> </td>  <TD headers="rax"><a name="x64f147">147</a><br> </td>
+	<TD headers="opis"><A NAME="f0160"> Pobierz minimalny priorytet statyczny (<span lang="en">sys_sched_get_priority_min</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = <A HREF="dodatk80.html#sched_policy">polityka</a> <br> </td>
+	<TD headers="ret"> EAX = minimalny priorytet dla tej polityki<BR>EAX = błąd EINVAL<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">161<br> </td>  <TD headers="rax"><a name="x64f148">148</a><br> </td>
+	<TD headers="opis"><A NAME="f0161"> Pobierz długość czasu w szeregowaniu cyklicznym (<span lang="en">sys_sched_rr_get_interval</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = PID procesu (0 = ten proces)<BR>
+		ECX/RSI = adres strukury <A HREF="dodatk80.html#timeval">timeval</A>, która otrzyma wynik<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd ESRCH, ENOSYS<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">162<br> </td>  <TD headers="rax"><a name="x64f35">35</a><br> </td>
+	<TD headers="opis"><A NAME="f0162"> Pauza w wykonywaniu programu (<span lang="en">sys_nanosleep</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = adres struktury <A HREF="dodatk80.html#timespec">timespec</A><BR>
+		ECX/RSI = NULL lub adres modyfikowalnej struktury <A HREF="dodatk80.html#timespec">timespec</A>, która otrzyma resztkę
+			czasu, która została<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = sygnał lub błąd EINTR, EINVAL<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">163<br> </td>  <TD headers="rax"><a name="x64f25">25</a><br> </td>
+	<TD headers="opis"><A NAME="f0163"> Przemapuj adres wirtualny (<span lang="en">sys_mremap</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = stary adres<BR>
+		ECX/RSI = rozmiar obszaru do przemapowania<BR>
+		EDX/RDX = żądany rozmiar<BR>
+		ESI/R10 = zero lub <A HREF="dodatk80.html#mremap_flagi">flagi przemapowania</A><BR>
+		EDI/R8 = nowy adres, jeśli dano flagę MREMAP_FIXED<br> </td>
+	<TD headers="ret"> EAX = wskaźnik do nowego obszaru<BR>EAX = sygnał lub błąd EFAULT, EAGAIN, ENOMEM, EINVAL<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">164<br> </td>  <TD headers="rax"><a name="x64f117">117</a><br> </td>
+	<TD headers="opis"><A NAME="f0164"> Ustaw różne ID użytkownika (<span lang="en">sys_setresuid</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = realny UID lub -1 (wtedy jest bez zmian)<BR>
+		ECX/RSI = efektywny UID lub -1 (bez zmian)<BR>
+		EDX/RDX = zachowany (saved) UID lub -1 (bez zmian)<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EPERM<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">165<br> </td>  <TD headers="rax"><a name="x64f118">118</a><br> </td>
+	<TD headers="opis"><A NAME="f0165"> Pobierz różne ID użytkownika (<span lang="en">sys_getresuid</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = adres DWORDa, który otrzyma realny UID<BR>
+		ECX/RSI = adres DWORDa, który otrzyma efektywny UID<BR>
+		EDX/RDX = adres DWORDa, który otrzyma zachowany UID<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EFAULT<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">166<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0166"> Uruchom tryb wirtualny 8086 (<span lang="en">sys_vm86</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = <A HREF="dodatk80.html#vm86_kod">kod funkcji</A><BR>
+		ECX/RSI = adres struktury <A HREF="dodatk80.html#vm86plus_struct">vm86plus_struct</a> <br> </td>
+	<TD headers="ret"> (zależy od numeru funkcji)<BR>EAX = błąd EFAULT<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">167<br> </td>  <TD headers="rax"><a name="x64f178">178</a><br> </td>
+	<TD headers="opis"><A NAME="f0167"> Zapytaj o moduł (<span lang="en">sys_query_module</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = adres nazwy modułu lub NULL (jądro)<BR>
+		ECX/RSI = numer <A HREF="dodatk80.html#query_sub">podfunkcji</A><BR>
+		EDX/RDX = adres bufora<BR>
+		ESI/R10 = rozmiar bufora<BR>
+		EDI/R8 = adres DWORDa<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EFAULT, ENOSPC, EINVAL, ENOENT<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">168<br> </td>  <TD headers="rax"><a name="x64f7">7</a><br> </td>
+	<TD headers="opis"><A NAME="f0168"> Czekaj na zdarzenia na deskryptorze (<span lang="en">sys_poll</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = adres tablicy struktur <A HREF="dodatk80.html#pollfd">pollfd</A><BR>
+		ECX/RSI = liczba struktur pollfd w tablicy<BR>
+		EDX/RDX = max. czas na oczekiwanie w milisekundach (-1 = nieskończoność)<br> </td>
+	<TD headers="ret"> EAX = liczba odpowiednich deskryptorów<BR>EAX = 0, gdy czas upłynął<BR>EAX = błąd EFAULT, EINTR, EINVAL<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">169<br> </td>  <TD headers="rax"><a name="x64f180">180</a><br> </td>
+	<TD headers="opis"><A NAME="f0169"> Interfejs demona NFS (<span lang="en">sys_nfsservctl</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = <A HREF="dodatk80.html#nfs">komenda</A><BR>
+		ECX/RSI = adres struktury <A HREF="dodatk80.html#nfs">nfsctl_arg</A><BR>
+		EDX/RDX = adres unii union <A HREF="dodatk80.html#nfs">nfsctl_res</a> <br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">170<br> </td>  <TD headers="rax"><a name="x64f119">119</a><br> </td>
+	<TD headers="opis"><A NAME="f0170"> Ustaw realny, efektywny i zachowany ID grupy (<span lang="en">sys_setresgid</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = realny GID<BR>
+		ECX/RSI = efektywny GID<BR>
+		EDX/RDX = zachowany (saved) GID<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EPERM<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">171<br> </td>  <TD headers="rax"><a name="x64f120">120</a><br> </td>
+	<TD headers="opis"><A NAME="f0171"> Pobierz realny, efektywny i zachowany ID grupy (<span lang="en">sys_getresgid</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = adres DWORDa, który otrzyma realny GID<BR>
+		ECX/RSI = adres DWORDa, który otrzyma efektywny GID<BR>
+		EDX/RDX = adres DWORDa, który otrzyma zachowany (saved) GID<br> </td>
+	<TD headers="ret"> EAX = 0<BR>EAX = błąd EFAULT<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">172<br> </td>  <TD headers="rax"><a name="x64f157">157</a><br> </td>
+	<TD headers="opis"><A NAME="f0172"> Działania na procesie (<span lang="en">sys_prctl</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = <A HREF="dodatk80.html#prctl">opcja</A><BR>
+		ECX/RSI, EDX/RDX, ESI/R10, EDI/R8 = argumenty<BR></TD>
+	<TD headers="ret"> EAX = 0 lub 1<BR>EAX = błąd EINVAL<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">173<br> </td>  <TD headers="rax"><a name="x64f15">15</a><br> </td>
+	<TD headers="opis"><A NAME="f0173"> Powrót z procedury obsługi sygnału (<span lang="en">sys_rt_sigreturn</span>) </a> <br> </td>
+	<TD headers="arg"> -- <span class="b">funkcja wewnętrzna, nie używać</span>--<BR>
+		 EBX/RDI = parametr zależny od architektury</td>
+	<TD headers="ret">nigdy nie powraca<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">174<br> </td>  <TD headers="rax"><a name="x64f13">13</a><br> </td>
+	<TD headers="opis"><A NAME="f0174"> Pobierz i zmień procedurę obsługi sygnału (<span lang="en">sys_rt_sigaction</span>) </a> <br> </td>
+	<TD headers="arg"> EBX/RDI = numer sygnału<BR>
+		ECX/RSI = adres struktury <A HREF="dodatk80.html#sigaction">sigaction</A> opisującą bieżącą procedurę<BR>
+		EDX/RDX = adres struktury <A HREF="dodatk80.html#sigaction">sigaction</A> opisującą starą procedurę<br>
+		ESI/R10 = rozmiar struktury <A HREF="dodatk80.html#sigaction">sigset_t</A><br> </td>
+	<TD headers="ret"> EAX = 0 <BR>EAX=błąd EINVAL, EINTR, EFAULT<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">175<br> </td>  <TD headers="rax"><a name="x64f14">14</a><br> </td>
+	<TD headers="opis"><A NAME="f0175"> Pobierz i zmień blokowane sygnały (<span lang="en">sys_rt_sigprocmask</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = <A HREF="dodatk80.html#procmask">działanie</a><br>
+		ECX/RSI = adres zestawu sygnałów (tablicy 32 DWORDów)<br>
+		EDX/RDX = adres zestawu sygnałów, który otrzyma starą maskę sygnałów<Br>
+		ESI/R10 = rozmiar struktury <A HREF="dodatk80.html#sigaction">sigset_t</A><br> </td>
+	<TD headers="ret"> EAX = 0 <BR>EAX=błąd EINVAL<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">176<br> </td>  <TD headers="rax"><a name="x64f127">127</a><br> </td>
+	<TD headers="opis"><A NAME="f0176"> Pobierz sygnały oczekujące (<span lang="en">sys_rt_sigpending</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres zestawu sygnałów, który otrzyma oczekujące sygnały<br>
+		ECX/RSI = rozmiar struktury <A HREF="dodatk80.html#sigaction">sigset_t</A><br> </td>
+	<TD headers="ret"> EAX = 0 <BR>EAX=błąd EFAULT<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">177<br> </td>  <TD headers="rax"><a name="x64f128">128</a><br> </td>
+	<TD headers="opis"><A NAME="f0177"> Synchronicznie czekaj na zakolejkowane sygnały (<span lang="en">sys_rt_sigtimedwait</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres zestawu sygnałów, na które czekać<br>
+		ECX/RSI = adres struktury <A HREF="dodatk80.html#siginfo">siginfo</a>, która otrzyma informację o sygnale<Br>
+		EDX/RDX = adres struktury <A HREF="dodatk80.html#timespec">timespec</a> określającej czas oczekiwania<br>
+		ESI/R10 = rozmiar struktury <A HREF="dodatk80.html#sigaction">sigset_t</A><br> </td>
+	<TD headers="ret"> EAX = numer sygnału <BR>EAX=błąd EINVAL, EINTR, EAGAIN<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">178<br> </td>  <TD headers="rax"><a name="x64f129">129</a><br> </td>
+	<TD headers="opis"><A NAME="f0178"> Zakolejkuj sygnał dla procesu (<span lang="en">sys_rt_sigqueueinfo</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI=PID procesu, który ma otrzymać sygnał<BR>
+		ECX/RSI=numer sygnału<BR>
+		EDX/RDX=adres struktury <A HREF="dodatk80.html#siginfo">siginfo_t</a> do wysłania procesowi razem z sygnałem<br> </td>
+	<TD headers="ret"> EAX = 0 <BR>EAX=błąd EAGAIN, EINVAL, EPERM, ESRCH<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">179<br> </td>  <TD headers="rax"><a name="x64f130">130</a><br> </td>
+	<TD headers="opis"><A NAME="f0179"> Czekaj na sygnał (<span lang="en">sys_rt_sigsuspend</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres zestawu sygnałów, na które czekać<br>
+		ECX/RSI = rozmiar struktury <A HREF="dodatk80.html#sigaction">sigset_t</A><br> </td>
+	<TD headers="ret">EAX = -1<BR>EAX=błąd EINTR, EFAULT <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">180<br> </td>  <TD headers="rax"><a name="x64f17">17</a><br> </td>
+	<TD headers="opis"><A NAME="f0180"> Czytaj z danej pozycji w pliku (<span lang="en">sys_pread</span>/<span lang="en">sys_pread64</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = deskryptor otwartego pliku<BR>
+		ECX/RSI = adres bufora, który otrzyma dane<BR>
+		EDX/RDX = liczba bajtów do odczytania<BR>
+		ESI/R10 = pozycja, z której zacząć czytanie<br> </td>
+	<TD headers="ret">EAX = liczba przeczytanych bajtów (wskaźnik pozycji w pliku pozostaje bez zmian)<BR>EAX = błąd (jak w <span lang="en">sys_read</span>) <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">181<br> </td>  <TD headers="rax"><a name="x64f18">18</a><br> </td>
+	<TD headers="opis"><A NAME="f0181"> Zapisuj na danej pozycji w pliku (<span lang="en">sys_pwrite</span>/<span lang="en">sys_pwrite64</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = deskryptor otwartego pliku<BR>
+		ECX/RSI = adres bufora, z którego pobierać dane do zapisania<BR>
+		EDX/RDX = liczba bajtów do zapisania<BR>
+		ESI/R10 = pozycja, od której zacząć zapisywanie<br> </td>
+	<TD headers="ret">EAX = liczba zapisanych bajtów (wskaźnik pozycji w pliku pozostaje bez zmian)<BR>EAX = błąd (jak w <span lang="en">sys_read</span>) <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">182<br> </td>  <TD headers="rax"><a name="x64f92">92</a><br> </td>
+	<TD headers="opis"><A NAME="f0182"> Zmiana właściciela pliku (<span lang="en">sys_chown</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI=adres ścieżki do pliku<BR>
+		ECX/RSI = UID nowego właściciela<BR>
+		EDX/RDX = GID nowej grupy<br> </td>
+	<TD headers="ret">EAX = 0<BR>EAX = błąd na przykład EPERM, EROFS, EFAULT, ENOENT, ENAMETOOLONG, ENOMEM, ENOTDIR, EACCES, ELOOP <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">183<br> </td>  <TD headers="rax"><a name="x64f79">79</a><br> </td>
+	<TD headers="opis"><A NAME="f0183"> Pobierz bieżący katalog roboczy (<span lang="en">sys_getcwd</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres bufora, który otrzyma ścieżkę<BR>
+		ECX/RSI = długość tego bufora<br> </td>
+	<TD headers="ret">EAX = EBX/RDI<BR>EAX=NULL, gdy błąd ERANGE, EACCES, EFAULT, EINVAL, ENOENT <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">184<br> </td>  <TD headers="rax"><a name="x64f125">125</a><br> </td>
+	<TD headers="opis"><A NAME="f0184"> Pobierz możliwości procesu (<span lang="en">sys_capget</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres struktury <A HREF="dodatk80.html#cap_user">cap_user_header_t</A><BR>
+		ECX/RSI = adres struktury <A HREF="dodatk80.html#cap_user">cap_user_data_t</a> <br> </td>
+	<TD headers="ret">EAX = EBX/RDI<BR>EAX=NULL, gdy błąd EPERM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">185<br> </td>  <TD headers="rax"><a name="x64f126">126</a><br> </td>
+	<TD headers="opis"><A NAME="f0185"> Ustaw możliwości procesu (<span lang="en">sys_capset</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres struktury <A HREF="dodatk80.html#cap_user">cap_user_header_t</A><BR>
+		ECX/RSI = adres struktury <A HREF="dodatk80.html#cap_user">cap_user_data_t</a> <br> </td>
+	<TD headers="ret">EAX = EBX/RDI<BR>EAX=NULL, gdy błąd EPERM, EINVAL <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">186<br> </td>  <TD headers="rax"><a name="x64f131">131</a><br> </td>
+	<TD headers="opis"><A NAME="f0186"> Ustaw alternatywny stos dla procedur obsługi sygnałów (<span lang="en">sys_sigaltstack</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres struktury <A HREF="dodatk80.html#altstack">stack_t</A>, opisującej nowy stos<BR>
+		ECX/RSI = adres struktury <A HREF="dodatk80.html#altstack">stack_t</A>, opisującej stary stos; lub NULL<BR>
+		(ewentualnie EDX/RDX = adres nowego wierzchołka stosu)<br> </td>
+	<TD headers="ret">EAX = 0<BR>EAX = błąd EPERM, EINVAL, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">187<br> </td>  <TD headers="rax"><a name="x64f40">40</a><br> </td>
+	<TD headers="opis"><A NAME="f0187"> Kopiuj dane między deskryptorami plików (<span lang="en">sys_sendfile</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = deskryptor pliku wyjściowego, otwartego do zapisu<BR>
+		ECX/RSI = deskryptor pliku wejściowego<BR>
+		EDX/RDX = adres 64-bitowej zmiennej - numeru bajtu w pliku źródłowym, od którego zacząć kopiować<BR>
+		ESI/R10 = liczba bajtów do skopiowania<br> </td>
+	<TD headers="ret">EAX = liczba zapisanych bajtów<BR>EAX = błąd EBADF, EAGAIN, EINVAL, ENOMEM, EIO, EFAULT<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">188<br> </td>  <TD headers="rax"><a name="x64f181">181</a><br> </td>
+	<TD headers="opis"><A NAME="f0188"> Funkcja systemowa <span lang="en">sys_getpmsg</span> </a> <br> </td>
+	<TD headers="arg"> <span class="b">niezaimplementowane w jądrach 2.4</span>, <br>
+		na systemach 64-bitowych zarezerwowane dla LiS/STREAMS </td>
+	<TD headers="ret"> <span class="b">zawsze EAX =  ENOSYS</span> <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">189<br> </td>  <TD headers="rax"><a name="x64f182">182</a><br> </td>
+	<TD headers="opis"><A NAME="f0189"> Funkcja systemowa <span lang="en">sys_putpmsg</span> </a> <br> </td>
+	<TD headers="arg"> <span class="b">niezaimplementowane w jądrach 2.4</span>, <br>
+		na systemach 64-bitowych zarezerwowane dla LiS/STREAMS </td>
+	<TD headers="ret"> <span class="b">zawsze EAX =  ENOSYS</span> <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">190<br> </td>  <TD headers="rax"><a name="x64f58">58</a><br> </td>
+	<TD headers="opis"><A NAME="f0190"> Utwórz proces potomny i zablokuj rodzica (<span lang="en">sys_vfork</span>) </a> <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret">EAX = PID procesu potomnego <BR>EAX = błąd EAGAIN, ENOMEM <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">191<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0191"> Pobierz limity zasobów (<span lang="en">sys_ugetrlimit</span>) </a> <br> </td>
+	<TD headers="arg"> patrz: <span lang="en">sys_getrlimit</span> (?)<br> </td>
+	 <TD headers="ret"> EAX = 0 <BR>EAX = błąd EFAULT, EINVAL, EPERM<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">192<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0192"> Mapuj urządzenie lub plik do pamięci (<span lang="en">sys_mmap2</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = proponowany adres początkowy<BR>
+		ECX/RSI = liczba bajtów pliku do zmapowania<BR>
+		EDX/RDX = <A HREF="dodatk80.html#mmap_ochrona">ochrona</A><BR>
+		ESI/R10 = <A HREF="dodatk80.html#mmap_flagi">flagi mapowania</A><BR>
+		EDI/R8 = deskryptor mapowanego pliku, jeśli mapowanie nie jest anonimowe<BR>
+		EBP/R9 = offset początku mapowanych danych w pliku, <span class="b">liczony w jednostkach wielkości strony systemowej zamiast w bajtach</span></TD>
+	<TD headers="ret">EAX = adres zmapowanego obszaru<BR>EAX = błąd (takie same jak w <span lang="en">sys_mmap</span> + EFAULT)<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">193<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0193"> Skróć plik, wersja 64-bitowa (<span lang="en">sys_truncate64</span>)  </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres nazwy pliku ASCIIZ<BR>
+		ECX/RSI = liczba bajtów, do której ma zostać skrócony plik (niższy DWORD)<BR>
+		EDX/RDX = liczba bajtów, do której ma zostać skrócony plik (wyższy DWORD)<br> </td>
+	<TD headers="ret">EAX = 0<BR> EAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">194<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0194"> Skróć plik, wersja 64-bitowa (<span lang="en">sys_ftruncate64</span>)  </a> <br> </td>
+	<TD headers="arg">EBX/RDI = deskryptor pliku otwartego do zapisu<BR>
+		ECX/RSI = liczba bajtów, do której ma zostać skrócony plik (niższy DWORD)<BR>
+		EDX/RDX = liczba bajtów, do której ma zostać skrócony plik (wyższy DWORD)<br> </td>
+	<TD headers="ret">EAX = 0<BR> EAX = błąd<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">195<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0195"> Pobierz status pliku, wersja 64-bitowa (<span lang="en">sys_stat64</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres nazwy pliku ASCIIZ. Jeśli plik jest linkiem, to zwracany jest
+			status obiektu docelowego.<BR>
+		ECX/RSI = adres struktury <A HREF="dodatk80.html#stat64">stat64</a> <br> </td>
+	<TD headers="ret">EAX = 0<BR> EAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">196<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0196"> Pobierz status pliku, wersja 64-bitowa (<span lang="en">sys_lstat64</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres nazwy pliku ASCIIZ. Jeśli plik jest linkiem, to zwracany
+			 jest status linku, a nie obiektu docelowego.<BR>
+		ECX/RSI = adres struktury <A HREF="dodatk80.html#stat64">stat64</a> <br> </td>
+	<TD headers="ret">EAX = 0<BR> EAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">197<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0197"> Pobierz status pliku, wersja 64-bitowa (<span lang="en">sys_fstat64</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = deskryptor otwartego pliku<BR>
+		ECX/RSI = adres struktury <A HREF="dodatk80.html#stat64">stat64</a> <br> </td>
+	<TD headers="ret">EAX = 0<BR> EAX = błąd <hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">198<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0198"> Zmiana właściciela (<span lang="en">sys_lchown32</span>) </a> <br> </td>
+	<TD headers="arg">EBX/RDI = adres nazwy pliku/katalogu ASCIIZ<BR>
+		ECX/RSI = nowy numer użytkownika<BR>
+		EDX/RDX = nowy numer grupy<br> </td>
+	<TD headers="ret"> EAX = 0 <BR>EAX = błąd EPERM, EROFS, EFAULT, ENAMETOOLONG, ENOENT, ENOMEM,
+		ENOTDIR, EACCES, ELOOP i inne<hr> <br> </td></TR>
+
+<TR class="c"> <TD headers="eax">199<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0199"> Pobierz identyfikator użytkownika (<span lang="en">sys_getuid32</span>) </a> <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret">EAX = numer UID<hr> <br> </td> </TR>
+
+<TR class="c"> <TD headers="eax">200<br> </td>  <TD headers="rax">-<br> </td>
+	<TD headers="opis"><A NAME="f0200"> Pobierz ID grupy bieżącego procesu (<span lang="en">sys_getgid32</span>) </a> <br> </td>
+	<TD headers="arg"> nic<br> </td>
+	<TD headers="ret">EAX = ID grupy<hr> <br> </td></TR>
+
+
+</TABLE>
+
+
+<br><br>
+<div class="bezdruk">
+<a accesskey="3" hreflang="pl" href="przer80h_3.html">Poprzednia część</a> (Alt+3)<br>
+<a accesskey="4" hreflang="pl" href="przer80h_5.html">Kolejna część</a> (Alt+4)<br>
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>

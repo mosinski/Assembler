@@ -1,0 +1,871 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<HTML lang="pl">
+<HEAD>
+<META HTTP-EQUIV="Content-Type"       CONTENT="text/html; charset=ISO-8859-2">
+<META HTTP-EQUIV="Content-Language"   CONTENT="pl">
+<META http-equiv="Content-Style-Type" content="text/css">
+<META HTTP-EQUIV="X-Frame-Options"    CONTENT="DENY">
+<LINK rel="stylesheet" href="../asm.css" type="text/css">
+
+<TITLE> Asembler: Linuks: Programy sieciowe </TITLE>
+<link rel="Start"    hreflang="pl" lang="en" href="../index.htm" >
+<link rel="Contents" hreflang="pl" lang="en" href="../index.htm" >
+
+<link rel="alternate" type="text/html" href="siec_linux_en.html"
+	hreflang="en" lang="en" title="English version">
+
+<META NAME="Author" CONTENT="Bogdan D.">
+<META NAME="Description" CONTENT="Pisanie programów sieciowych pod Linuksem">
+<META NAME="Keywords" CONTENT="asm, assembler, asembler, linux, liunks, sieć, net, accept, bind,
+	connect, listen, socket, recv, send, RFC">
+<META NAME="Language" CONTENT="pl">
+<META NAME="Generator" CONTENT="KWrite">
+<meta http-equiv="Last-Modified" content="Tue, Jan 18 2011 17:59:59 CEST">
+</HEAD><BODY>
+
+<h1 class="nag">Pisanie programów sieciowych pod Linuksem</h1>
+
+<P>
+Linux jest systemem typowo sieciowym. Nawet niektóre usługi systemowe działają jako serwery sieciowe,
+ umożliwiając dostęp maszynom z zewnątrz. A ja bez niepotrzebnego zagłębiania się w porty,
+ protokoły i inne szczegóły dotyczące sieci, pokażę teraz, jak napisać prosty,
+ własny serwerek i klienta do niego.</P>
+<P>
+Komunikacja w sieci odbywa się z wykorzystaniem wielu różnych elementów. Podstawowym pojęciem jest
+ gniazdo (ang. <span lang="en">socket</span>). Jest to logiczne (czyli nie istniejące fizyczne)
+ urządzenie będące podstawową bramką, przez którą przepływają informacje.
+ Gniazdko tworzy się funkcją <span lang="en" class="b">socket</span> (z biblioteki języka C,
+ tak jak wszystkie późniejsze). Przyjmuje ona 3 argumenty (patrz: man 2 <span lang="en">socket</span>):</P>
+<OL>
+ <LI>domena - określa typ połączenia. My wykorzystamy wartość PF_INET=2, oznaczającą
+ 	protokoły internetowe (<acronym lang="en" title="Internet Protocol">IP</acronym>v4)</LI>
+ <LI>typ gniazda - określa, czy gniazdo jest datagramowe, strumieniowe,
+ 	surowe (<span lang="en">raw</span>) itp. My wykorzystamy gniazdo strumieniowe
+ 	SOCK_STREAM=1 i protokół <span lang="en">TCP</span> (<span lang="en">Transmission Control Protocol</span>),
+ 	który gwarantuje wiarygodne, dwustronne połączenie.</LI>
+ <LI>protokół, jeśli nie jest on jednoznacznie wyznaczony. U nas <span lang="en">TCP</span>
+ 	jest jednoznacznie wyznaczony przez typ gniazda (strumieniowe),
+ 	więc ten argument przyjmuje wartość 0.</LI>
+</OL>
+<P>Jeśli utworzenie gniazda nie udało się, funkcja <span lang="en">socket</span> zwróci wartość -1.
+ Jeśli się udało, zwróci liczbę całkowitą - deskryptor otwartego gniazda
+ (podobnie, jak w plikach). Po zakończeniu pracy gniazdo można zamknąć
+ funkcją <span class="b">close</span>.</P>
+<P>
+Od chwili utworzenia gniazda dalszy kod w serwera i klienta różnią się, więc omówię je po kolei.</P>
+
+
+
+
+
+
+<HR>
+<h2 class="nag">Serwer</h2>
+	<BR><a href="#klient" class="bezdruk" tabindex="1">(przeskocz opis serwera)</a>
+
+<P>
+Jak wiemy, zadaniem serwera jest nasłuchiwanie połączeń od klientów. Aby to osiągnąć, należy wykonać
+ następujące kroki.</P>
+
+<OL>
+
+ <LI>Przypisanie gniazda do adresu.
+  <P>W chwili utworzenia, gniazdo nie jest jeszcze przypisane do adresu, a przecież trzeba jakoś określić,
+  na jakim adresie i porcie nasłuchuje nasz serwer. Służy do tego funkcja
+  <span class="b">bind</span>. Przyjmuje ona następujące argumenty (patrz: man 2 bind):</P>
+  <OL>
+   <LI>gniazdo, które utworzyliśmy funkcją <span lang="en">socket</span></LI>
+   <LI>adres struktury <span class="b">sockaddr</span>, którą zaraz się zajmiemy</LI>
+   <LI>długość tejże struktury</LI>
+  </OL>
+  <P>Choć definicja funkcji bind mówi o strukturze sockaddr, to funkcji tej
+  podaje się odpowiednio rzutowany wskaźnik do
+  struktury <span class="b">sockaddr_in</span>. Ta struktura wygląda tak:</P>
+	<BR><a href="#siec_linux01" class="bezdruk">(przeskocz strukturę sockaddr_in)</a>
+  <PRE>
+	  struc sockaddr_in
+		.sin_family resw 1	; rodzina adresów
+		.sin_port   resw 1	; numer portu
+		.sin_addr   resd 1	; adres
+		            resb 8	; dopełnienie do 16 bajtów
+	  endstruc</PRE>
+  <P><a name="siec_linux01" id="siec_linux01">Do pola sin_family wpisujemy</a> AF_INET=2,
+   oznaczające rodzinę adresów internetowych.</P>
+  <P>Do pola sin_port wpisujemy numer portu, na którym będzie nasłuchiwał nasz serwer.
+   Ale uwaga - nie bezpośrednio! Najpierw numer portu musi zostać przetłumaczony na
+    sieciowy porządek bajtów funkcją <span class="b">htons</span> (patrz: man htons).
+   Dopiero wynik funkcji, której podajemy numer portu, wpisujemy w to pole.
+    Programy bez uprawnień administratora mogą korzystać tylko z portów o numerach powyżej 1023.</P>
+  <P>Do pola sin_addr wpisujemy wartość INADDR_ANY=0, co oznacza, że chcemy nasłuchiwać
+   na dowolnym adresie.</P>
+  <P>W przypadku błędu, bind zwraca -1.
+ </P></LI>
+
+ <LI>Włączenie nasłuchiwania na danym gnieździe.
+  <P>Aby włączyć nasłuchiwanie na danym gnieździe, należy użyć funkcji <span class="b" lang="en">listen</span>.
+   Przyjmuje ona dwa argumenty (patrz: man 2 listen):</P>
+  <OL>
+   <LI>gniazdo, utworzone funkcją <span lang="en">socket</span> z adresem przypisanym funkcją bind</LI>
+   <LI>maksymalną liczbę klientów oczekujących w kolejce na obsługę</LI>
+  </OL>
+  <P>W przypadku błędu, <span lang="en">listen</span> zwraca -1.</P>
+  <P>Jeśli funkcja <span lang="en">listen</span> się powiedzie, to można z
+   serwerem przejść w tryb demona (o tym w <a href="tsr_tut_linux.html" hreflang="pl">kursie
+	o pisaniu programów rezydentnych</a>).</P>
+ </LI>
+</OL>
+
+<P>Po włączeniu nasłuchiwania na gnieździe możemy zacząć przyjmować połączenia od klientów.
+ Przyjęcie połączenia odbywa się funkcją <span class="b" lang="en">accept</span>.
+ Przyjmuje ona trzy argumenty (patrz: man 2 <span lang="en">accept</span>):</P>
+ <OL>
+  <LI>nasłuchujące gniazdo</LI>
+  <LI>zero lub adres struktury sockaddr (lub tej samej sockaddr_in, którą podaliśmy
+  	dla bind). Struktura ta	otrzyma dane o kliencie (na przykład jego adres)</LI>
+  <LI>adres zmiennej zawierającej długość struktury z parametru numer 2</LI>
+ </OL>
+ <P>Gdy klient już się połączył, <span lang="en">accept</span> zwraca deskryptor
+  nowego gniazda, które będzie służyć do komunikacji z klientem.</P>
+
+
+
+
+
+
+
+
+<BR><HR>
+<h2 class="nag"><a name="klient" id="klient">Klient</a></h2>
+	<BR><a href="#rozmowa" class="bezdruk">(przeskocz opis klienta)</a>
+
+<P>
+W porównaniu z serwerem, w kliencie jest mniej pracy. Po utworzeniu gniazda do
+ połączenia się z serwerem wystarczy jedna funkcja - <span class="b" lang="en">connect</span>.
+  Przyjmuje ona trzy argumenty (patrz: man 2 <span lang="en">connect</span>):</P>
+ <OL>
+  <LI>gniazdo utworzone funkcją <span lang="en">socket</span></LI>
+  <LI>adres struktury sockaddr</LI>
+  <LI>długość tejże struktury</LI>
+ </OL>
+ <P>Tutaj także zamiast struktury sockaddr przekazujemy adres struktury sockaddr_in.
+  Jednak trzeba ją trochę inaczej wypełnić.</P>
+ <P>Pola sin_family i sin_port wypełniamy tak samo, jak dla bind. W końcu chcemy się
+  połączyć do tego samego portu, na którym nasłuchuje serwer.</P>
+ <P>Pole sin_addr wypełniamy adresem IP serwera. Oczywiście nie wprost jako łańcuch znaków,
+  ale odpowiednio przerobionym. Do przerobienia łańcucha znaków 127.0.0.1
+  (oznaczającego zawsze bieżący komputer dla niego samego) na właściwą postać
+  posłuży nam funkcja <span class="b">inet_aton</span>. Przyjmuje ona 2 argumenty (patrz: man inet_aton):</P>
+  <OL>
+   <LI>adres łańcucha znaków z adresem w zapisie dziesiętnym kropkowym (ttt.xxx.yyy.zzz)</LI>
+   <LI>adres struktury in_addr, która otrzyma wynik</LI>
+  </OL>
+  <P>Struktura in_addr jest jedyną składową pola sin_addr w naszej strukturze
+   sockaddr_in i to adres tego właśnie pola podajemy funkcji inet_aton.</P>
+<P>
+Po poprawnym wykonaniu połączenia funkcją <span lang="en">connect</span>,
+ można przystąpić do wymiany danych.</P>
+
+
+
+
+
+
+
+
+<BR><HR>
+<h2 class="nag"><a name="rozmowa" id="rozmowa">Wymiana danych</a></h2>
+	<BR><a href="#przyklad" class="bezdruk">(przeskocz wymianę danych)</a>
+
+<P>
+Po dokonaniu połączenia obie strony - klient i serwer - mają gotowe gniazda,
+ którymi mogą się komunikować. Do wymiany danych służą dwie podstawowe funkcje:
+ <span class="b">send</span> i <span class="b">recv</span>. Obie przyjmują dokładnie te same cztery
+ parametry (patrz: man 2 send, man 2 recv):</P>
+ <OL>
+  <LI>gniazdo, które jest połączone z klientem/serwerem</LI>
+  <LI>adres bufora odbiorczego/nadawczego</LI>
+  <LI>długość tego bufora</LI>
+  <LI>specjalne flagi, jeśli jest taka potrzeba. U nas będzie to zero.</LI>
+ </OL>
+
+
+
+
+
+
+
+<BR><HR>
+<h2 class="nag"><a name="przyklad" id="przyklad">Przykład</a></h2>
+
+<P>
+Po przebrnięciu przez tł trudną teorię możemy wreszcie przystąpić do pisania programów.
+ Wiem, że sucha teoria nie umożliwi natychmiastowego napisania programów serwera
+ i klienta (jest wiele pułapek, na które trzeba zwrócić uwagę),
+ dlatego prezentuję tutaj przykładowe programy serwera i klienta (składnia NASMa).</P>
+<P>Serwer:</P>
+	<BR><a href="#siec_linux02" class="bezdruk">(przeskocz program serwera)</a>
+<PRE>
+; Program serwera
+;
+; autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+; nasm -O999 -f elf -o serwer.o serwer.asm
+; gcc -o serwer serwer.o
+
+section	.text
+global	main		; będziemy korzystać z biblioteki C, więc
+			; funkcja główna musi się nazywać &quot;main&quot;
+
+; definicje kilku przydatnych stałych
+%define PF_INET		2
+%define AF_INET		PF_INET
+%define SOCK_STREAM	1
+%define INADDR_ANY	0
+
+%define	NPORTU		4242
+%define	MAXKLIENT	5	; maksymalna liczba klientów
+
+; zewnętrzne funkcje z biblioteki C, z których będziemy korzystać
+extern	daemon
+extern	socket
+extern	listen
+extern	accept
+extern	bind
+extern	htons
+extern	recv
+extern	send
+extern	close
+
+main:
+	push	dword 0
+	push	dword SOCK_STREAM
+	push	dword AF_INET
+	call	socket			; tworzymy gniazdo:
+					;socket(AF_INET,SOCK_STREAM,0);
+	add	esp, 12			; usuwamy argumenty ze stosu
+
+	cmp	eax, 0			; EAX &lt; 0 oznacza błąd
+	jl	.sock_blad
+
+	mov	[gniazdo], eax		; zachowujemy deskryptor gniazda
+
+	push	word NPORTU
+	call	htons			; przerabiamy numer portu na
+					; właściwy format
+					; htons(NPORTU);
+	add	esp, 2
+
+			; wpisujemy przerobiony numer portu:
+	mov	[adres+sockaddr_in.sin_port], ax
+			; rodzina adresów internetowych:
+	mov	word [adres+sockaddr_in.sin_family], AF_INET
+			; akceptujemy każdy adres
+	mov	dword [adres+sockaddr_in.sin_addr], INADDR_ANY
+
+	push	dword sockaddr_in_size
+	push	dword adres
+	push	dword [gniazdo]
+	call	bind			; przypisujemy gniazdo do adresu:
+				; bind(gniazdo,&amp;adres,sizeof(adres));
+	add	esp, 12
+
+	cmp	eax, 0
+	jl	.bind_blad
+
+	push	dword MAXKLIENT
+	push	dword [gniazdo]
+	call	listen			; włączamy nasłuchiwanie:
+					; listen(gniazdo,MAXKLIENT);
+	add	esp, 8
+
+	cmp	eax, 0
+	jl	.list_blad
+
+	push	dword 1
+	push	dword 1
+	call	daemon			; przechodzimy w tryb demona
+	add	esp, 8			; usuniecie argumentów ze stosu
+
+	mov	dword [rozmiar], sockaddr_in_size
+
+.czekaj:
+	push	dword rozmiar		; [rozmiar] zawiera rozmiar
+					; struktury sockaddr_in
+	push	dword adres
+	push	dword [gniazdo]
+	call	accept			; czekamy na połączenie
+				; accept(gniazdo,&amp;adres,&amp;rozmiar)
+	add	esp, 12
+	cmp	eax, 0
+	jl	.czekaj
+
+	mov	[gniazdo_kli], eax	; gdy accept się udało,
+					; zwraca nowe gniazdo klienta
+
+.rozmowa:
+	push	dword 0
+	push	dword buf_d
+	push	dword bufor
+	push	dword [gniazdo_kli]
+	call	recv			; odbieramy dane;
+			; recv(gniazdo_kli,&amp;bufor,sizeof(bufor),0);
+	add	esp, 16
+
+	cmp	eax, 0			; jeśli błąd, to czekamy ponownie
+	jl	.rozmowa
+
+	cmp	byte [bufor], &quot;Q&quot;	; ustalamy, że Q kończy transmisję
+	je	.koniec
+
+	mov	ecx, buf_d
+	mov	edi, bufor
+	xor	eax, eax
+	cld
+	rep	stosb			; czyścimy bufor
+
+	push	dword 0
+	push	dword 2
+	push	dword ok
+	push	dword [gniazdo_kli]
+	call	send			; wysyłamy dane
+					; (na cokolwiek odpowiadamy &quot;OK&quot;)
+					; send(gniazdo_kli,&amp;ok,2,0);
+	add	esp, 16
+
+	jmp	.rozmowa		; i czekamy od nowa
+
+.koniec:
+	push	dword 0
+	push	dword buf_d
+	push	dword bufor
+	push	dword [gniazdo_kli]
+	call	send			; wysyłamy Q, które jest w buforze
+	add	esp, 16
+
+	push	dword [gniazdo_kli]
+	call	close			; zamykamy gniazdo klienta
+	add	esp, 4
+
+; jeśli chcemy, aby serwer nasłuchiwał kolejnych połączeń, piszemy tu:
+;;; 	jmp	.czekaj
+; serwera nie da się wtedy inaczej zamknąć niż przez zabicie procesu
+
+	push	dword [gniazdo]
+	call	close			; zamykamy gniazdo główne serwera
+	add	esp, 4
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h			; wychodzimy z programu
+
+
+; obsługa błędów:
+
+.sock_blad:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, blad_socket
+	mov	edx, blad_socket_d
+	int	80h			; wyświetlenie napisu
+
+	mov	eax, 1
+	mov	ebx, 1
+	int	80h			; wyjście z programu z
+					; odpowiednim kodem błędu
+
+.bind_blad:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, blad_bind
+	mov	edx, blad_bind_d
+	int	80h
+
+	push	dword [gniazdo]
+	call	close			; zamykamy gniazdo
+
+	mov	eax, 1
+	mov	ebx, 2
+	int	80h
+
+.list_blad:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, blad_listen
+	mov	edx, blad_listen_d
+	int	80h
+
+	push	dword [gniazdo]
+	call	close			; zamykamy gniazdo
+
+	mov	eax, 1
+	mov	ebx, 3
+	int	80h
+
+
+section .data
+
+					; deskryptory gniazd:
+gniazdo		dd	0
+gniazdo_kli	dd	0
+
+bufor		times	20	db	0	; bufor odbiorczo-nadawczy
+buf_d		equ	$ - bufor		; długość bufora
+
+						; komunikaty błędów:
+blad_socket	db	&quot;Problem z socket!&quot;, 10
+blad_socket_d	equ	$ - blad_socket
+
+blad_bind	db	&quot;Problem z bind!&quot;, 10
+blad_bind_d	equ	$ - blad_bind
+
+blad_listen	db	&quot;Problem z listen!&quot;, 10
+blad_listen_d	equ	$ - blad_listen
+
+ok		db	&quot;OK&quot;		; to, co wysyłamy
+
+struc sockaddr_in
+
+	.sin_family	resw	1		; rodzina adresów
+	.sin_port	resw	1		; numer portu
+	.sin_addr	resd	1		; adres
+
+			resb	8		; dopełnienie do 16 bajtów
+endstruc
+
+adres		istruc	sockaddr_in		; adres jako zmienna, która
+						; jest strukturą
+rozmiar		dd	sockaddr_in_size	; rozmiar struktury</PRE>
+
+<P><a name="siec_linux02" id="siec_linux02">Klient</a>:</P>
+	<BR><a href="#siec_linux03" class="bezdruk">(przeskocz program klienta)</a>
+<PRE>
+; Program klienta
+;
+; autor: Bogdan D., bogdandr (at) op.pl
+;
+; kompilacja:
+; nasm -O999 -f elf -o klient.o klient.asm
+; gcc -o klient klient.o
+
+section	.text
+global	main		; będziemy korzystać z biblioteki C, więc
+			; funkcja główna musi się nazywać &quot;main&quot;
+
+; definicje kilku przydatnych stałych
+%define PF_INET		2
+%define AF_INET		PF_INET
+%define SOCK_STREAM	1
+%define INADDR_ANY	0
+
+%define	NPORTU		4242
+
+; zewnętrzne funkcje z biblioteki C, z których będziemy korzystać
+extern	socket
+extern	connect
+extern	htons
+extern	recv
+extern	send
+extern	close
+extern	inet_aton
+
+main:
+	push	dword 0
+	push	dword SOCK_STREAM
+	push	dword AF_INET
+	call	socket			; tworzymy gniazdo:
+					; socket(AF_INET,SOCK_STREAM,0);
+	add	esp, 12			; usuwamy argumenty ze stosu
+
+	cmp	eax, 0			; EAX &lt; 0 oznacza błąd
+	jle	.sock_blad
+
+	mov	[gniazdo], eax		; zachowujemy deskryptor gniazda
+
+					; rodzina adresów internetowych:
+	mov	word [adres+sockaddr_in.sin_family], AF_INET
+
+	push	dword (adres + sockaddr_in.sin_addr)
+	push	dword localhost
+	call	inet_aton		; przerabiamy adres 127.0.0.1 na
+					; właściwy format
+	add	esp, 8
+	test	eax, eax		; EAX = 0 oznacza, że adres
+					; był nieprawidłowy
+	jz	.inet_blad
+
+	push	word NPORTU
+	call	htons			; przerabiamy numer portu
+					; na właściwy format
+	add	esp, 2
+				; wpisujemy przerobiony numer portu:
+	mov	word [adres+sockaddr_in.sin_port], ax
+
+	push	dword sockaddr_in_size
+	push	dword adres
+	push	dword [gniazdo]
+	call	connect			; łączymy się z serwerem:
+				; connect(gniazdo,&amp;adres,sizeof(adres));
+	add	esp, 12
+
+	cmp	eax, 0
+	jne	.conn_blad
+
+.rozmowa:
+	mov	eax, 3
+	mov	ebx, 0
+	mov	ecx, bufor
+	mov	edx, buf_d
+	int	80h			; wczytujemy dane ze
+					; standardowego wejścia
+
+	push	dword 0
+	push	dword buf_d
+	push	dword bufor
+	push	dword [gniazdo]
+	call	send			; wysyłamy to, co wczytaliśmy:
+				; send(gniazdo,&amp;bufor,sizeof(bufor),0);
+	add	esp, 16
+
+	cmp	eax, 0
+	jl	.send_blad
+
+	mov	ecx, buf_d
+	mov	edi, bufor
+	xor	eax, eax
+	cld
+	rep	stosb			; czyścimy bufor
+
+.odbieraj:
+	push	dword 0
+	push	dword buf_d
+	push	dword bufor
+	push	dword [gniazdo]
+	call	recv			; odbieramy dane od serwera:
+				; recv(gniazdo,&amp;bufor,sizeof(bufor),0);
+	add	esp, 16
+
+	cmp	eax, 0
+	jl	.odbieraj
+
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, odebrano
+	mov	edx, odebrano_dl
+	int	80h			; wypisujemy, co odebraliśmy
+
+	cmp	byte [bufor], &quot;Q&quot;		; &quot;Q&quot; kończy transmisję
+	jne	.rozmowa
+
+	push	dword [gniazdo]
+	call	close			; zamykamy gniazdo
+	add	esp, 4
+
+	mov	eax, 1
+	xor	ebx, ebx
+	int	80h			; wychodzimy z programu
+
+
+; sekcja obsługi błędów
+
+
+.sock_blad:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, blad_socket
+	mov	edx, blad_socket_d
+	int	80h			; wyświetlenie napisu
+
+	mov	eax, 1
+	mov	ebx, 1
+	int	80h			; wyjście z programu z
+					; odpowiednim kodem błędu
+
+.conn_blad:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, blad_connect
+	mov	edx, blad_connect_d
+	int	80h
+
+	push	dword [gniazdo]
+	call	close			; zamykamy gniazdo
+
+	mov	eax, 1
+	mov	ebx, 2
+	int	80h
+
+.inet_blad:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, blad_inet
+	mov	edx, blad_inet_d
+	int	80h
+
+	push	dword [gniazdo]
+	call	close			; zamykamy gniazdo
+
+	mov	eax, 1
+	mov	ebx, 3
+	int	80h
+
+.send_blad:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, blad_send
+	mov	edx, blad_send_d
+	int	80h
+
+	push	dword [gniazdo]
+	call	close			; zamykamy gniazdo
+
+	mov	eax, 1
+	mov	ebx, 4
+	int	80h
+
+.recv_blad:
+	mov	eax, 4
+	mov	ebx, 1
+	mov	ecx, blad_recv
+	mov	edx, blad_recv_d
+	int	80h
+
+	push	dword [gniazdo]
+	call	close			; zamykamy gniazdo
+
+	mov	eax, 1
+	mov	ebx, 5
+	int	80h
+
+section .data
+
+gniazdo		dd	0			; deskryptor gniazda
+
+odebrano	db	&quot;Serwer: &quot;
+bufor		times	20	db	0	; bufor nadawczo-odbiorczy
+buf_d		equ	$ - bufor		; długość bufora
+		db	10			; przejście do nowej linii
+odebrano_dl	equ	$ - odebrano
+
+						; komunikaty błędów
+blad_socket	db	&quot;Problem z socket!&quot;, 10
+blad_socket_d	equ	$ - blad_socket
+
+blad_connect	db	&quot;Problem z connect!&quot;, 10
+blad_connect_d	equ	$ - blad_connect
+
+blad_inet	db	&quot;Problem z inet_aton!&quot;, 10
+blad_inet_d	equ	$ - blad_inet
+
+blad_send	db	&quot;Problem z send!&quot;, 10
+blad_send_d	equ	$ - blad_send
+
+blad_recv	db	&quot;Problem z recv!&quot;, 10
+blad_recv_d	equ	$ - blad_recv
+
+
+localhost	db	&quot;127.0.0.1&quot;, 0		; adres, z którym
+						; będziemy się łączyć
+
+struc sockaddr_in
+
+	.sin_family	resw	1		; rodzina adresów
+	.sin_port	resw	1		; numer portu
+	.sin_addr	resd	1		; adres
+
+			resb	8		; dopełnienie do 16 bajtów
+endstruc
+
+adres		istruc	sockaddr_in		; adres jako zmienna,
+						; która jest strukturą</PRE>
+<P>
+<a name="siec_linux03" id="siec_linux03">Jako że programy te korzystają</a> z biblioteki języka C,
+ ich kompilacja musi wyglądać trochę inaczej niż zwykle:</P>
+<PRE>
+	nasm -f elf -o plik.o plik.asm
+	gcc -o plik plik.o</PRE>
+<P>Po kompilacji najpierw oczywiście uruchamiamy serwer poleceniem
+ <CODE>./serwer</CODE> (program serwera sam przejdzie w tło). Możecie sprawdzić,
+ co się stanie, jeśli dwa razy spróbujecie uruchomić serwer lub uruchomicie klienta
+bez uruchomionego serwera.</P>
+<P>Oczywiście, serwer może też być klientem innego serwera (na przykład po odebraniu danych
+ przerabiać je i przekazywać dalej).</P>
+
+
+
+
+
+<BR><HR>
+<h2 class="nag"><a name="siec_int80h" id="siec_int80h">Funkcje sieciowe przerwania int 80h</a></h2>
+	<BR><a href="#siec_x64" class="bezdruk">(przeskocz int 80h)</a>
+
+<P>
+Korzystanie z sieci jest oczywiście możliwe także bez pośrednictwa biblioteki języka C. W końcu
+ każda tak istotna funkcja przecież musi być zaprogramowana jako część jądra.</P>
+<P>Interfejs sieciowy jądra to jedna funkcja - sys_socketcall (numer 102). Przyjmuje ona dwa
+ argumenty. Pierwszy (w EBX) to funkcja, którą chcemy uruchomić. Każda wspomniana wcześniej
+ funkcja z biblioteki C ma swój numer. Są to: dla <span lang="en">socket</span> - 1, dla bind - 2,
+ <span lang="en">connect</span> - 3, <span lang="en">listen</span> - 4,
+ <span lang="en">accept</span> - 5, send - 9, recv - 10. Funkcja <span lang="en">close</span>
+ jest tą samą, której używa się do zamykania plików (a więc EBX=[gniazdo], EAX=6, int 80h).</P>
+<P>
+Drugim argumentem (w ECX) jest adres reszty argumentów, które podalibyśmy funkcji z biblioteki C.
+ Można je bez przeszkód w tej samej kolejności, co wcześniej, umieścić na stosie, po czym wykonać
+ instrukcję <code>mov ecx, esp</code>. Z resztą, tak to właśnie robi biblioteka C
+ (plik sysdeps/unix/sysv/linux/i386/socket.S w źródłach glibc, tam jednak jest "ecx+4", gdyż
+ należy przeskoczyć jeszcze adres powrotny z funkcji). Można te dane
+ umieścić oczywiście w swojej sekcji danych i podać ich adres, ale dane te muszą być jedna po
+ drugiej dokładnie w takiej kolejności, w jakiej znajdowałyby na stosie (czyli
+ <em class="wazne">od lewej do prawej</em> na wzrastających adresach). Po prostu po kolei,
+ według deklaracji C, od lewej do prawej.</P>
+<P>
+Do omówienia zostają jeszcze funkcje pomocnicze - htons i inet_aton.</P>
+<P>
+Funkcja <span class="b">htons</span> jest dość prosta w budowie (plik sysdeps/i386/htons.S
+ w źródłach glibc), jej treść mieści się w takim oto makrze (zakładając, że argument jest w EAX):</P>
+<pre title="makro htons">
+	%macro htons 0
+		and	eax, 0FFFFh
+		ror	ax, 8
+	%endm</pre>
+
+<P>Czyli po prostu zeruje górną połowę EAX i zamienia zawartość rejestrów AH i AL między sobą.</P>
+
+<P>Funkcja <span class="b">inet_aton</span> (plik resolv/inet_addr.c w źródłach glibc) jest
+ trochę trudniejsza. Wolę znacznie wszystko skrócić i powiedzieć, że adres należy
+ załadować do rejestru EAX <span class="b">binarnie</span>, czyli na przykład z 127.0.0.1
+ dostajemy EAX=7F000001h, a z 192.168.0.2 - EAX=C0A80002h. Potem trzeba odwrócić kolejność bajtów.
+ Najlepiej od początku skorzystać z następującego makra:</P>
+<pre title="makro adr2bin">
+	%macro adr2bin 4
+
+		mov	al, %4
+		shl	eax, 8
+		mov	al, %3
+		shl	eax, 8
+		mov	al, %2
+		shl	eax, 8
+		mov	al, %1
+	%endm
+
+	; użycie:
+		adr2bin	127, 0, 0, 1	   ; dla adresu 127.0.0.1
+		adr2bin	192, 168, 45, 243  ; dla adresu 192.168.45.243</pre>
+
+<P>którego wynik (EAX) zapisujemy do pierwszych czterech bajtów pola sin_addr struktury
+ sockaddr_in (co normalnie funkcja inet_aton robiła automatycznie).</P>
+<P>
+To całe odwracanie bierze się z tego, że porządek bajtów w protokole TCP jest typu big-endian,
+ a procesory zgodne z Intelem są typu little-endian.</P>
+<P>O tym, jak pisać demony korzystając wyłącznie z przerwania int 80h, napisałem w
+<a href="tsr_tut_linux.html" hreflang="pl">kursie o pisaniu programów rezydentnych</a>.</P>
+
+
+
+
+
+
+<BR><HR>
+<h2 class="nag"><a name="siec_x64" id="siec_x64">Funkcje sieciowe w systemie 64-bitowym</a></h2>
+	<BR><a href="#koniec" class="bezdruk">(przeskocz system 64-bitowy)</a>
+
+<P>
+Obsługa sieci różni się nieco na systemach 64-bitowych w porównaniu z systemami 32-bitowymi.
+Nie tylko zmienia się numer funkcji, ale teraz poszczególne operacje sieciowe mają swoje
+własne funkcje systemowe. Są to: <span lang="en">socket</span> - 41, <span lang="en">connect</span> - 42,
+<span lang="en">accept</span> - 43, <span lang="en">sendto</span> - 44,
+<span lang="en">recvfrom</span> - 45, <span lang="en">bind</span> - 49,
+<span lang="en">listen</span> - 50.
+Reszta parametrów jest przekazywana nie na stosie, a
+w kolejnych rejestrach, zgodnie z interfejsem systemu 64-bitowego (kolejno w rejestrach:
+RDI, RSI, RDX, R10, R8, R9). Samo wywołanie systemu następuje instrukcją
+<span class="b" lang="en">syscall</span>,
+a nie poprzez przerwanie 80h.</P>
+<P>
+Przykładowe wywołania funkcji wyglądają więc następująco:</P>
+<pre>
+	mov	rax, 41			; socket
+	mov	rdi, AF_INET
+	mov	rsi, SOCK_STREAM
+	mov	rdx, IPPROTO_TCP
+	syscall
+
+	mov	rax, 42			; connect
+	mov	rdi, [socket]
+	mov	rsi, sock_struc
+	mov	rdx, sockaddr_in_size
+	syscall
+
+	mov	rax, 44			; sendto
+	mov	rdi, [socket]
+	mov	rsi, buf
+	mov	rdx, buf_ile
+	mov	r10, 0
+	syscall
+
+	mov	rax, 49			; bind
+	mov	rdi, [socket]
+	mov	rsi, sock_struc
+	mov	rdx, sockaddr_in_size
+	syscall
+
+	mov	rax, 50			; listen
+	mov	rdi, [socket]
+	mov	rsi, MAXKLIENT
+	syscall
+
+	mov	rax, 43			; accept
+	mov	rdi, [socket]
+	mov	rsi, sock_struc
+	mov	rdx, sockaddr_in_size
+	syscall
+
+	mov	rax, 45			; recvfrom
+	mov	rdi, [socket_client]
+	mov	rsi, buf
+	mov	rdx, buf_ile
+	mov	r10, 0
+	syscall
+
+	...
+struc sockaddr_in
+	.sin_family:	resw 1
+	.sin_port:	resw 1
+	.sin_addr:	resd 1
+			resb 8
+endstruc
+
+sock_struc istruc sockaddr_in</pre>
+
+<P>Funkcje htons i inet_aton są takie same, jak dla systemów 32-bitowych (bo przecież kolejność
+bajtów przesyłanych w sieci się nie zmienia).</P>
+
+<br>
+<HR>
+
+
+
+<P><a name="koniec" id="koniec">Warto jeszcze wspomnieć o dwóch sprawach</a>.
+ Pierwsza to programy strace i ltrace. Pozwalają one na śledzenie, których funkcji
+ systemowych i kiedy dany program używa. Jeśli coś Wam nie działa, wyłączcie tryb
+ demona w serwerze, po czym uruchomcie
+ <code>strace ./serwer</code> i patrzcie, na których wywołaniach funkcji są jakieś problemy.
+ Podobnie możecie oczywiście zrobić
+ z klientem, na przykład na drugim terminalu. Po szczegóły odsyłam do stron manuala.</P>
+<P>
+Drugą sprawa jest dla tych z Was, którzy poważnie myślą o pisaniu aplikacji sieciowych.
+ Jest to zbiór norm RFC (<span lang="en">Request For Comment</span>). Opisują one wszystkie publicznie
+ używane protokoły, na przykład <acronym lang="en" title="HyperText Transfer Protocol">HTTP</acronym>,
+ <acronym lang="en" title="Simple Mail Transfer Protocol">SMTP</acronym> czy
+ <acronym lang="en" title="Post Office Protocol">POP</acronym>3:
+ <A HREF="http://www.rfc-editor.org/" hreflang="en">rfc-editor.org</A>.</P>
+
+<br>
+<div class="bezdruk">
+<A accesskey="1" hreflang="pl" href="../index.htm">Spis treści off-<span lang="en">line</span></a> (Alt+1)<BR>
+<A accesskey="2" hreflang="pl" href="../index.php">Spis treści on-<span lang="en">line</span></a> (Alt+2)<br>
+<A accesskey="0" hreflang="pl" href="../ulatwie.htm">Ułatwienia dla niepełnosprawnych</a> (Alt+0)<BR>
+</div>
+
+</BODY></HTML>
